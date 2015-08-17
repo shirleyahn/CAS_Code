@@ -1,0 +1,43 @@
+/scratch/users/sahn1/WE_Triazine
+/scratch/users/sahn1/WE_Triazine/StarterFolderGROMACS_WE
+0
+0
+1
+1.0e-100
+0
+100000
+10.0
+10
+4
+-180.0
+180.0
+0
+200
+1
+0
+0
+
+### the above lines are input for the following weighted ensemble simulation parameters ###
+main_directory
+initial_configuration_directory
+flag  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation from middle of
+        binning. 3: restarting simulation from middle of resampling.
+balls_flag  # 0: create new balls at each step. 1: keep created balls.
+resample_less_flag  # 0: off. 1: on. resample_less entails sorting walkers' weights in ascending order and binning
+                      walkers with weights less than weight_threshold to the nearest existing ball.
+weight_threshold  # if the walker's weight is less than the threshold, then it is binned to the nearest existing ball.
+enhanced_sampling_flag  # 0: off. 1: sub-binning balls by standard deviation distance from center of ball. 2: . 3: .
+num_balls_limit  # limit is set depending on the available memory. parameter needed in case the calculated max_num_balls
+                   is greater or too much smaller than the limit.
+radius  # radius can be changed in the middle of the simulation.
+num_walkers  # num_walkers should be fixed.
+num_cvs  # number of collective variables (num_cvs) should be fixed.
+lower_bound  # lower bound value for the collective variables. set it to arbitrary value if collective variables have
+               different units. this is only used to calculate the volume of the free energy landscape.
+upper_bound  # upper bound value for the collective variables.
+initial_step_num  # initial_step_num should be changed from 0 when restarting a simulation.
+max_num_steps
+num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation. NOTE: when flag = 3, this
+                      should be equal to the highest walker number inside the WE folder
+first_walker  # only needed if flag = 1, otherwise 0
+last_walker  # only needed if flag = 1, otherwise 0
