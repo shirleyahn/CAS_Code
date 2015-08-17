@@ -298,10 +298,10 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
     weights = [walker_list[i].weight for i in range(gv.num_occupied_balls*gv.num_walkers)]
     occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers, int)
     excess_index = gv.num_occupied_balls*gv.num_walkers
-    for i in range(balls.shape[0]):
-        if int(balls[i][gv.num_cvs]) > 0:
+    for current_ball in range(balls.shape[0]):
+        if int(balls[current_ball][gv.num_cvs]) > 0:
             num_occupied_balls += 1
-            ball_center = balls[i][:-1].tolist()
+            ball_center = balls[current_ball][:-1].tolist()
             initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
             initial_weights_array = np.array(initial_weights)
             walker_indices = np.argsort(-initial_weights_array)
@@ -423,7 +423,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             os.system('rm -rf walker' + str(y))
 
                 if j == 0:  # reset balls
-                    balls[i][gv.num_cvs] = 0
+                    balls[current_ball][gv.num_cvs] = 0
                 for k, global_index in enumerate(new_indices):
                     coordinates = temp_walker_list[global_index].coordinates
                     if occupied_indices[global_index] == 0:
@@ -457,7 +457,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         f = open('weight_trajectory.txt', 'a')
                         f.write(str(walker_list[new_index].weight) + '\n')
                         f.close()
-                    balls[i][gv.num_cvs] += 1
+                    balls[current_ball][gv.num_cvs] += 1
 
     if excess_index-num_occupied_balls*gv.num_walkers != len(vacant_walker_indices):
         print 'Something wrong with resampling'
@@ -495,15 +495,15 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
     os.chdir(gv.main_directory + '/WE')
     total_weight = 0.0
     f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')
-    for i in range(balls.shape[0]):
-        ball_center = balls[i][:-1].tolist()
+    for current_ball in range(balls.shape[0]):
+        ball_center = balls[current_ball][:-1].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
         total_weight += sum(weights)
         ball_center.append(sum(weights))
         f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center)))
         f.write('\n')
         # reset walkers and number of walkers that belong in each ball
-        balls[i][gv.num_cvs] = 0
+        balls[current_ball][gv.num_cvs] = 0
         ball_to_walkers[tuple(ball_center[:-1])] = []
     f.close()
 

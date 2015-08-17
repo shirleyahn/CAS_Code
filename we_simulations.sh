@@ -2,8 +2,8 @@
 
 ###
 # TODO: set main directory, walker directory, and molecular dynamics simulation program directory
-#       and number of nodes requested, number of cores per node, number of gpu's requested.
-#       num_sim_walkers should be equal to num_nodes * num_cpu, since one walker will run with one node.
+# and number of nodes requested, number of cores per node, number of gpu's requested.
+# num_sim_walkers should be equal to num_nodes * num_cpu, since one walker will run with one node.
 ###
 
 export MAIN_DIRECTORY=/scratch/users/sahn1/WE_Triazine

@@ -1,11 +1,3 @@
-###
-# Regular weighted ensemble simulation Python code was developed by Hee Sun Lee, Stanford.
-# Bash script for multiple simultaneous simulations was developed by Surl-Hee Ahn, Stanford.
-# Resampling method is from E. Darve, Stanford and J. Izaguirre, University of Notre Dame.
-# Enhanced sampling weighted ensemble simulation Python code was developed on top of regular weighted ensemble code by
-# Surl-Hee Ahn, Stanford.
-###
-
 import sys
 main_directory = '/scratch/users/sahn1/WE_Triazine'  # TODO: set main directory for WE simulation
 sys.path.append(main_directory)
@@ -58,13 +50,14 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
 
         # second, create balls and assign walkers to balls
         t1 = time()
-        balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
+        new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # third, resample walkers for every ball
-        we_functions.resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices)
+        we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers, vacant_walker_indices)
 
         # finally, output the results in text files
-        we_functions.print_status(step_num, walker_list, balls, ball_to_walkers)
+        we_functions.print_status(step_num, walker_list, new_balls, ball_to_walkers)
+        balls = new_balls
         t2 = time()
 
         os.chdir(gv.main_directory+'/WE')
