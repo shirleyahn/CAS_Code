@@ -21,7 +21,9 @@ def set_parameters(input_parameter_file):
         gv.flag = int(f.readline())
         gv.balls_flag = int(f.readline())
         gv.resample_less_flag = int(f.readline())
-        gv.weight_threshold = float(f.readline())
+        gv.static_threshold_flag = int(f.readline())
+        gv.threshold = float(f.readline())
+        gv.property = int(f.readline())
         gv.enhanced_sampling_flag = int(f.readline())
         gv.num_balls_limit = int(f.readline())
         gv.radius = float(f.readline())
@@ -207,6 +209,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     start = 0  # indicates whether we are dealing with the very first walker or not
+    new_threshold = 0  # only needed if gv.static_threshold_flag = 0
     for i in walker_indices:
         # first, go to walker directory i
         walker_directory = gv.main_directory + '/WE/walker' + str(i)
@@ -262,8 +265,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         distance = distance_from_center
                         balls_key = j
 
+            if gv.property < 0:
+                property = weight
+            else:
+                property = new_coordinates[gv.property]
             # walker is inside some ball or if we need to resample less and the weight is less than the threshold
-            if inside != 0 or (gv.resample_less_flag == 1 and weight < gv.weight_threshold):
+            if inside != 0 or (gv.resample_less_flag == 1 and property < gv.threshold):
                 balls[balls_key, gv.num_cvs] += 1
                 ball_center = balls[balls_key][:-1].tolist()
                 temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, distance, initial_step_num, weight)
@@ -271,6 +278,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     ball_to_walkers[tuple(ball_center)].append(i)
                 else:
                     ball_to_walkers[tuple(ball_center)] = [i]
+                if gv.static_threshold_flag == 0 and property < gv.threshold:
+                    new_threshold = property
             # walker is not inside any existing ball, so create a new ball
             else:
                 ball_center = [coordinate for coordinate in new_coordinates]
@@ -290,6 +299,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
 
     os.chdir(gv.main_directory + '/WE')
     np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.3f')
+    if gv.static_threshold_flag == 0:
+        gv.threshold = new_threshold
     return balls
 
 

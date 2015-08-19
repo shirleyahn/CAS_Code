@@ -3,7 +3,9 @@
 0
 0
 1
-1.0e-100
+0
+22.0
+21
 0
 100000
 10.0
@@ -23,9 +25,16 @@ initial_configuration_directory
 flag  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation from middle of
         binning. 3: restarting simulation from middle of resampling.
 balls_flag  # 0: create new balls at each step. 1: keep created balls.
-resample_less_flag  # 0: off. 1: on. resample_less entails sorting walkers' weights in ascending order and binning
-                      walkers with weights less than weight_threshold to the nearest existing ball.
-weight_threshold  # if the walker's weight is less than the threshold, then it is binned to the nearest existing ball.
+resample_less_flag  # 0: off. 1: on. resample_less entails sorting walkers' weights in ascending order (rare walkers
+                      first) and binning walkers that have some property (e.g. weight, some collective variable like
+                      distance) with value less than the threshold to the nearest existing ball.
+static_threshold_flag  # 0: off, then the lowest current value is set as the threshold for the next step. 1: on,
+                         initial threshold is kept throughout the simulation.
+threshold  # if some property of the walker has a value less than the threshold, then it is binned to the nearest
+             existing ball.
+property  # property of the walker that is used when resample_less_flag = 1. this can be weight or some collective
+            variable. if it's weight, then type -1. otherwise type the index of the collective variable, e.g. if
+            there are 3 collective variables and you would like to keep track of the last one, type 2.
 enhanced_sampling_flag  # 0: off. 1: sub-binning balls by standard deviation distance from center of ball. 2: . 3: .
 num_balls_limit  # limit is set depending on the available memory. parameter needed in case the calculated max_num_balls
                    is greater or too much smaller than the limit.

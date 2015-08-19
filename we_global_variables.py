@@ -6,7 +6,9 @@ global initial_configuration_directory
 global flag
 global balls_flag
 global resample_less_flag
-global weight_threshold
+global static_threshold_flag
+global threshold
+global property
 global enhanced_sampling_flag
 global num_balls_limit
 global radius
