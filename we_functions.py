@@ -393,7 +393,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         else:
                             if bin_index*std < distance <= (bin_index+1)*std:
                                 weights_bin[l] = temp_walker_list[k].weight
-                                indices_bin[l] = temp_walker_list[k].i_global
+                                indices_bin[l] = temp_walker_list[k].global_index
                                 l += 1
                 
                 total_weight = sum(weights_bin)
