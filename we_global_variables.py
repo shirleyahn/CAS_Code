@@ -6,6 +6,7 @@ global initial_configuration_directory
 global flag
 global balls_flag
 global resample_less_flag
+global less_or_greater_flag
 global static_threshold_flag
 global threshold
 global property

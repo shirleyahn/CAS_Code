@@ -18,19 +18,24 @@ def set_parameters(input_parameter_file):
     with open(input_parameter_file, 'r') as f:
         gv.main_directory = f.readline().strip()
         gv.initial_configuration_directory = f.readline().strip()
+        f.readline()
         gv.flag = int(f.readline())
         gv.balls_flag = int(f.readline())
         gv.resample_less_flag = int(f.readline())
+        gv.less_or_greater_flag = int(f.readline())
         gv.static_threshold_flag = int(f.readline())
+        f.readline()
         gv.threshold = float(f.readline())
         gv.property = int(f.readline())
         gv.enhanced_sampling_flag = int(f.readline())
         gv.num_balls_limit = int(f.readline())
+        f.readline()
         gv.radius = float(f.readline())
         gv.num_walkers = int(f.readline())
         gv.num_cvs = int(f.readline())
         gv.lower_bound = float(f.readline())
         gv.upper_bound = float(f.readline())
+        f.readline()
         gv.initial_step_num = int(f.readline())
         gv.max_num_steps = int(f.readline())
         gv.num_occupied_balls = int(f.readline())
@@ -270,7 +275,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             else:
                 property = new_coordinates[gv.property]
             # walker is inside some ball or if we need to resample less and the weight is less than the threshold
-            if inside != 0 or (gv.resample_less_flag == 1 and property < gv.threshold):
+            if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and property < gv.threshold) \
+                    or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and property > gv.threshold):
                 balls[balls_key, gv.num_cvs] += 1
                 ball_center = balls[balls_key][:-1].tolist()
                 temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, distance, initial_step_num, weight)
@@ -278,7 +284,9 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     ball_to_walkers[tuple(ball_center)].append(i)
                 else:
                     ball_to_walkers[tuple(ball_center)] = [i]
-                if gv.static_threshold_flag == 0 and property < gv.threshold:
+                if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0 and property < gv.threshold:
+                    new_threshold = property
+                elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1 and property > gv.threshold:
                     new_threshold = property
             # walker is not inside any existing ball, so create a new ball
             else:
