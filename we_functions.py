@@ -487,6 +487,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
         for i in range(num_occupied_balls*gv.num_walkers, excess_index):
             new_index = vacant_walker_indices.pop(0)
             walker_list[new_index].copy_walker(walker_list[i])
+            walker_list[new_index].global_index = new_index
             # rename the directory with name 'i' to 'new_index'
             os.chdir(gv.main_directory + '/WE')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
@@ -495,6 +496,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
             new_index = vacant_walker_indices.pop(0)
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
+            walker_list[new_index].global_index = new_index
             # rename the directory with name 'i' to 'new_index'
             os.chdir(gv.main_directory + '/WE')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
@@ -505,6 +507,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                     new_index = vacant_walker_indices.pop(0)
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
+                walker_list[new_index].global_index = new_index
                 # rename the directory with name 'i' to 'new_index'
                 os.chdir(gv.main_directory + '/WE')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
