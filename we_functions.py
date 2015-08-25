@@ -214,7 +214,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     start = 0  # indicates whether we are dealing with the very first walker or not
-    new_threshold = 0  # only needed if gv.static_threshold_flag = 0
+    new_threshold = gv.threshold  # only needed if gv.static_threshold_flag = 0
     for i in walker_indices:
         # first, go to walker directory i
         walker_directory = gv.main_directory + '/WE/walker' + str(i)
@@ -274,20 +274,18 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 property = weight
             else:
                 property = new_coordinates[gv.property]
-            # walker is inside some ball or if we need to resample less and the weight is less than the threshold
+            # walker is inside some ball or if we need to resample less and the weight is less or greater than threshold
             if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and property < gv.threshold) \
                     or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and property > gv.threshold):
                 balls[balls_key, gv.num_cvs] += 1
                 ball_center = balls[balls_key][:-1].tolist()
-                temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, distance, initial_step_num, weight)
+                distance_from_center = calculate_distance_from_center(ball_center, new_coordinates)
+                temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, distance_from_center,
+                                                    initial_step_num, weight)
                 if tuple(ball_center) in ball_to_walkers:
                     ball_to_walkers[tuple(ball_center)].append(i)
                 else:
                     ball_to_walkers[tuple(ball_center)] = [i]
-                if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0 and property < gv.threshold:
-                    new_threshold = property
-                elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1 and property > gv.threshold:
-                    new_threshold = property
             # walker is not inside any existing ball, so create a new ball
             else:
                 ball_center = [coordinate for coordinate in new_coordinates]
@@ -297,6 +295,10 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 center_num_balls.append(1)
                 balls = np.append(balls, [np.asarray(center_num_balls)], axis=0)
                 gv.current_num_balls += 1
+            if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0 and property > new_threshold:
+                new_threshold = property
+            elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1 and property < new_threshold:
+                new_threshold = property
 
         # finally, write the new ball on the trajectory file
         ball_center = temp_walker_list[i].ball_center
@@ -343,66 +345,66 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                 std = np.sqrt(np.var(distance_from_center_list))
                 if std != 0.0:
                     num_bins = int(np.ceil(gv.radius/std))+2
-                true_num_bins = 0
-                bins = []
-                num_walkers_bin = []
-                for j in range(num_bins):
-                    num_walkers = 0
-                    for k in initial_indices:
-                        distance = temp_walker_list[k].distance_from_center
-                        if j == 0:
-                            if distance <= std:
-                                num_walkers += 1
-                        elif j == num_bins-1:
-                            if (j+1)*std < distance <= gv.radius:
-                                num_walkers += 1
-                        else:
-                            if j*std < distance <= (j+1)*std:
-                                num_walkers += 1
-                    if num_walkers != 0:
-                        true_num_bins += 1
-                        bins.append(j)
-                        num_walkers_bin.append(num_walkers)
+                    true_num_bins = 0
+                    bins = []
+                    num_walkers_bin = []
+                    for nth_bin in range(num_bins):
+                        num_walkers = 0
+                        for j in initial_indices:
+                            distance = temp_walker_list[j].distance_from_center
+                            if nth_bin == 0:
+                                if distance <= std:
+                                    num_walkers += 1
+                            elif nth_bin == num_bins-1:
+                                if nth_bin*std < distance:
+                                    num_walkers += 1
+                            else:
+                                if nth_bin*std < distance <= (nth_bin+1)*std:
+                                    num_walkers += 1
+                        if num_walkers != 0:
+                            true_num_bins += 1
+                            bins.append(nth_bin)
+                            num_walkers_bin.append(num_walkers)
 
             target_num_walkers = int(np.floor(float(gv.num_walkers)/true_num_bins))
             remainder = gv.num_walkers-target_num_walkers*true_num_bins
             # reset ball_to_walkers
             ball_to_walkers[tuple(ball_center)] = []
 
-            for j, bin_index in enumerate(bins):
+            for nth_bin, bin_index in enumerate(bins):
                 new_weights = []
                 new_indices = []
                 new_num_walkers = 0
                 # add the remaining walkers to the very last bin if there are any
-                if remainder != 0 and j == (true_num_bins-1):
+                if remainder != 0 and nth_bin == (true_num_bins-1):
                     target_num_walkers += remainder
 
-                weights_bin = [float]*num_walkers_bin[j]
-                indices_bin = [int]*num_walkers_bin[j]
+                weights_bin = [float]*num_walkers_bin[nth_bin]
+                indices_bin = [int]*num_walkers_bin[nth_bin]
 
                 if gv.enhanced_sampling_flag == 0:
                     weights_bin = initial_weights
                     indices_bin = initial_indices
 
                 elif gv.enhanced_sampling_flag == 1:
-                    l = 0
-                    for k in initial_indices:
-                        distance = temp_walker_list[k].distance_from_center
+                    k = 0
+                    for j in initial_indices:
+                        distance = temp_walker_list[j].distance_from_center
                         if bin_index == 0:
                             if distance <= std:
-                                weights_bin[l] = temp_walker_list[k].weight
-                                indices_bin[l] = temp_walker_list[k].global_index
-                                l += 1
+                                weights_bin[k] = temp_walker_list[j].weight
+                                indices_bin[k] = temp_walker_list[j].global_index
+                                k += 1
                         elif bin_index == num_bins-1:
-                            if (bin_index+1)*std < distance <= gv.radius:
-                                weights_bin[l] = temp_walker_list[k].weight
-                                indices_bin[l] = temp_walker_list[k].global_index
-                                l += 1
+                            if bin_index*std < distance:
+                                weights_bin[k] = temp_walker_list[j].weight
+                                indices_bin[k] = temp_walker_list[j].global_index
+                                k += 1
                         else:
                             if bin_index*std < distance <= (bin_index+1)*std:
-                                weights_bin[l] = temp_walker_list[k].weight
-                                indices_bin[l] = temp_walker_list[k].global_index
-                                l += 1
+                                weights_bin[k] = temp_walker_list[j].weight
+                                indices_bin[k] = temp_walker_list[j].global_index
+                                k += 1
                 
                 total_weight = sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
@@ -441,12 +443,12 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             os.chdir(gv.main_directory + '/WE')
                             os.system('rm -rf walker' + str(y))
 
-                if j == 0:  # reset balls
+                if nth_bin == 0:  # reset balls
                     balls[current_ball][gv.num_cvs] = 0
-                for k, global_index in enumerate(new_indices):
+                for j, global_index in enumerate(new_indices):
                     coordinates = temp_walker_list[global_index].coordinates
                     if occupied_indices[global_index] == 0:
-                        walker_list[global_index].set(coordinates, new_weights[k])
+                        walker_list[global_index].set(coordinates, new_weights[j])
                         walker_list[global_index].ball_center = ball_center
                         walker_list[global_index].distance_from_center = \
                             calculate_distance_from_center(ball_center, walker_list[global_index].coordinates)
@@ -456,7 +458,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         os.chdir(directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
-                        f.write(str(new_weights[k]) + '\n')
+                        f.write(str(new_weights[j]) + '\n')
                         f.close()
                     else:
                         if len(vacant_walker_indices) > 0:
