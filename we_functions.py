@@ -348,22 +348,22 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                     true_num_bins = 0
                     bins = []
                     num_walkers_bin = []
-                    for nth_bin in range(num_bins):
+                    for nb in range(num_bins):
                         num_walkers = 0
-                        for j in initial_indices:
-                            distance = temp_walker_list[j].distance_from_center
-                            if nth_bin == 0:
+                        for ii in initial_indices:
+                            distance = temp_walker_list[ii].distance_from_center
+                            if nb == 0:
                                 if distance <= std:
                                     num_walkers += 1
-                            elif nth_bin == num_bins-1:
-                                if nth_bin*std < distance:
+                            elif nb == num_bins-1:
+                                if nb*std < distance:
                                     num_walkers += 1
                             else:
-                                if nth_bin*std < distance <= (nth_bin+1)*std:
+                                if nb*std < distance <= (nb+1)*std:
                                     num_walkers += 1
                         if num_walkers != 0:
                             true_num_bins += 1
-                            bins.append(nth_bin)
+                            bins.append(nb)
                             num_walkers_bin.append(num_walkers)
 
             target_num_walkers = int(np.floor(float(gv.num_walkers)/true_num_bins))
@@ -371,16 +371,16 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
             # reset ball_to_walkers
             ball_to_walkers[tuple(ball_center)] = []
 
-            for nth_bin, bin_index in enumerate(bins):
+            for b, bin_index in enumerate(bins):
                 new_weights = []
                 new_indices = []
                 new_num_walkers = 0
                 # add the remaining walkers to the very last bin if there are any
-                if remainder != 0 and nth_bin == (true_num_bins-1):
+                if remainder != 0 and b == (true_num_bins-1):
                     target_num_walkers += remainder
 
-                weights_bin = [float]*num_walkers_bin[nth_bin]
-                indices_bin = [int]*num_walkers_bin[nth_bin]
+                weights_bin = [float]*num_walkers_bin[b]
+                indices_bin = [int]*num_walkers_bin[b]
 
                 if gv.enhanced_sampling_flag == 0:
                     weights_bin = initial_weights
@@ -443,12 +443,13 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             os.chdir(gv.main_directory + '/WE')
                             os.system('rm -rf walker' + str(y))
 
-                if nth_bin == 0:  # reset balls
+                if b == 0:  # reset balls
                     balls[current_ball][gv.num_cvs] = 0
-                for j, global_index in enumerate(new_indices):
+                for ni, global_index in enumerate(new_indices):
                     coordinates = temp_walker_list[global_index].coordinates
                     if occupied_indices[global_index] == 0:
-                        walker_list[global_index].set(coordinates, new_weights[j])
+                        walker_list[global_index].set(coordinates, new_weights[ni])
+                        walker_list[global_index].global_index = global_index
                         walker_list[global_index].ball_center = ball_center
                         walker_list[global_index].distance_from_center = \
                             calculate_distance_from_center(ball_center, walker_list[global_index].coordinates)
@@ -458,7 +459,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         os.chdir(directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
-                        f.write(str(new_weights[j]) + '\n')
+                        f.write(str(walker_list[global_index].weight) + '\n')
                         f.close()
                     else:
                         if len(vacant_walker_indices) > 0:
