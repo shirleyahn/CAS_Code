@@ -43,7 +43,9 @@ def set_parameters(input_parameter_file):
         gv.last_walker = int(f.readline())
 
     ball_volume = (np.pi**(gv.num_cvs/2)*gv.radius**gv.num_cvs)/special.gamma((gv.num_cvs/2)+1)
-    gv.max_num_balls = int(np.floor((gv.upper_bound-gv.lower_bound)**gv.num_cvs/ball_volume))
+    gv.max_num_balls = 0
+    if ball_volume != 0.0:
+        gv.max_num_balls = int(np.floor((gv.upper_bound-gv.lower_bound)**gv.num_cvs/ball_volume))
     if gv.max_num_balls > gv.num_balls_limit or gv.max_num_balls < gv.num_balls_limit*1e-2:
         gv.max_num_balls = gv.num_balls_limit
     print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
