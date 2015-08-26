@@ -26,7 +26,7 @@ def set_parameters(input_parameter_file):
         gv.static_threshold_flag = int(f.readline())
         f.readline()
         gv.threshold = float(f.readline())
-        gv.property = int(f.readline())
+        gv.property_to_keep_track = int(f.readline())
         gv.enhanced_sampling_flag = int(f.readline())
         gv.num_balls_limit = int(f.readline())
         f.readline()
@@ -270,13 +270,13 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         distance = distance_from_center
                         balls_key = j
 
-            if gv.property < 0:
-                property = weight
+            if gv.property_to_keep_track < 0:
+                property_to_keep_track = weight
             else:
-                property = new_coordinates[gv.property]
+                property_to_keep_track = new_coordinates[gv.property_to_keep_track]
             # walker is inside some ball or if we need to resample less and the weight is less or greater than threshold
-            if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and property < gv.threshold) \
-                    or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and property > gv.threshold):
+            if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and property_to_keep_track < gv.threshold) \
+                    or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and property_to_keep_track > gv.threshold):
                 balls[balls_key, gv.num_cvs] += 1
                 ball_center = balls[balls_key][:-1].tolist()
                 distance_from_center = calculate_distance_from_center(ball_center, new_coordinates)
@@ -295,10 +295,10 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 center_num_balls.append(1)
                 balls = np.append(balls, [np.asarray(center_num_balls)], axis=0)
                 gv.current_num_balls += 1
-            if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0 and property > new_threshold:
-                new_threshold = property
-            elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1 and property < new_threshold:
-                new_threshold = property
+            if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0 and property_to_keep_track > new_threshold:
+                new_threshold = property_to_keep_track
+            elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1 and property_to_keep_track < new_threshold:
+                new_threshold = property_to_keep_track
 
         # finally, write the new ball on the trajectory file
         ball_center = temp_walker_list[i].ball_center
@@ -362,6 +362,12 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             true_num_bins += 1
                             bins.append(nb)
                             num_walkers_bin.append(num_walkers)
+                    if true_num_bins <= 1:
+                        num_bins = 1
+                        true_num_bins = 1
+                        bins = [0]
+                        num_walkers_bin = [len(initial_indices)]
+                        std = 0.0
 
             target_num_walkers = int(np.floor(float(gv.num_walkers)/true_num_bins))
             remainder = gv.num_walkers-target_num_walkers*true_num_bins

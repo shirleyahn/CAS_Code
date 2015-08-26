@@ -9,7 +9,7 @@ global resample_less_flag
 global less_or_greater_flag
 global static_threshold_flag
 global threshold
-global property
+global property_to_keep_track
 global enhanced_sampling_flag
 global num_balls_limit
 global radius
