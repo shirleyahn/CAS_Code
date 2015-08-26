@@ -51,20 +51,23 @@ def set_parameters(input_parameter_file):
 
 
 def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers, vacant_walker_indices):
-    # initial values obtained from input_initial_values_file
-    initial_values = [None]*gv.num_cvs
-    f = open(input_initial_values_file, 'r')
-    for i in range(gv.num_cvs):
-        initial_values[i] = float(f.readline())
     for i in range(len(walker_list)):
-        walker_list[i] = walker.Walker([-1000.0]*gv.num_cvs, i, [-1000.0]*gv.num_cvs, 0.0, 0, 0.0)
+        walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, i, [-1000.0] * gv.num_cvs, 0.0, 0, 0.0)
 
     if gv.flag == 0:  # new simulation
+        initial_weight = 1.0/(gv.num_walkers*gv.num_occupied_balls)
+        f = open(input_initial_values_file, 'r')
+        for n in range(gv.num_occupied_balls):
+            initial_values = [None] * gv.num_cvs
+            for i in range(gv.num_cvs):
+                initial_values[i] = float(f.readline())
+            for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
+                walker_list[i].set(initial_values, initial_weight)
+        f.close()
+
         os.system('mkdir WE')
         os.chdir(gv.main_directory+'/WE')
-        initial_weight = 1.0/(gv.num_walkers*gv.num_occupied_balls)
         for i in range(gv.num_walkers*gv.num_occupied_balls):
-            walker_list[i].set(initial_values, initial_weight)
             walker_directory = gv.main_directory + '/WE/walker' + str(i)
             shutil.copytree(gv.initial_configuration_directory, walker_directory)
 
