@@ -308,7 +308,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         f.close()
 
     os.chdir(gv.main_directory + '/WE')
-    np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.3f')
+    np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.5f')
     if gv.static_threshold_flag == 0:
         gv.threshold = new_threshold
     return balls
@@ -461,7 +461,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         os.chdir(directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
-                        f.write(str(walker_list[global_index].weight) + '\n')
+                        f.write('% 1.20e' % new_weights[ni] + '\n')
                         f.close()
                     else:
                         if len(vacant_walker_indices) > 0:
@@ -478,7 +478,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         os.chdir(new_directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
-                        f.write(str(walker_list[new_index].weight) + '\n')
+                        f.write('% 1.20e' % walker_list[new_index].weight + '\n')
                         f.close()
                     balls[current_ball][gv.num_cvs] += 1
 
