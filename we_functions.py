@@ -409,7 +409,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                                 indices_bin[k] = temp_walker_list[j].global_index
                                 k += 1
                 
-                total_weight = sum(weights_bin)
+                total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
 
                 x = indices_bin.pop()
@@ -512,6 +512,8 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                 os.chdir(gv.main_directory + '/WE')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
+    while len(vacant_walker_indices) > 0:
+        vacant_walker_indices.pop()
     gv.num_occupied_balls = num_occupied_balls
 
 
@@ -522,8 +524,8 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
     for current_ball in range(balls.shape[0]):
         ball_center = balls[current_ball][:-1].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
-        total_weight += sum(weights)
-        ball_center.append(sum(weights))
+        total_weight += np.sum(weights)
+        ball_center.append(np.sum(weights))
         f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center)))
         f.write('\n')
         # reset walkers and number of walkers that belong in each ball
