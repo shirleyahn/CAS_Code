@@ -38,11 +38,8 @@ def set_parameters(input_parameter_file):
         gv.step_size = float(f.readline())
         gv.beta = float(f.readline())
         f.readline()
-        gv.initial_step_num = int(f.readline())
         gv.max_num_steps = int(f.readline())
         gv.num_occupied_balls = int(f.readline())
-        gv.first_walker = int(f.readline())
-        gv.last_walker = int(f.readline())
 
     ball_volume = (np.pi**(gv.num_cvs/2)*gv.radius**gv.num_cvs)/special.gamma((gv.num_cvs/2)+1)
     grid_volume = 1.0

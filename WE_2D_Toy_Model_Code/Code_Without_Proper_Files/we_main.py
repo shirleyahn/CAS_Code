@@ -1,5 +1,5 @@
 import sys
-main_directory = '/scratch/users/sahn1/WE_2D_Toy_Model'  # TODO: set main directory for WE simulation
+main_directory = '/Users/Ahn/Dropbox (Stanford Mechanics)/Hee Sun Shirley/WE_Enhanced_Sampling/WE_Code/WE_2D_Toy_Model_Code/Code_Without_Proper_Files'  # TODO: set main directory for WE simulation
 sys.path.append(main_directory)
 import os
 os.chdir(main_directory)
@@ -24,26 +24,18 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
     we_functions.initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers,
                             vacant_walker_indices)
 
-    for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
+    for step_num in range(gv.max_num_steps):
         # reset ball objects so that balls are newly created at every step
-        if gv.balls_flag == 0 and step_num != gv.initial_step_num:
+        if gv.balls_flag == 0 and step_num != 0:
             balls = np.zeros((1, gv.num_cvs+1))
             ball_to_walkers = {}
             gv.current_num_balls = 0
 
-        if gv.flag == 1 and step_num == gv.initial_step_num:
-            pass
-        else:
-            gv.first_walker = 0
-            gv.last_walker = gv.num_occupied_balls*gv.num_walkers-1
         print 'running   ' + str(step_num+1) + '-th step'
 
         # first, run simulation
         t0 = time()
-        if (gv.flag == 2 or gv.flag == 3) and step_num == gv.initial_step_num:
-            pass
-        else:
-            we_functions.m_simulation(walker_list)
+        we_functions.m_simulation(walker_list)
 
         # second, create balls and assign walkers to balls
         t1 = time()

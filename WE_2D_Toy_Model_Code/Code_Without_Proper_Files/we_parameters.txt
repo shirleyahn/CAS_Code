@@ -1,4 +1,4 @@
-/scratch/users/sahn1/WE_2D_Toy_Model
+/Users/Ahn/Dropbox (Stanford Mechanics)/Hee Sun Shirley/WE_Enhanced_Sampling/WE_Code/WE_2D_Toy_Model_Code/Code_Without_Proper_Files
 
 0
 1
@@ -19,11 +19,8 @@
 0.05
 10.0
 
-0
 100
 1
-0
-0
 
 ### the above lines are input for the following weighted ensemble simulation parameters ###
 main_directory
@@ -60,9 +57,5 @@ m_steps_per_step  # how many times the metropolis algorithm should be executed p
 step_size  # how large the step size should be for each walker
 beta  # inverse temperature
 
-initial_step_num  # initial_step_num should be changed from 0 when restarting a simulation.
 max_num_steps
-num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation. NOTE: when flag = 3, this
-                      should be equal to the highest walker number inside the WE folder
-first_walker  # only needed if flag = 1, otherwise 0
-last_walker  # only needed if flag = 1, otherwise 0
+num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation.

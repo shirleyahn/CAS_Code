@@ -17,11 +17,8 @@ global grid_dimensions
 global m_steps_per_step
 global step_size
 global beta
-global initial_step_num
 global max_num_steps
 global num_occupied_balls
-global first_walker
-global last_walker
 
 ###
 # parameters that are set by we_functions.py
