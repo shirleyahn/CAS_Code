@@ -78,8 +78,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
         os.system('mkdir WE')
         os.chdir(gv.main_directory+'/WE')
         for i in range(gv.num_walkers*gv.num_occupied_balls):
-            walker_directory = gv.main_directory + '/WE/walker' + str(i)
-            shutil.copytree(gv.initial_configuration_directory, walker_directory)
+            os.system('mkdir walker' + str(i))
 
     elif gv.flag == 1:  # restarting simulation in the middle of simulation
         for i in range(gv.num_walkers*gv.num_occupied_balls):
@@ -222,7 +221,7 @@ def m_simulation(walker_list):
         temp_x = walker_list[i].coordinates[0]
         temp_y = walker_list[i].coordinates[1]
         for j in range(gv.m_steps_per_step):
-            direction = np.random.randit(0, 4)
+            direction = np.random.randint(0, 4)
             if direction == 0:  # move to left
                 new_x = temp_x - gv.step_size
                 new_y = temp_y
@@ -246,6 +245,13 @@ def m_simulation(walker_list):
                     temp_x = new_x
                     temp_y = new_y
         walker_list[i].set([temp_x, temp_y])
+        new_coordinates = walker_list[i].coordinates
+        walker_directory = gv.main_directory + '/WE/walker' +str(i)
+        os.chdir(walker_directory)
+        f = open('trajectory.txt', 'a')
+        f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
+        f.write('\n')
+        f.close()
 
 
 def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
@@ -264,22 +270,10 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         os.chdir(walker_directory)
 
         # then, obtain new coordinates' values
-        if os.path.exists(walker_directory+'/coordinates.out'):
-            new_coordinates = np.loadtxt('coordinates.out')
-            new_coordinates = new_coordinates[2:].tolist()
-            rm_command = 'rm *.out'
-            os.system(rm_command)
-
-            # also, write the new coordinates' values  on the trajectory file
-            f = open('trajectory.txt', 'a')
-            f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
-            f.write('\n')
-            f.close()
-        else:
-            f = open('trajectory.txt', 'r')
-            new_coordinates = f.readlines()[-1].strip().split()
-            new_coordinates = [float(coordinate) for coordinate in new_coordinates]
-            f.close()
+        f = open('trajectory.txt', 'r')
+        new_coordinates = f.readlines()[-1].strip().split()
+        new_coordinates = [float(coordinate) for coordinate in new_coordinates]
+        f.close()
 
         initial_step_num = walker_list[i].initial_step_num
         weight = walker_list[i].weight
