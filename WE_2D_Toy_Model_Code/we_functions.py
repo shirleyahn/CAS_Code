@@ -1,6 +1,7 @@
 import numpy as np
 import walker
 import we_global_variables as gv
+import we_energy_function as ef
 from scipy import special
 import os
 import shutil
@@ -218,8 +219,33 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
 
 def m_simulation(walker_list):
     for i in range(gv.num_occupied_balls*gv.num_walkers):
+        temp_x = walker_list[i].coordinates[0]
+        temp_y = walker_list[i].coordinates[1]
         for j in range(gv.m_steps_per_step):
-            direction = np.random
+            direction = np.random.randit(0, 4)
+            if direction == 0:  # move to left
+                new_x = temp_x - gv.step_size
+                new_y = temp_y
+            elif direction == 1:  # move to right
+                new_x = temp_x + gv.step_size
+                new_y = temp_y
+            elif direction == 2:  # move to top
+                new_x = temp_x
+                new_y = temp_y + gv.step_size
+            else:  # move to bottom
+                new_x = temp_x
+                new_y = temp_y - gv.step_size
+            old_energy = ef.energy_function(temp_x, temp_y)
+            new_energy = ef.energy_function(new_x, new_y)
+            if new_energy - old_energy <= 0.0:  # accept move
+                temp_x = new_x
+                temp_y = new_y
+            else:
+                random_number = np.random.uniform(0.0, 1.0)
+                if random_number < np.exp(-(new_energy-old_energy)*gv.beta):  # accept move
+                    temp_x = new_x
+                    temp_y = new_y
+        walker_list[i].set([temp_x, temp_y])
 
 
 def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
