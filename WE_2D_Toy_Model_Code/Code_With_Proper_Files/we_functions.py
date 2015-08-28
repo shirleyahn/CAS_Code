@@ -25,15 +25,18 @@ def set_parameters(input_parameter_file):
         gv.less_or_greater_flag = int(f.readline())
         gv.static_threshold_flag = int(f.readline())
         f.readline()
-        gv.threshold = float(f.readline())
-        gv.property_to_keep_track = int(f.readline())
+        temp_list = f.readline().strip().split()
+        gv.threshold_values = [float(i) for i in temp_list]
+        temp_list = f.readline().strip().split()
+        gv.properties_to_keep_track = [int(i) for i in temp_list]
         gv.enhanced_sampling_flag = int(f.readline())
         gv.num_balls_limit = int(f.readline())
         f.readline()
         gv.radius = float(f.readline())
         gv.num_walkers = int(f.readline())
         gv.num_cvs = int(f.readline())
-        gv.grid_dimensions = f.readline().strip().split()
+        temp_list = f.readline().strip().split()
+        gv.grid_dimensions = [float(i) for i in temp_list]
         f.readline()
         gv.m_steps_per_step = int(f.readline())
         gv.step_size = float(f.readline())
@@ -49,7 +52,7 @@ def set_parameters(input_parameter_file):
     grid_volume = 1.0
     ii = 0
     for i in range(gv.num_cvs):
-        grid_volume *= (float(gv.grid_dimensions[ii+1])-float(gv.grid_dimensions[ii]))
+        grid_volume *= (gv.grid_dimensions[ii+1]-gv.grid_dimensions[ii])
         ii += 2
     gv.max_num_balls = 0
     if ball_volume != 0.0:
@@ -263,7 +266,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     start = 0  # indicates whether we are dealing with the very first walker or not
-    new_threshold = gv.threshold  # only needed if gv.static_threshold_flag = 0
+    new_threshold_values = gv.threshold_values  # only needed if gv.static_threshold_flag = 0
     for i in walker_indices:
         # first, go to walker directory i
         walker_directory = gv.main_directory + '/WE/walker' + str(i)
@@ -307,13 +310,25 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         distance = distance_from_center
                         balls_key = j
 
-            if gv.property_to_keep_track < 0:
-                property_to_keep_track = weight
-            else:
-                property_to_keep_track = new_coordinates[gv.property_to_keep_track]
-            # walker is inside some ball or if we need to resample less and the weight is less or greater than threshold
-            if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and property_to_keep_track < gv.threshold) \
-                    or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and property_to_keep_track > gv.threshold):
+            properties_to_keep_track = []
+            for i in range(len(gv.properties_to_keep_track)):
+                if gv.properties_to_keep_track[i] < 0:
+                    properties_to_keep_track.append(weight)
+                else:
+                    properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[i]])
+            bin_walker = 0
+            if gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0:
+                for i in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[i] < gv.threshold_values[i]:
+                        bin_walker += 1
+            elif gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1:
+                for i in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[i] > gv.threshold_values[i]:
+                        bin_walker += 1
+            # walker is inside some ball or if we need to resample less and the properties to keep track of are all less
+            # or greater than the threshold values
+            if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and bin_walker != 0) \
+                    or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and bin_walker != 0):
                 balls[balls_key, gv.num_cvs] += 1
                 ball_center = balls[balls_key][:-1].tolist()
                 distance_from_center = calculate_distance_from_center(ball_center, new_coordinates)
@@ -332,10 +347,15 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 center_num_balls.append(1)
                 balls = np.append(balls, [np.asarray(center_num_balls)], axis=0)
                 gv.current_num_balls += 1
-            if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0 and property_to_keep_track > new_threshold:
-                new_threshold = property_to_keep_track
-            elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1 and property_to_keep_track < new_threshold:
-                new_threshold = property_to_keep_track
+            # update threshold values if gv.static_threshold_flag = 0
+            if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0:
+                for i in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[i] > new_threshold_values[i]:
+                        new_threshold_values[i] = properties_to_keep_track[i]
+            elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1:
+                for i in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[i] < new_threshold_values[i]:
+                        new_threshold_values[i] = properties_to_keep_track[i]
 
         # finally, write the new ball on the trajectory file
         ball_center = temp_walker_list[i].ball_center
@@ -347,7 +367,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     os.chdir(gv.main_directory + '/WE')
     np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.5f')
     if gv.static_threshold_flag == 0:
-        gv.threshold = new_threshold
+        gv.threshold_values = new_threshold_values
     return balls
 
 

@@ -19,7 +19,7 @@ num_sim_walkers=16
 cd $MAIN_DIRECTORY
 output=$(cat bash_script_input_file.txt)
 first_walker=$(echo $output | awk '{$NF=""}1')
-second_walker=$(echo $output | cut -d'_' -f 2)
+last_walker=$(echo $output | cut -d'_' -f 2)
 
 # assume walkers run in separate directories, walker0, walker1, ...
 cd $WALKER_DIRECTORY
@@ -87,7 +87,11 @@ do
     echo 0 | ${GROMACS}/trjconv -s ../../init.gro -f run.xtc -b 10.0 -o run.xtc
     ${GROMACS}/g_angle -f run.xtc -n ../../dihedrals.ndx -ov -all -type dihedral
     tail -1 angaver.xvg > coordinates.out
-    echo 22 23 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx 
+    echo 24 27 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx 
+    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
+    echo 25 28 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
+    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
+    echo 26 29 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
     awk 'END {print $2*10}' mindist.xvg >> coordinates.out
     awk 'NR%2{printf $0" ";next;}1' coordinates.out > new_coordinates.out
     mv new_coordinates.out coordinates.out
