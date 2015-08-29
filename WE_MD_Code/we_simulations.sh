@@ -93,7 +93,7 @@ do
     awk 'END {print $2*10}' mindist.xvg >> coordinates.out
     echo 26 29 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
     awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    awk 'NR%2{printf $0" ";next;}1' coordinates.out > new_coordinates.out
+    awk '{printf $0" ";next;}' coordinates.out > new_coordinates.out
     mv new_coordinates.out coordinates.out
     rm -rf ang*
     rm -rf mindist*
