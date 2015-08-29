@@ -154,19 +154,19 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         balls_key = j
 
             properties_to_keep_track = []
-            for i in range(len(gv.properties_to_keep_track)):
-                if gv.properties_to_keep_track[i] < 0:
+            for k in range(len(gv.properties_to_keep_track)):
+                if gv.properties_to_keep_track[k] < 0:
                     properties_to_keep_track.append(weight)
                 else:
-                    properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[i]])
+                    properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
             bin_walker = 0
             if gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0:
-                for i in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[i] < gv.threshold_values[i]:
+                for m in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[m] < gv.threshold_values[m]:
                         bin_walker += 1
             elif gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1:
-                for i in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[i] > gv.threshold_values[i]:
+                for m in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[m] > gv.threshold_values[m]:
                         bin_walker += 1
             # walker is inside some ball or if we need to resample less and the properties to keep track of are all less
             # or greater than the threshold values
@@ -192,13 +192,13 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 gv.current_num_balls += 1
             # update threshold values if gv.static_threshold_flag = 0
             if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0:
-                for i in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[i] > new_threshold_values[i]:
-                        new_threshold_values[i] = properties_to_keep_track[i]
+                for n in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[n] > new_threshold_values[n]:
+                        new_threshold_values[n] = properties_to_keep_track[n]
             elif gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1:
-                for i in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[i] < new_threshold_values[i]:
-                        new_threshold_values[i] = properties_to_keep_track[i]
+                for n in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[n] < new_threshold_values[n]:
+                        new_threshold_values[n] = properties_to_keep_track[n]
 
     os.chdir(gv.main_directory + '/WE')
     np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.5f')
