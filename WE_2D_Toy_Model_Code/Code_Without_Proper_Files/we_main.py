@@ -16,7 +16,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
     # create python objects for walkers and balls
     walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
     temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
-    balls = np.zeros((1, gv.num_cvs+1))
+    balls = np.zeros((1, gv.num_cvs+2))
     ball_to_walkers = {}
 
     # create walkers and their directories
@@ -25,7 +25,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
     for step_num in range(gv.max_num_steps):
         # reset ball objects so that balls are newly created at every step
         if gv.balls_flag == 0 and step_num != 0:
-            balls = np.zeros((1, gv.num_cvs+1))
+            balls = np.zeros((1, gv.num_cvs+2))
             ball_to_walkers = {}
             gv.current_num_balls = 0
 
@@ -39,7 +39,11 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
         t1 = time()
         new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
-        # third, resample walkers for every ball
+        # third, calculate transition matrix
+        if step_num != 0:
+            we_functions.calculating_transition(step_num, temp_walker_list, balls)
+
+        # fourth, resample walkers for every ball
         we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
 
         # finally, output the results in text files

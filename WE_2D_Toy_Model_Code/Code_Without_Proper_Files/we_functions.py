@@ -4,7 +4,6 @@ import we_global_variables as gv
 import we_energy_function as ef
 from scipy import special
 import os
-import shutil
 import copy
 if gv.rate_flag == 1:
     import we_check_state_function
@@ -65,16 +64,17 @@ def set_parameters(input_parameter_file):
 
 def initialize(input_initial_values_file, walker_list):
     for i in range(len(walker_list)):
-        walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, i, [-1000.0] * gv.num_cvs, 0.0, 0, 0.0)
+        walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, [-1000.0] * gv.num_cvs, 0,
+                                       0.0, 0, 0.0, -1)
 
-    initial_weight = 1.0/(gv.num_walkers*gv.num_occupied_balls)
+    initial_weight = 1.0 / (gv.num_walkers * gv.num_occupied_balls)
     f = open(input_initial_values_file, 'r')
     for n in range(gv.num_occupied_balls):
         initial_values = [None] * gv.num_cvs
         for i in range(gv.num_cvs):
             initial_values[i] = float(f.readline())
         if gv.rate_flag == 1:
-            initial_state = we_check_state_function(initial_values)
+            initial_state = we_check_state_function.check_state_function(initial_values)
         for i in range(n * gv.num_walkers, (n + 1) * gv.num_walkers):
             walker_list[i].set(initial_values, initial_weight)
             if gv.rate_flag == 1:
@@ -86,8 +86,9 @@ def initialize(input_initial_values_file, walker_list):
 
 def m_simulation(walker_list):
     for i in range(gv.num_occupied_balls*gv.num_walkers):
-        temp_x = walker_list[i].coordinates[0]
-        temp_y = walker_list[i].coordinates[1]
+        previous_coordinates = walker_list[i].current_coordinates
+        temp_x = walker_list[i].current_coordinates[0]
+        temp_y = walker_list[i].current_coordinates[1]
         for j in range(gv.m_steps_per_step):
             direction = np.random.randint(0, 4)
             if direction == 0:  # move to left
@@ -113,6 +114,7 @@ def m_simulation(walker_list):
                     temp_x = new_x
                     temp_y = new_y
         walker_list[i].set([temp_x, temp_y])
+        walker_list[i].previous_coordinates = previous_coordinates
 
 
 def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
@@ -127,15 +129,16 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     start = 0  # indicates whether we are dealing with the very first walker or not
     new_threshold_values = gv.threshold_values  # only needed if gv.static_threshold_flag = 0
     for i in walker_indices:
-        new_coordinates = walker_list[i].coordinates
+        new_coordinates = walker_list[i].current_coordinates
         if gv.rate_flag == 1:
-            state = we_check_state_function(new_coordinates)
+            state = we_check_state_function.check_state_function(new_coordinates)
             if walker_list[i].state != -1 and state != -1 and walker_list[i].state != state:
                 flux[walker_list[i].state, state] += walker_list[i].weight
             elif walker_list[i].state != -1 and state == -1:
                 state = walker_list[i].state
         else:
             state = -1
+        previous_coordinates = walker_list[i].previous_coordinates
         initial_step_num = walker_list[i].initial_step_num
         weight = walker_list[i].weight
         inside = 0  # indicates whether we are dealing with the very first walker or not
@@ -145,28 +148,30 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             inside += 1
             ball_center = [coordinate for coordinate in new_coordinates]
             ball_to_walkers[tuple(ball_center)] = [i]
-            temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, 0.0, initial_step_num, weight, state)
-            center_num_balls = copy.deepcopy(ball_center)
-            center_num_balls.append(1)
-            balls[gv.current_num_balls] = np.asarray(center_num_balls)
+            temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, ball_center,
+                                                gv.current_num_balls, 0.0, initial_step_num, weight, state)
+            center_key_num = copy.deepcopy(ball_center)
+            center_key_num.append(gv.current_num_balls)
+            center_key_num.append(1)
+            balls[gv.current_num_balls] = np.asarray(center_key_num)
             gv.current_num_balls += 1
 
         distance = 0.0
-        balls_key = 0
+        ball_key = 0
         # otherwise, loop through all of the balls and find the ball that has a center nearest the walker
         if inside == 0:
             for j in range(balls.shape[0]):
-                ball_center = balls[j][:-1].tolist()
+                ball_center = balls[j][:-2].tolist()
                 distance_from_center = calculate_distance_from_center(ball_center, new_coordinates)
                 if distance_from_center <= gv.radius:
                     inside += 1
                 if distance == 0.0:
                     distance = distance_from_center
-                    balls_key = j
+                    ball_key = j
                 else:
                     if distance_from_center < distance:
                         distance = distance_from_center
-                        balls_key = j
+                        ball_key = j
 
             properties_to_keep_track = []
             for k in range(len(gv.properties_to_keep_track)):
@@ -187,11 +192,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             # or greater than the threshold values
             if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and bin_walker != 0) \
                     or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and bin_walker != 0):
-                balls[balls_key, gv.num_cvs] += 1
-                ball_center = balls[balls_key][:-1].tolist()
+                balls[ball_key, gv.num_cvs] += 1
+                ball_center = balls[ball_key][:-2].tolist()
                 distance_from_center = calculate_distance_from_center(ball_center, new_coordinates)
-                temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, distance_from_center,
-                                                    initial_step_num, weight, state)
+                temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, ball_center,
+                                                    balls[ball_key][-2], distance_from_center, initial_step_num,
+                                                    weight, state)
                 if tuple(ball_center) in ball_to_walkers:
                     ball_to_walkers[tuple(ball_center)].append(i)
                 else:
@@ -200,10 +206,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             else:
                 ball_center = [coordinate for coordinate in new_coordinates]
                 ball_to_walkers[tuple(ball_center)] = [i]
-                temp_walker_list[i] = walker.Walker(new_coordinates, i, ball_center, 0.0, initial_step_num, weight, state)
-                center_num_balls = copy.deepcopy(ball_center)
-                center_num_balls.append(1)
-                balls = np.append(balls, [np.asarray(center_num_balls)], axis=0)
+                temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, ball_center,
+                                                    gv.current_num_balls, 0.0, initial_step_num, weight, state)
+                center_key_num = copy.deepcopy(ball_center)
+                center_key_num.append(gv.current_num_balls)
+                center_key_num.append(1)
+                balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
                 gv.current_num_balls += 1
             # update threshold values if gv.static_threshold_flag = 0
             if gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0:
@@ -224,6 +232,31 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     return balls
 
 
+def calculating_transition(step_num,  temp_walker_list, balls):
+    transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
+    for i in range(gv.num_occupied_balls*gv.num_walkers):
+        previous_coordinates = temp_walker_list[i].previous_coordinates
+        inside = 0
+        distance = 0.0
+        balls_key = 0
+        for j in range(balls.shape[0]):
+            ball_center = balls[j][:-2].tolist()
+            distance_from_center = calculate_distance_from_center(ball_center, previous_coordinates)
+            if distance_from_center <= gv.radius:
+                inside += 1
+            if distance == 0.0:
+                distance = distance_from_center
+                balls_key = j
+            else:
+                if distance_from_center < distance:
+                    distance = distance_from_center
+                    balls_key = j
+        if inside != 0:
+            transition_matrix[balls_key][temp_walker_list[i].balls_key] += temp_walker_list[i].weight
+    os.chdir(gv.main_directory + '/WE')
+    np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.5e')
+
+
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.num_occupied_balls*gv.num_walkers)]
@@ -233,7 +266,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
     for current_ball in range(balls.shape[0]):
         if int(balls[current_ball][gv.num_cvs]) > 0:
             num_occupied_balls += 1
-            ball_center = balls[current_ball][:-1].tolist()
+            ball_center = balls[current_ball][:-2].tolist()
             initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
             initial_weights_array = np.array(initial_weights)
             walker_indices = np.argsort(-initial_weights_array)
@@ -355,14 +388,18 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                             vacant_walker_indices.append(y)
 
                 if b == 0:  # reset balls
-                    balls[current_ball][gv.num_cvs] = 0
+                    balls[current_ball][gv.num_cvs+1] = 0
                 for ni, global_index in enumerate(new_indices):
-                    coordinates = temp_walker_list[global_index].coordinates
+                    previous_coordinates = temp_walker_list[global_index].previous_coordinates
+                    current_coordinates = temp_walker_list[global_index].current_coordinates
+                    ball_key = temp_walker_list[global_index].ball_key
                     if occupied_indices[global_index] == 0:
-                        walker_list[global_index].set(coordinates, new_weights[ni])
+                        walker_list[global_index].set(current_coordinates, new_weights[ni])
+                        walker_list[global_index].previous_coordinates = previous_coordinates
                         walker_list[global_index].ball_center = ball_center
                         walker_list[global_index].distance_from_center = \
-                            calculate_distance_from_center(ball_center, coordinates)
+                            calculate_distance_from_center(ball_center, current_coordinates)
+                        walker_list[global_index].ball_key = ball_key
                         occupied_indices[global_index] = 1
                         ball_to_walkers[tuple(ball_center)].append(global_index)
                     else:
@@ -405,15 +442,15 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
     total_weight = 0.0
     f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')
     for current_ball in range(balls.shape[0]):
-        ball_center = balls[current_ball][:-1].tolist()
+        ball_center = balls[current_ball][:-2].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
         total_weight += np.sum(weights)
         ball_center.append(np.sum(weights))
         f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center)))
         f.write('\n')
         # reset walkers and number of walkers that belong in each ball
-        balls[current_ball][gv.num_cvs] = 0
-        ball_to_walkers[tuple(ball_center[:-1])] = []
+        balls[current_ball][gv.num_cvs+1] = 0
+        ball_to_walkers[tuple(ball_center)] = []
     f.close()
 
     # verify that total weight of all balls is 1.0
