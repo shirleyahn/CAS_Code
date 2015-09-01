@@ -6,8 +6,7 @@ from scipy import special
 import os
 import shutil
 import copy
-if gv.rate_flag == 1:
-    import we_check_state_function
+import we_check_state_function
 
 
 def calculate_distance_from_center(center, values):
