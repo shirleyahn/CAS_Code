@@ -41,7 +41,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
 
         # third, calculate transition matrix
         if step_num != 0:
-            we_functions.calculating_transition(step_num, temp_walker_list, balls)
+            we_functions.calculating_transition(step_num, temp_walker_list, new_balls)
 
         # fourth, resample walkers for every ball
         we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)

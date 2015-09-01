@@ -13,6 +13,8 @@ def calculate_distance_from_center(center, values):
     distance = 0.0
     for i in range(len(center)):
         distance += (values[i]-center[i])**2
+    if abs(distance) < 1.0e-12:
+        distance = 0.0
     return np.sqrt(distance)
 
 
@@ -300,6 +302,10 @@ def m_simulation(walker_list):
                 if random_number < np.exp(-(new_energy-old_energy)*gv.beta):  # accept move
                     temp_x = new_x
                     temp_y = new_y
+        if abs(temp_x) < 1.0e-12:
+            temp_x = 0.0 
+        if abs(temp_y) < 1.0e-12:
+            temp_y = 0.0 
         walker_list[i].set([temp_x, temp_y])
         walker_list[i].previous_coordinates = previous_coordinates
         new_coordinates = walker_list[i].current_coordinates
@@ -397,7 +403,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             # or greater than the threshold values
             if inside != 0 or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 0 and bin_walker != 0) \
                     or (gv.resample_less_flag == 1 and gv.less_or_greater_flag == 1 and bin_walker != 0):
-                balls[ball_key, gv.num_cvs] += 1
+                balls[ball_key][gv.num_cvs+1] += 1
                 current_ball_center = balls[ball_key][:-2].tolist()
                 distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
@@ -455,7 +461,7 @@ def calculating_transition(step_num,  temp_walker_list, balls):
         previous_coordinates = temp_walker_list[i].previous_ball_center
         inside = 0
         distance = 0.0
-        balls_key = 0
+        ball_key = 0
         for j in range(balls.shape[0]):
             ball_center = balls[j][:-2].tolist()
             distance_from_center = calculate_distance_from_center(ball_center, previous_coordinates)
@@ -463,13 +469,13 @@ def calculating_transition(step_num,  temp_walker_list, balls):
                 inside += 1
             if distance == 0.0:
                 distance = distance_from_center
-                balls_key = j
+                ball_key = j
             else:
                 if distance_from_center < distance:
                     distance = distance_from_center
-                    balls_key = j
+                    ball_key = j
         if inside != 0:
-            transition_matrix[balls_key][temp_walker_list[i].balls_key] += temp_walker_list[i].weight
+            transition_matrix[ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
     os.chdir(gv.main_directory + '/WE')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.5e')
 
@@ -480,7 +486,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
     occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers, int)
     excess_index = gv.num_occupied_balls*gv.num_walkers
     for current_ball in range(balls.shape[0]):
-        if int(balls[current_ball][gv.num_cvs]) > 0:
+        if int(balls[current_ball][gv.num_cvs+1]) > 0:
             num_occupied_balls += 1
             current_ball_center = balls[current_ball][:-2].tolist()
             initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(current_ball_center)]]
