@@ -15,15 +15,15 @@
 0.1
 100
 2
--1.0 1.0 -1.0 1.0
+-1.5 1.5 -0.5 1.25
 
 5
 0.05
 10.0
-1
+0
 
 100
-1
+2
 
 ### the above lines are input for the following weighted ensemble simulation parameters ###
 main_directory

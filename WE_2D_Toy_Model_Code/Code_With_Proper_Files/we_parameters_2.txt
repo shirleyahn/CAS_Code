@@ -1,5 +1,6 @@
-/Users/Ahn/Dropbox (Stanford Mechanics)/Hee Sun Shirley/WE_Enhanced_Sampling/WE_Code/WE_2D_Toy_Model_Code/Code_Without_Proper_Files
+/scratch/users/sahn1/WE_2D_Toy_Model
 
+0
 0
 1
 1
@@ -15,19 +16,24 @@
 0.1
 100
 2
--1.0 1.0 -1.0 1.0
+-1.5 1.5 -0.5 1.25
 
 5
 0.05
 10.0
-1
+0
 
+0
 100
-1
+2
+0
+0
 
 ### the above lines are input for the following weighted ensemble simulation parameters ###
 main_directory
 
+flag  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation from middle of
+        binning. 3: restarting simulation from middle of resampling.
 balls_flag  # 0: create new balls at each step. 1: keep created balls.
 resample_less_flag  # 0: off. 1: on. resample_less entails sorting walkers' weights in ascending order (rare walkers
                       first) and binning walkers that have some property (e.g. weight, some collective variable like
@@ -66,5 +72,9 @@ step_size  # how large the step size should be for each walker
 beta  # inverse temperature
 pbc  # 0: off. 1: periodic boundary conditions on.
 
+initial_step_num  # initial_step_num should be changed from 0 when restarting a simulation.
 max_num_steps
-num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation.
+num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation. NOTE: when flag = 3, this
+                      should be equal to the highest walker number inside the WE folder
+first_walker  # only needed if flag = 1, otherwise 0
+last_walker  # only needed if flag = 1, otherwise 0
