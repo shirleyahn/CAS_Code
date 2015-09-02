@@ -6,6 +6,7 @@ import os
 import shutil
 import copy
 import we_check_state_function
+import matplotlib.pyplot as plt
 
 
 def calculate_distance_from_center(center, values):
@@ -411,18 +412,15 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     return balls
 
 
-def calculating_transition(step_num,  temp_walker_list, balls):
-    transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
+def spectral_clustering(step_num,  temp_walker_list, balls):
+    affinity_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.num_occupied_balls*gv.num_walkers):
         previous_coordinates = temp_walker_list[i].previous_ball_center
-        inside = 0
         distance = 0.0
         ball_key = 0
         for j in range(balls.shape[0]):
             ball_center = balls[j][:-2].tolist()
             distance_from_center = calculate_distance_from_center(ball_center, previous_coordinates)
-            if distance_from_center <= gv.radius:
-                inside += 1
             if distance == 0.0:
                 distance = distance_from_center
                 ball_key = j
@@ -430,10 +428,22 @@ def calculating_transition(step_num,  temp_walker_list, balls):
                 if distance_from_center < distance:
                     distance = distance_from_center
                     ball_key = j
-        if inside != 0:
-            transition_matrix[ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
+        affinity_matrix[temp_walker_list[i].ball_key][ball_key] += temp_walker_list[i].weight/2.0
+        affinity_matrix[ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight/2.0
+    degree_matrix = np.zeros((balls.shape[0], balls.shape[0]))
+    for i in range(balls.shape[0]):
+        degree_matrix[i][i] = np.sum(affinity_matrix[i])
+    laplacian_matrix = degree_matrix - affinity_matrix
+    final_matrix = np.dot(np.linalg.inv(degree_matrix), laplacian_matrix)
+    eigenvalues, eigenvectors = np.linalg.eig(final_matrix)
+    plt.plot(np.sort(eigenvalues),'ro')
+    plt.savefig('eigenvalues_' + str(step_num+1) + '.png')
+    plt.close()
     os.chdir(gv.main_directory + '/WE')
-    np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.5e')
+    np.savetxt('affinity_matrix_' + str(step_num+1) + '.txt', affinity_matrix, fmt=' %1.20e')
+    np.savetxt('degree_matrix_' + str(step_num+1) + '.txt', degree_matrix, fmt=' %1.20e')
+    np.savetxt('laplacian_matrix_' + str(step_num+1) + '.txt', laplacian_matrix, fmt=' %1.20e')
+    np.savetxt('final_matrix_' + str(step_num+1) + '.txt', final_matrix, fmt=' %1.20e')
 
 
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices):

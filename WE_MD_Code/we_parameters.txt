@@ -45,7 +45,7 @@ less_or_greater_flag  # 0: criteria for binning walkers is if the walkers have s
                         -1: if resample_less_flag = 0.
 static_threshold_flag  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
                          current value is set as the threshold for the next step. 1: on, initial threshold is kept
-                         throughout the simulation.
+                         throughout the simulation. -1: if resample_less_flag = 0.
 threshold_values  # if some properties of the walker have values less or greater than the threshold values, then it is
                     binned to the nearest existing ball.
 properties_to_keep_track  # properties of the walker that are compared against the threshold values when

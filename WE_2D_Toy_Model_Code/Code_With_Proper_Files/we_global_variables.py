@@ -24,6 +24,7 @@ global grid_dimensions
 global m_steps_per_step
 global step_size
 global beta
+global pbc
 
 global initial_step_num
 global max_num_steps

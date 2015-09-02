@@ -23,6 +23,7 @@ global grid_dimensions
 global m_steps_per_step
 global step_size
 global beta
+global pbc
 
 global max_num_steps
 global num_occupied_balls

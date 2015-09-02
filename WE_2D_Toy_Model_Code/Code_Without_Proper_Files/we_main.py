@@ -39,9 +39,9 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
         t1 = time()
         new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
-        # third, calculate transition matrix
+        # third, perform spectral clustering
         if step_num != 0:
-            we_functions.calculating_transition(step_num, temp_walker_list, new_balls)
+            we_functions.spectral_clustering(step_num, temp_walker_list, new_balls)
 
         # fourth, resample walkers for every ball
         we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
