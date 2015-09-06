@@ -539,8 +539,8 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                         occupied_indices[global_index] = 1
                         initial_step_num = walker_list[global_index].initial_step_num
                         walker_list[global_index].copy_walker(temp_walker_list[global_index])
-                        walker_list.initial_step_num = initial_step_num
-                        walker_list.weight = new_weights[ni]
+                        walker_list[global_index].initial_step_num = initial_step_num
+                        walker_list[global_index].weight = new_weights[ni]
                         ball_to_walkers[tuple(current_ball_center)].append(global_index)
                     else:
                         if len(vacant_walker_indices) > 0:
