@@ -25,6 +25,8 @@ global step_size
 global beta
 global pbc
 
+global sc_start
+global sc_steps
 global max_num_steps
 global num_occupied_balls
 

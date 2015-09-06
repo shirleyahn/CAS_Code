@@ -27,6 +27,8 @@ global beta
 global pbc
 
 global initial_step_num
+global sc_start
+global sc_steps
 global max_num_steps
 global num_occupied_balls
 global first_walker

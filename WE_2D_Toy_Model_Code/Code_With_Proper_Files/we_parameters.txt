@@ -24,7 +24,9 @@
 1
 
 0
-100
+50
+50
+200
 1
 0
 0
@@ -73,6 +75,8 @@ beta  # inverse temperature
 pbc  # 0: off. 1: periodic boundary conditions on.
 
 initial_step_num  # initial_step_num should be changed from 0 when restarting a simulation.
+sc_start  # step number to start spectral clustering
+sc_steps  # how many steps to use for spectral clustering
 max_num_steps
 num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation. NOTE: when flag = 3, this
                       should be equal to the highest walker number inside the WE folder

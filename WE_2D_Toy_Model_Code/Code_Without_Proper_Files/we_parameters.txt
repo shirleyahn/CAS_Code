@@ -22,7 +22,9 @@
 10.0
 1
 
-100
+50
+50
+101
 1
 
 ### the above lines are input for the following weighted ensemble simulation parameters ###
@@ -66,5 +68,7 @@ step_size  # how large the step size should be for each walker
 beta  # inverse temperature
 pbc  # 0: off. 1: periodic boundary conditions on.
 
+sc_start  # step number to start spectral clustering
+sc_steps  # how many steps to use for spectral clustering
 max_num_steps
 num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation.
