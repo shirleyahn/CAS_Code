@@ -14,6 +14,11 @@ class Walker:
         self.weight = float(weight)
         self.state = int(state)
 
+    def set(self, current_coordinates, weight=0.0):
+        self.current_coordinates = current_coordinates
+        if weight > 0.0:
+            self.weight = float(weight)
+
     def copy_walker(self, some_walker):
         self.previous_coordinates = some_walker.previous_coordinates
         self.current_coordinates = some_walker.current_coordinates
