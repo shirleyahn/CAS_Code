@@ -4,18 +4,13 @@
 global main_directory
 global initial_configuration_directory
 
-global flag
+global simulation_flag
 global balls_flag
-global resample_less_flag
+global sorting_flag
 global rate_flag
 global num_states
-
-global less_or_greater_flag
-global static_threshold_flag
-global threshold_values
-global properties_to_keep_track
-
 global enhanced_sampling_flag
+
 global num_balls_limit
 global radius
 global num_walkers
@@ -24,12 +19,20 @@ global lower_bound
 global upper_bound
 
 global initial_step_num
-global sc_start
-global sc_steps
 global max_num_steps
 global num_occupied_balls
 global first_walker
 global last_walker
+
+global less_or_greater_flag
+global static_threshold_flag
+global threshold_values
+global properties_to_keep_track
+
+global sc_start
+global sc_steps
+global evalue_threshold
+global timestep
 
 ###
 # parameters that are set by we_functions.py

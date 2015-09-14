@@ -1,74 +1,84 @@
-/Users/Ahn/Dropbox (Stanford Mechanics)/Hee Sun Shirley/WE_Enhanced_Sampling/WE_Code/WE_2D_Toy_Model_Code/Code_Without_Proper_Files
+/scratch/users/sahn1/WE_2D_Toy_Model
 
 0
 1
 1
 2
+2
 
-0
-1
-1.0e-100
--1
-
-0
 100000
 0.1
 100
 2
 -1.5 1.5 -0.5 1.25
 
+200
+1
+
 5
 0.05
 10.0
-0
+1
 
-50
-50
-101
-2
+0
+1
+1.0e-100
+-1
 
 ### the above lines are input for the following weighted ensemble simulation parameters ###
 main_directory
 
 balls_flag  # 0: create new balls at each step. 1: keep created balls.
-resample_less_flag  # 0: off. 1: on. resample_less entails sorting walkers' weights in ascending order (rare walkers
-                      first) and binning walkers that have some property (e.g. weight, some collective variable like
-                      distance) with value less or greater than the threshold to the nearest existing ball.
+sorting_flag  # 0: sort walkers' weights in descending order (most probable walkers first). 1: sort walkers' weights in
+                ascending order (rare walkers first).
 rate_flag  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
              determined by we_check_state_function.py.
 num_states  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
+enhanced_sampling_flag  # 0: off. 1: sub-binning balls by standard deviation distance from center of ball. 2: binning
+                          walkers if the walkers have some property less or greater than threshold. 3: spectral
+                          clustering. 4: flux (to-do).
 
-less_or_greater_flag  # 0: criteria for binning walkers is if the walkers have some property less than the threshold.
-                        1: criteria for binning walkers is if the walkers have some property greater than the threshold.
-                        -1: if resample_less_flag = 0.
-static_threshold_flag  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
-                         current value is set as the threshold for the next step. 1: on, initial threshold is kept
-                         throughout the simulation. -1: if resample_less_flag = 0.
-threshold_values  # if some properties of the walker have values less or greater than the threshold values, then it is
-                    binned to the nearest existing ball.
-properties_to_keep_track  # properties of the walker that are compared against the threshold values when
-                            resample_less_flag = 1. this can be weight and/or some collective variable(s). if one of
-                            them is weight, then type -1. otherwise type the indices of the collective variable, e.g. if
-                            there are 3 collective variables and you would like to keep track of the last one, type 2
-                            (index starts from 0). if more than one property is kept track of, then type them
-                            sequentially separated by a space, e.g. -1 2.
-
-enhanced_sampling_flag  # 0: off. 1: sub-binning balls by standard deviation distance from center of ball. 2: . 3: .
 num_balls_limit  # limit is set depending on the available memory. parameter needed in case the calculated max_num_balls
                    is greater or too much smaller than the limit.
 radius  # radius can be changed in the middle of the simulation.
 num_walkers  # num_walkers should be fixed.
-num_cvs  # number of collective variables (num_cvs) should be fixed as 2 since the metropolis algorithm implemented only 
+num_cvs  # number of collective variables (num_cvs) should be fixed as 2 since the metropolis algorithm implemented only
            works for 2D case.
-grid_dimensions  # since num_cvs = 2, then type x_lower_bound x_upper_bound y_lower_bound y_upper_bound separated by one 
+grid_dimensions  # since num_cvs = 2, then type x_lower_bound x_upper_bound y_lower_bound y_upper_bound separated by one
                    space with appropriate values, i.e. -1.0 1.0 -1.0 1.0
+
+max_num_steps  # maximum number of steps for the simulation.
+num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation. NOTE: when simulation_flag = 3,
+                      this should be equal to the highest walker number inside the WE folder
 
 m_steps_per_step  # how many times the metropolis algorithm should be executed per step
 step_size  # how large the step size should be for each walker
 beta  # inverse temperature
 pbc  # 0: off. 1: periodic boundary conditions on.
 
+### for the next four lines, if enhanced_sampling_flag = 2 ###
+less_or_greater_flag  # 0: criteria for binning walkers is if the walkers have some property LESS than the threshold.
+                        1: criteria for binning walkers is if the walkers have some property GREATER than the threshold.
+static_threshold_flag  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
+                         current value is set as the threshold for the next step. 1: on, initial threshold is kept
+                         throughout the simulation.
+threshold_values  # if some properties of the walker have values less or greater than the threshold values, then it is
+                    binned to the nearest existing ball.
+properties_to_keep_track  # properties of the walker that are compared against the threshold values. this can be weight
+                            and/or some collective variable(s). if one of them is weight, then type -1. otherwise type
+                            the indices of the collective variable, e.g. if there are 3 collective variables and you
+                            would like to keep track of the last one, type 2
+                            (index starts from 0). if more than one property is kept track of, then type them
+                            sequentially separated by a space, e.g. -1 2.
+
+see above as an example.
+
+### for the next three lines, if enhanced_sampling flag == 3 ###
 sc_start  # step number to start spectral clustering
 sc_steps  # how many steps to use for spectral clustering
-max_num_steps
-num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation.
+evalue_threshold  # highest eigenvalue that will be used to define a cluster
+
+as an example,
+50
+10
+0.8

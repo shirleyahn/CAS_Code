@@ -1,12 +1,12 @@
-import sys
-main_directory = '/Users/Ahn/Dropbox (Stanford Mechanics)/Hee Sun Shirley/WE_Enhanced_Sampling/WE_Code/WE_2D_Toy_Model_Code/Code_Without_Proper_Files'  # TODO: set main directory for WE simulation
-sys.path.append(main_directory)
-import os
-os.chdir(main_directory)
 import numpy as np
+from time import time
+import os
+import sys
+main_directory = '/scratch/users/sahn1/WE_2D_Toy_Model'  # TODO: set main directory for WE simulation
+sys.path.append(main_directory)
+os.chdir(main_directory)
 import we_global_variables as gv
 import we_functions
-from time import time
 
 
 def weighted_ensemble_simulation(input_parameters_file, input_initial_values_file):
@@ -39,12 +39,15 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
         t1 = time()
         new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
-        # third, perform spectral clustering
-        if step_num == gv.sc_start:
+        # third, perform spectral clustering if enhanced_sampling_flag = 3
+        if gv.enhanced_sampling_flag == 3 and step_num == gv.sc_start:
             gv.transition_matrix = np.zeros((new_balls.shape[0], new_balls.shape[0]))
             gv.ref_balls = new_balls
-        if gv.sc_start < step_num <= gv.sc_start+gv.sc_steps:
-            we_functions.spectral_clustering(step_num, temp_walker_list, new_balls)
+        if gv.enhanced_sampling_flag == 3 and gv.sc_start < step_num <= gv.sc_start + gv.sc_steps:
+            final_balls, final_ball_to_walkers = we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,
+                                                                                  ball_to_walkers)
+            new_balls = final_balls
+            ball_to_walkers = final_ball_to_walkers
 
         # fourth, resample walkers for every ball
         we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)

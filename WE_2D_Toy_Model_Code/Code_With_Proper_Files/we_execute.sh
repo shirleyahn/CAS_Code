@@ -9,6 +9,8 @@
 #SBATCH --job-name=2D_Toy_Model
 #SBATCH --output=2D_Toy_Model.out
 #SBATCH --error=2D_Toy_Model.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=sahn1@stanford.edu
 
 ###
 # Bash shell script is specific for SLURM. This can be easily modified for other cluster systems (e.g. PBS).

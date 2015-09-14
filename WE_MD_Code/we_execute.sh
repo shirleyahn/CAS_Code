@@ -9,6 +9,8 @@
 #SBATCH --job-name=9_40_10ps
 #SBATCH --output=9_40_10ps.out
 #SBATCH --error=9_40_10ps.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=sahn1@stanford.edu
 
 ###
 # Bash shell script is specific for SLURM and GROMACS. This can be easily modified for other cluster systems
