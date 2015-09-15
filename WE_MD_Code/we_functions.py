@@ -1,15 +1,15 @@
-import numpy as np
-import walker
-import we_global_variables as gv
-from scipy import special
-import os
-import shutil
-import copy
-import we_check_state_function
-from scipy.cluster.vq import kmeans2, ClusterError
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
+import os
+import shutil
+import copy
+from scipy import special
+from scipy.cluster.vq import kmeans2, ClusterError
+import walker
+import we_global_variables as gv
+import we_check_state_function
 
 
 def calculate_distance_from_center(center, values):
@@ -53,8 +53,7 @@ def set_parameters(input_parameter_file):
             gv.properties_to_keep_track = [int(i) for i in temp_list]
         elif gv.enhanced_sampling_flag == 3:
             f.readline()
-            gv.sc_start = int(f.readline())
-            gv.sc_steps = int(f.readline())
+            gv.num_balls_for_sc = int(f.readline())
             gv.evalue_threshold = float(f.readline())
             gv.timestep = float(f.readline())
 
@@ -311,7 +310,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         # then, obtain new coordinates' values
         if os.path.exists(walker_directory+'/coordinates.out'):
             new_coordinates = np.loadtxt('coordinates.out')
-            new_coordinates = new_coordinates[2:].tolist()
+            new_coordinates = new_coordinates.tolist()
             rm_command = 'rm *.out'
             os.system(rm_command)
 
@@ -372,23 +371,24 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         distance = distance_from_center
                         ball_key = j
 
-            properties_to_keep_track = []
-            for k in range(len(gv.properties_to_keep_track)):
-                if gv.properties_to_keep_track[k] < 0:
-                    properties_to_keep_track.append(weight)
-                else:
-                    properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
-            bin_walker = 0
-            if gv.enhanced_sampling_flag == 2 and gv.less_or_greater_flag == 0:
-                for m in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[m] < gv.threshold_values[m]:
-                        bin_walker += 1
-            elif gv.enhanced_sampling_flag == 2 and gv.less_or_greater_flag == 1:
-                for m in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[m] > gv.threshold_values[m]:
-                        bin_walker += 1
-            # walker is inside some ball or if enhanced_sampling_flag = 2 and the properties to keep track of are all
-            # less or greater than the threshold values
+            if gv.enhanced_sampling_flag == 2:
+                properties_to_keep_track = []
+                for k in range(len(gv.properties_to_keep_track)):
+                    if gv.properties_to_keep_track[k] < 0:
+                        properties_to_keep_track.append(weight)
+                    else:
+                        properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
+                bin_walker = 0
+                if gv.less_or_greater_flag == 0:
+                    for m in range(len(gv.properties_to_keep_track)):
+                        if properties_to_keep_track[m] < gv.threshold_values[m]:
+                            bin_walker += 1
+                elif gv.less_or_greater_flag == 1:
+                    for m in range(len(gv.properties_to_keep_track)):
+                        if properties_to_keep_track[m] > gv.threshold_values[m]:
+                            bin_walker += 1
+            # walker is inside some ball or if enhanced_sampling_flag = 2 and some or all of the properties to keep
+            # track of are less or greater than the threshold values
             if inside != 0 or (gv.enhanced_sampling_flag == 2 and gv.less_or_greater_flag == 0 and bin_walker != 0) \
                     or (gv.enhanced_sampling_flag == 2 and gv.less_or_greater_flag == 1 and bin_walker != 0):
                 balls[ball_key][gv.num_cvs+1] += 1
@@ -445,7 +445,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
 
 
 def spectral_clustering(step_num,  temp_walker_list, balls, ball_to_walkers):
-    transition_matrix_for_final = np.zeros((gv.transition_matrix.shape[0], gv.transition_matrix.shape[1]))
     transition_matrix_for_current_step = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.num_occupied_balls * gv.num_walkers):
         if temp_walker_list[i].previous_distance_from_center <= gv.radius:
@@ -456,31 +455,6 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_to_walkers):
             current_coordinates = temp_walker_list[i].current_coordinates
         else:
             current_coordinates = temp_walker_list[i].current_ball_center
-
-        previous_distance = 0.0
-        previous_ball_key = 0
-        current_distance = 0.0
-        current_ball_key = 0
-        for j in range(gv.ref_balls.shape[0]):
-            ball_center = gv.ref_balls[j][:-2].tolist()
-            previous_distance_from_center = calculate_distance_from_center(ball_center, previous_coordinates)
-            current_distance_from_center = calculate_distance_from_center(ball_center, current_coordinates)
-            if previous_distance == 0.0:
-                previous_distance = previous_distance_from_center
-                previous_ball_key = j
-            else:
-                if previous_distance_from_center < previous_distance:
-                    previous_distance = previous_distance_from_center
-                    previous_ball_key = j
-            if current_distance == 0.0:
-                current_distance = current_distance_from_center
-                current_ball_key = j
-            else:
-                if current_distance_from_center < current_distance:
-                    current_distance = current_distance_from_center
-                    current_ball_key = j
-        if transition_matrix_for_final[previous_ball_key][current_ball_key] == 0.0:
-            transition_matrix_for_final[previous_ball_key][current_ball_key] += 1.0
 
         previous_distance = 0.0
         previous_ball_key = 0
@@ -507,7 +481,6 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_to_walkers):
         if transition_matrix_for_current_step[previous_ball_key][current_ball_key] == 0.0:
             transition_matrix_for_current_step[previous_ball_key][current_ball_key] += 1.0
 
-    gv.transition_matrix += transition_matrix_for_final
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(new_transition_matrix.shape[0]):
         for j in range(new_transition_matrix.shape[1]):
@@ -609,57 +582,6 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_to_walkers):
     np.savetxt('laplacian_matrix_' + str(step_num + 1) + '.txt', laplacian_matrix, fmt=' %1.10e')
     np.savetxt('normalized_laplacian_matrix_' + str(step_num + 1) + '.txt', normalized_laplacian_matrix, fmt=' %1.10e')
 
-    if step_num == gv.sc_start + gv.sc_steps:
-        new_transition_matrix = np.zeros((gv.transition_matrix.shape[0], gv.transition_matrix.shape[1]))
-        for i in range(new_transition_matrix.shape[0]):
-            for j in range(new_transition_matrix.shape[1]):
-                new_transition_matrix[i][j] = (gv.transition_matrix[i][j] + gv.transition_matrix[j][i]) / (
-                    2.0 * gv.sc_steps)
-        for i in range(new_transition_matrix.shape[0]):
-            row_sum = np.sum(new_transition_matrix[i])
-            for j in range(new_transition_matrix.shape[1]):
-                if row_sum != 0.0:
-                    new_transition_matrix[i][j] /= row_sum
-
-        evalues, evectors = np.linalg.eig(new_transition_matrix.T)
-        idx = evalues.argsort()[::-1]
-        evectors = evectors[:, idx]
-        eq_vector = abs(np.real(evectors[:, 0]))
-        eq_vec_diag_matrix = np.diag(eq_vector)
-        inv_eq_vec_diag_matrix = np.zeros((eq_vec_diag_matrix.shape[0], eq_vec_diag_matrix.shape[0]))
-        for i in range(inv_eq_vec_diag_matrix.shape[0]):
-            if eq_vec_diag_matrix[i][i] != 0.0:
-                inv_eq_vec_diag_matrix[i][i] = 1.0 / eq_vec_diag_matrix[i][i]
-        affinity_matrix = np.dot(np.sqrt(eq_vec_diag_matrix), np.dot(new_transition_matrix,
-                                                                     np.sqrt(inv_eq_vec_diag_matrix)))
-        degree_matrix = np.zeros((affinity_matrix.shape[0], affinity_matrix.shape[0]))
-        for i in range(degree_matrix.shape[0]):
-            degree_matrix[i][i] = np.sum(affinity_matrix[i])
-        laplacian_matrix = degree_matrix - affinity_matrix
-        inv_degree_matrix = np.zeros((degree_matrix.shape[0], degree_matrix.shape[0]))
-        for i in range(inv_degree_matrix.shape[0]):
-            if degree_matrix[i][i] != 0.0:
-                inv_degree_matrix[i][i] = 1.0 / degree_matrix[i][i]
-        normalized_laplacian_matrix = np.dot(inv_degree_matrix, laplacian_matrix)
-        final_evalues, final_evectors = np.linalg.eig(normalized_laplacian_matrix)
-        idx = final_evalues.argsort()[::-1]
-        final_evalues = np.real(final_evalues[idx])
-        for i in range(len(final_evalues)):
-            if abs(final_evalues[i]) < 1.0e-12:
-                final_evalues[i] = 0.0
-
-        plt.plot(np.sort(final_evalues), 'ro')
-        plt.savefig('final_eigenvalues_' + str(step_num + 1) + '.png')
-        plt.close()
-        np.savetxt('final_eigenvalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
-        np.savetxt('final_old_transition_matrix_' + str(step_num + 1) + '.txt', gv.transition_matrix, fmt=' %1.10e')
-        np.savetxt('final_new_transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
-        np.savetxt('final_affinity_matrix_' + str(step_num + 1) + '.txt', affinity_matrix, fmt=' %1.10e')
-        np.savetxt('final_degree_matrix_' + str(step_num + 1) + '.txt', degree_matrix, fmt=' %1.10e')
-        np.savetxt('final_laplacian_matrix_' + str(step_num + 1) + '.txt', laplacian_matrix, fmt=' %1.10e')
-        np.savetxt('final_normalized_laplacian_matrix_' + str(step_num + 1) + '.txt', normalized_laplacian_matrix,
-                   fmt=' %1.10e')
-
     return new_balls, new_ball_to_walkers
 
 
@@ -734,7 +656,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                 weights_bin = [float]*num_walkers_bin[b]
                 indices_bin = [int]*num_walkers_bin[b]
 
-                if gv.enhanced_sampling_flag == 0 or (gv.enhanced_sampling_flag == 1 and std == 0.0):
+                if gv.enhanced_sampling_flag != 1 or (gv.enhanced_sampling_flag == 1 and std == 0.0):
                     weights_bin = initial_weights
                     indices_bin = initial_indices
 
@@ -757,7 +679,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                                 weights_bin[k] = temp_walker_list[j].weight
                                 indices_bin[k] = temp_walker_list[j].global_index
                                 k += 1
-                
+
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
 

@@ -29,8 +29,7 @@ global static_threshold_flag
 global threshold_values
 global properties_to_keep_track
 
-global sc_start
-global sc_steps
+global num_balls_for_sc
 global evalue_threshold
 global timestep
 
@@ -39,5 +38,3 @@ global timestep
 ###
 global max_num_balls
 global current_num_balls
-global transition_matrix
-global ref_balls

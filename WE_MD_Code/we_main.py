@@ -55,10 +55,8 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
         new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 3
-        if gv.enhanced_sampling_flag == 3 and step_num == gv.sc_start:
-            gv.transition_matrix = np.zeros((new_balls.shape[0], new_balls.shape[0]))
-            gv.ref_balls = new_balls
-        if gv.enhanced_sampling_flag == 3 and gv.sc_start < step_num <= gv.sc_start + gv.sc_steps:
+        if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and \
+           step_num != gv.initial_step_num:
             final_balls, final_ball_to_walkers = we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,
                                                                                   ball_to_walkers)
             new_balls = final_balls
