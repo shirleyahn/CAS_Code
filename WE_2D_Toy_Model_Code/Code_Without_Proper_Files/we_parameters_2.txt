@@ -75,8 +75,8 @@ see above as an example.
 
 ### for the next two lines, if enhanced_sampling flag == 3 ###
 num_balls_for_sc  # minimum number of balls present to perform spectral clustering for that step
-evalue_threshold  # highest eigenvalue that will be used to define a cluster
+num_clusters  # number of clusters for k-means part of spectral clustering
 
 as an example,
 1000
-0.8
+10

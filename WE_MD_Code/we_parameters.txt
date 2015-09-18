@@ -75,12 +75,12 @@ properties_to_keep_track  # properties of the walker that are compared against t
 
 see above as an example.
 
-### for the next four lines, if enhanced_sampling flag == 3 ###
+### for the next two lines, if enhanced_sampling flag == 3 ###
 num_balls_for_sc  # minimum number of balls present to perform spectral clustering for that step
-evalue_threshold  # highest eigenvalue that will be used to define a cluster
+num_clusters  # number of clusters for k-means part of spectral clustering
 timestep  # length of timestep in ps
 
 as an example,
 1000
-0.8
+10
 10.0

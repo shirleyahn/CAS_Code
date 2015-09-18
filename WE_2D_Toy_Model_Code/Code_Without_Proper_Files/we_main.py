@@ -18,6 +18,8 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
     temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
     balls = np.zeros((1, gv.num_cvs+2))
     ball_to_walkers = {}
+    key_to_ball = {}
+    ball_clusters_list = {}
 
     # create walkers and their directories
     we_functions.initialize(input_initial_values_file, walker_list)
@@ -27,6 +29,8 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
         if gv.balls_flag == 0 and step_num != 0:
             balls = np.zeros((1, gv.num_cvs+2))
             ball_to_walkers = {}
+            key_to_ball = {}
+            ball_clusters_list = {}
             gv.current_num_balls = 0
 
         print 'running   ' + str(step_num+1) + '-th step'
@@ -37,20 +41,20 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
 
         # second, create balls and assign walkers to balls
         t1 = time()
-        new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
+        new_balls = we_functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 3
         if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and step_num != 0:
-            final_balls, final_ball_to_walkers = we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,
-                                                                                  ball_to_walkers)
-            new_balls = final_balls
-            ball_to_walkers = final_ball_to_walkers
-
-        # fourth, resample walkers for every ball
-        we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
+            we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
+            # fourth, resample walkers for every ball
+            we_functions.resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clusters_list,
+                                           key_to_ball)
+        else:
+            # fourth, resample walkers for every ball
+            we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
 
         # finally, output the results in text files
-        we_functions.print_status(step_num, walker_list, new_balls, ball_to_walkers)
+        we_functions.print_status(step_num, walker_list, new_balls, ball_to_walkers, ball_clusters_list, key_to_ball)
         balls = new_balls
         t2 = time()
 

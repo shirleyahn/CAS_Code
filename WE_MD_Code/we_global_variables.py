@@ -30,7 +30,7 @@ global threshold_values
 global properties_to_keep_track
 
 global num_balls_for_sc
-global evalue_threshold
+global num_clusters
 global timestep
 
 ###
