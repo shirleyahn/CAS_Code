@@ -575,8 +575,17 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             center_key_state = copy.deepcopy(current_ball_center)
             center_key_state.append(ball_key)
             center_key_state.append(state)
+            walker_directory = gv.main_directory + '/WE/walker' + str(i)
+            os.chdir(walker_directory)
             f = open('ball_trajectory.txt', 'a')
             f.write(' '.join(map(lambda coordinate: str(coordinate), center_key_state)))
+            f.write('\n')
+            f.close()
+            num_lines = sum(1 for line in open('trajectory.txt'))
+            if num_lines > step_num:
+                os.system('sed -i \'$d\' trajectory.txt')
+            f = open('trajectory.txt', 'a')
+            f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
             f.write('\n')
             f.close()
 
