@@ -12,7 +12,7 @@ import we_check_state_function
 def calculate_distance_from_center(center, values):
     distance = 0.0
     for i in range(len(center)):
-        distance += (values[i]-center[i])**2
+        distance += (values[i] - center[i]) ** 2
     if abs(distance) < 1.0e-10:
         distance = 0.0
     return np.sqrt(distance)
@@ -56,11 +56,11 @@ def set_parameters(input_parameter_file):
             gv.num_clusters = int(f.readline())
             gv.timestep = float(f.readline())
 
-    ball_volume = (np.pi**(gv.num_cvs/2)*gv.radius**gv.num_cvs)/special.gamma((gv.num_cvs/2)+1)
+    ball_volume = (np.pi ** (gv.num_cvs / 2) * gv.radius ** gv.num_cvs) / special.gamma((gv.num_cvs / 2) + 1)
     gv.max_num_balls = 0
     if ball_volume != 0.0:
-        gv.max_num_balls = int(np.floor((gv.upper_bound-gv.lower_bound)**gv.num_cvs/ball_volume))
-    if gv.max_num_balls > gv.num_balls_limit or gv.max_num_balls < gv.num_balls_limit*1e-2:
+        gv.max_num_balls = int(np.floor((gv.upper_bound - gv.lower_bound) ** gv.num_cvs / ball_volume))
+    if gv.max_num_balls > gv.num_balls_limit or gv.max_num_balls < gv.num_balls_limit * 1e-2:
         gv.max_num_balls = gv.num_balls_limit
     print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
     gv.current_num_balls = 0
@@ -290,7 +290,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
 
 
 def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball):
-    initial_weights = [walker_list[i].weight for i in range(gv.num_occupied_balls*gv.num_walkers)]
+    initial_weights = [walker_list[i].weight for i in range(gv.num_occupied_balls * gv.num_walkers)]
     initial_weights_array = np.array(initial_weights)
     flux = np.zeros((gv.num_states, gv.num_states))
     if gv.sorting_flag == 1:
@@ -299,15 +299,21 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     start = 0  # indicates whether we are dealing with the very first walker or not
-    if gv.enhanced_sampling_flag == 2 and gv.static_threshold_flag == 0:
-        new_threshold_values = gv.threshold_values
+    if gv.enhanced_sampling_flag == 2:
+        ref_walker = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0, [-1000.0] * gv.num_cvs,
+                                   [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0, -1)
+        ref_walker_binning_value = len(gv.properties_to_keep_track)
+        ref_walker_properties_value = 0.0
+        if gv.static_threshold_flag == 0:
+            new_threshold_values = gv.threshold_values
+
     for i in walker_indices:
         # first, go to walker directory i
         walker_directory = gv.main_directory + '/WE/walker' + str(i)
         os.chdir(walker_directory)
 
         # then, obtain new coordinates' values
-        if os.path.exists(walker_directory+'/coordinates.out'):
+        if os.path.exists(walker_directory + '/coordinates.out'):
             new_coordinates = np.loadtxt('coordinates.out')
             new_coordinates = new_coordinates.tolist()
             rm_command = 'rm *.out'
@@ -324,6 +330,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             new_coordinates = [float(coordinate) for coordinate in new_coordinates]
             f.close()
 
+        previous_coordinates = walker_list[i].current_coordinates
+        previous_ball_center = walker_list[i].current_ball_center
+        previous_distance_from_center = walker_list[i].current_distance_from_center
+        initial_step_num = walker_list[i].initial_step_num
+        weight = walker_list[i].weight
+
         if gv.rate_flag == 1:
             state = we_check_state_function.check_state_function(new_coordinates)
             if walker_list[i].state != -1 and state != -1 and walker_list[i].state != state:
@@ -332,11 +344,27 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 state = walker_list[i].state
         else:
             state = -1
-        previous_coordinates = walker_list[i].current_coordinates
-        previous_ball_center = walker_list[i].current_ball_center
-        previous_distance_from_center = walker_list[i].current_distance_from_center
-        initial_step_num = walker_list[i].initial_step_num
-        weight = walker_list[i].weight
+
+        if gv.enhanced_sampling_flag == 2:
+            properties_to_keep_track = []
+            for k in range(len(gv.properties_to_keep_track)):
+                if gv.properties_to_keep_track[k] < 0:
+                    properties_to_keep_track.append(weight)
+                else:
+                    properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
+            walker_binning_value = 0
+            walker_properties_value = 0.0
+            if gv.less_or_greater_flag == 0:
+                for m in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[m] < gv.threshold_values[m]:
+                        walker_binning_value += 1
+                        walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
+            elif gv.less_or_greater_flag == 1:
+                for m in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[m] > gv.threshold_values[m]:
+                        walker_binning_value += 1
+                        walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
+
         inside = 0  # indicates whether we are dealing with the very first walker or not
         # if balls_flag = 0 and if we're dealing with the very first walker, create the very first ball for the walker
         if (gv.balls_flag == 0 and start == 0) or (gv.balls_flag == 1 and start == 0 and step_num == 0):
@@ -347,6 +375,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
                                                 current_ball_center, gv.current_num_balls,
                                                 previous_distance_from_center, 0.0, initial_step_num, weight, state)
+            if gv.enhanced_sampling_flag == 2:
+                ref_walker = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
+                                           current_ball_center, gv.current_num_balls,
+                                           previous_distance_from_center, 0.0, initial_step_num, weight, state)
+                ref_walker_binning_value = walker_binning_value
+                ref_walker_properties_value = walker_properties_value
             center_key_num = copy.deepcopy(current_ball_center)
             center_key_num.append(gv.current_num_balls)
             center_key_num.append(1)
@@ -371,39 +405,29 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                         distance = distance_from_center
                         ball_key = j
 
-            if gv.enhanced_sampling_flag == 2:
-                properties_to_keep_track = []
-                for k in range(len(gv.properties_to_keep_track)):
-                    if gv.properties_to_keep_track[k] < 0:
-                        properties_to_keep_track.append(weight)
-                    else:
-                        properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
-                bin_walker = 0
-                if gv.less_or_greater_flag == 0:
-                    for m in range(len(gv.properties_to_keep_track)):
-                        if properties_to_keep_track[m] < gv.threshold_values[m]:
-                            bin_walker += 1
-                elif gv.less_or_greater_flag == 1:
-                    for m in range(len(gv.properties_to_keep_track)):
-                        if properties_to_keep_track[m] > gv.threshold_values[m]:
-                            bin_walker += 1
-            # walker is inside some ball or if enhanced_sampling_flag = 2 and some or all of the properties to keep
-            # track of are less or greater than the threshold values
-            if inside != 0 or (gv.enhanced_sampling_flag == 2 and gv.less_or_greater_flag == 0 and bin_walker != 0) \
-                    or (gv.enhanced_sampling_flag == 2 and gv.less_or_greater_flag == 1 and bin_walker != 0):
-                balls[ball_key][gv.num_cvs+1] += 1
+            # walker is inside some ball
+            if inside != 0:
+                balls[ball_key][gv.num_cvs + 1] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                 distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
-                                                    current_ball_center, balls[ball_key][-2],
+                                                    current_ball_center, balls[ball_key][gv.num_cvs],
                                                     previous_distance_from_center, distance_from_center,
                                                     initial_step_num, weight, state)
-                if tuple(current_ball_center) in ball_to_walkers:
-                    ball_to_walkers[tuple(current_ball_center)].append(i)
-                else:
-                    ball_to_walkers[tuple(current_ball_center)] = [i]
-            # walker is not inside any existing ball, so create a new ball
-            else:
+                if gv.enhanced_sampling_flag == 2 and ((gv.balls_flag == 1 and start == 0) or walker_binning_value <
+                   ref_walker_binning_value or (walker_binning_value == ref_walker_binning_value and
+                                                walker_properties_value < ref_walker_properties_value)):
+                    ref_walker = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
+                                               current_ball_center, balls[ball_key][gv.num_cvs],
+                                               previous_distance_from_center, distance_from_center,
+                                               initial_step_num, weight, state)
+                    ref_walker_binning_value = walker_binning_value
+                    ref_walker_properties_value = walker_properties_value
+                    new_threshold_values = properties_to_keep_track
+                ball_to_walkers[tuple(current_ball_center)].append(i)
+
+            # or walker does not belong in any ball -> create a new ball
+            elif gv.enhanced_sampling_flag != 2:
                 current_ball_center = [coordinate for coordinate in new_coordinates]
                 ball_to_walkers[tuple(current_ball_center)] = [i]
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
@@ -415,37 +439,116 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
                 key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
                 gv.current_num_balls += 1
-            # update threshold values if enhanced_sampling_flag = 2 and static_threshold_flag = 0
-            if gv.enhanced_sampling_flag == 2 and gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 0:
-                for n in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[n] > new_threshold_values[n]:
-                        new_threshold_values[n] = properties_to_keep_track[n]
-            elif gv.enhanced_sampling_flag == 2 and gv.static_threshold_flag == 0 and gv.less_or_greater_flag == 1:
-                for n in range(len(gv.properties_to_keep_track)):
-                    if properties_to_keep_track[n] < new_threshold_values[n]:
-                        new_threshold_values[n] = properties_to_keep_track[n]
 
-        # finally, write the new ball on the trajectory file
-        current_ball_center = temp_walker_list[i].current_ball_center
-        ball_key = temp_walker_list[i].ball_key
-        center_key_state = copy.deepcopy(current_ball_center)
-        center_key_state.append(ball_key)
-        center_key_state.append(state)
-        f = open('ball_trajectory.txt', 'a')
-        f.write(' '.join(map(lambda coordinate: str(coordinate), center_key_state)))
-        f.write('\n')
-        f.close()
+            # or if enhanced_sampling_flag = 2 and ref_walker is a "better" walker in terms of its values -> replace
+            # walker with ref_walker
+            elif gv.enhanced_sampling_flag == 2 and (walker_binning_value > ref_walker_binning_value or
+                 (walker_binning_value == ref_walker_binning_value and
+                  walker_properties_value > ref_walker_properties_value)):
+                balls[ref_walker.ball_key][gv.num_cvs+1] += 1
+                temp_walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0,
+                                                    [-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0,
+                                                    -1)
+                temp_walker_list[i].copy_walker(ref_walker)
+                temp_walker_list[i].global_index = i
+                temp_walker_list[i].weight = weight
+                current_ball_center = temp_walker_list[i].current_ball_center
+                ball_to_walkers[tuple(current_ball_center)].append(i)
+
+            # or if enhanced_sampling_flag = 2 and walker is a "better" walker in terms of its values -> create a new
+            # ball
+            elif gv.enhanced_sampling_flag == 2 and ((gv.balls_flag == 1 and start == 0) or walker_binning_value <
+                 ref_walker_binning_value or (walker_binning_value == ref_walker_binning_value and
+                                              walker_properties_value < ref_walker_properties_value)):
+                current_ball_center = [coordinate for coordinate in new_coordinates]
+                ball_to_walkers[tuple(current_ball_center)] = [i]
+                temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
+                                                    current_ball_center, gv.current_num_balls,
+                                                    previous_distance_from_center, 0.0, initial_step_num, weight, state)
+                ref_walker = walker.Walker(previous_coordinates, new_coordinates, i, previous_ball_center,
+                                           current_ball_center, gv.current_num_balls,
+                                           previous_distance_from_center, 0.0, initial_step_num, weight, state)
+                ref_walker_binning_value = walker_binning_value
+                ref_walker_properties_value = walker_properties_value
+                new_threshold_values = properties_to_keep_track
+                center_key_num = copy.deepcopy(current_ball_center)
+                center_key_num.append(gv.current_num_balls)
+                center_key_num.append(1)
+                balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
+                key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
+                gv.current_num_balls += 1
+
+            # finally, write the new ball on the trajectory file
+            if gv.enhanced_sampling_flag != 2:
+                current_ball_center = temp_walker_list[i].current_ball_center
+                ball_key = temp_walker_list[i].ball_key
+                center_key_state = copy.deepcopy(current_ball_center)
+                center_key_state.append(ball_key)
+                center_key_state.append(state)
+                f = open('ball_trajectory.txt', 'a')
+                f.write(' '.join(map(lambda coordinate: str(coordinate), center_key_state)))
+                f.write('\n')
+                f.close()
+
+    # if enhanced_sampling_flag = 2, replace "inadequate" walkers with ref_walker
+    if gv.enhanced_sampling_flag == 2:
+        for i in walker_indices:
+            new_coordinates = walker_list[i].current_coordinates
+            weight = walker_list[i].weight
+            properties_to_keep_track = []
+            for k in range(len(gv.properties_to_keep_track)):
+                if gv.properties_to_keep_track[k] < 0:
+                    properties_to_keep_track.append(weight)
+                else:
+                    properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
+            walker_binning_value = 0
+            walker_properties_value = 0.0
+            if gv.less_or_greater_flag == 0:
+                for m in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[m] < gv.threshold_values[m]:
+                        walker_binning_value += 1
+                        walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
+            elif gv.less_or_greater_flag == 1:
+                for m in range(len(gv.properties_to_keep_track)):
+                    if properties_to_keep_track[m] > gv.threshold_values[m]:
+                        walker_binning_value += 1
+                        walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
+            if (walker_binning_value > ref_walker_binning_value or (walker_binning_value == ref_walker_binning_value and
+                walker_properties_value > ref_walker_properties_value)):
+                previous_ball_center = temp_walker_list[i].current_ball_center
+                previous_ball_key = temp_walker_list[i].ball_key
+                balls[previous_ball_key][gv.num_cvs+1] -= 1
+                balls[ref_walker.ball_key][gv.num_cvs+1] += 1
+                temp_walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0,
+                                                    [-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0,
+                                                    -1)
+                temp_walker_list[i].copy_walker(ref_walker)
+                temp_walker_list[i].global_index = i
+                temp_walker_list[i].weight = weight
+                ball_to_walkers[tuple(previous_ball_center)].remove(i)
+                current_ball_center = temp_walker_list[i].current_ball_center
+                ball_to_walkers[tuple(current_ball_center)].append(i)
+            current_ball_center = temp_walker_list[i].current_ball_center
+            ball_key = temp_walker_list[i].ball_key
+            center_key_state = copy.deepcopy(current_ball_center)
+            center_key_state.append(ball_key)
+            center_key_state.append(state)
+            f = open('ball_trajectory.txt', 'a')
+            f.write(' '.join(map(lambda coordinate: str(coordinate), center_key_state)))
+            f.write('\n')
+            f.close()
 
     os.chdir(gv.main_directory + '/WE')
-    np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.5f')
+    np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
     if gv.rate_flag == 1:
-        np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
+        np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
+    # update threshold values
     if gv.enhanced_sampling_flag == 2 and gv.static_threshold_flag == 0:
         gv.threshold_values = new_threshold_values
     return balls
 
 
-def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
+def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.num_occupied_balls * gv.num_walkers):
         if temp_walker_list[i].previous_distance_from_center <= gv.radius:
@@ -500,20 +603,10 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
     for i in range(inv_eq_vec_diag_matrix.shape[0]):
         if eq_vec_diag_matrix[i][i] != 0.0:
             inv_eq_vec_diag_matrix[i][i] = 1.0 / eq_vec_diag_matrix[i][i]
-    affinity_matrix = np.dot(np.sqrt(eq_vec_diag_matrix),
-                             np.dot(new_transition_matrix, np.sqrt(inv_eq_vec_diag_matrix)))
-    """
-    degree_matrix = np.zeros((affinity_matrix.shape[0], affinity_matrix.shape[0]))
-    for i in range(degree_matrix.shape[0]):
-        degree_matrix[i][i] = np.sum(affinity_matrix[i])
-    laplacian_matrix = degree_matrix - affinity_matrix
-    inv_degree_matrix = np.zeros((degree_matrix.shape[0], degree_matrix.shape[0]))
-    for i in range(inv_degree_matrix.shape[0]):
-        if degree_matrix[i][i] != 0.0:
-            inv_degree_matrix[i][i] = 1.0 / degree_matrix[i][i]
-    normalized_laplacian_matrix = np.dot(inv_degree_matrix, laplacian_matrix)
-    """
-    final_evalues, final_evectors = np.linalg.eig(affinity_matrix)
+    symmetric_transition_matrix = np.dot(np.sqrt(eq_vec_diag_matrix),
+                                         np.dot(new_transition_matrix, np.sqrt(inv_eq_vec_diag_matrix)))
+
+    final_evalues, final_evectors = np.linalg.eig(symmetric_transition_matrix)
     idx = abs(final_evalues).argsort()[::-1]
     final_evalues = np.real(final_evalues[idx])
     final_evectors = np.real(final_evectors[:, idx])
@@ -594,27 +687,16 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
     """
     f.close()
 
-    """
-    plt.plot(np.sort(final_evalues)[0:num_clusters+5], 'ro')
-    plt.savefig('evalues_' + str(step_num + 1) + '.png')
-    plt.close()
-    """
     np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
     np.savetxt('evectors_' + str(step_num + 1) + '.txt', final_evectors, fmt=' %1.10e')
-    np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
-    np.savetxt('affinity_matrix_' + str(step_num + 1) + '.txt', affinity_matrix, fmt=' %1.10e')
-    """
-    np.savetxt('degree_matrix_' + str(step_num + 1) + '.txt', degree_matrix, fmt=' %1.10e')
-    np.savetxt('laplacian_matrix_' + str(step_num + 1) + '.txt', laplacian_matrix, fmt=' %1.10e')
-    np.savetxt('normalized_laplacian_matrix_' + str(step_num + 1) + '.txt', normalized_laplacian_matrix, fmt=' %1.10e')
-    """
+    np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', symmetric_transition_matrix, fmt=' %1.10e')
 
 
 def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clusters_list, key_to_ball):
     num_occupied_balls = 0
-    weights = [walker_list[i].weight for i in range(gv.num_occupied_balls*gv.num_walkers)]
-    occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers, int)
-    excess_index = gv.num_occupied_balls*gv.num_walkers
+    weights = [walker_list[i].weight for i in range(gv.num_occupied_balls * gv.num_walkers)]
+    occupied_indices = np.zeros(gv.max_num_balls * gv.num_walkers, int)
+    excess_index = gv.num_occupied_balls * gv.num_walkers
     vacant_walker_indices = []
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
@@ -633,7 +715,7 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                 new_indices = []
                 new_num_walkers = 0
                 # add the remaining walkers to the very last bin if there are any
-                if remainder != 0 and b == num_bins-1:
+                if remainder != 0 and b == num_bins - 1:
                     target_num_walkers += remainder
 
                 weights_bin = []
@@ -643,7 +725,7 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                     indices_bin.append(temp_walker_list[walker_index].global_index)
                 # reset ball_to_walkers
                 ball_to_walkers[ball_center] = []
-                if b == num_bins-1:
+                if b == num_bins - 1:
                     for ball in ball_clusters_list[current_cluster][num_bins:]:
                         for walker_index in ball_to_walkers[ball]:
                             weights_bin.append(temp_walker_list[walker_index].weight)
@@ -658,21 +740,21 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                 indices_bin = [temp_indices[i] for i in walker_indices]
 
                 total_weight = np.sum(weights_bin)
-                target_weight = total_weight/target_num_walkers
+                target_weight = total_weight / target_num_walkers
 
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
                     if x_weight >= target_weight or len(indices_bin) == 0:
-                        r = max(1, int(np.floor(x_weight/target_weight)))
-                        r = min(r, target_num_walkers-new_num_walkers)
+                        r = max(1, int(np.floor(x_weight / target_weight)))
+                        r = min(r, target_num_walkers - new_num_walkers)
                         new_num_walkers += r
                         for item in np.repeat(x, r):
                             new_indices.append(item)
                             new_weights.append(target_weight)
-                        if new_num_walkers < target_num_walkers and x_weight-r*target_weight > 0.0:
+                        if new_num_walkers < target_num_walkers and x_weight - r * target_weight > 0.0:
                             indices_bin.append(x)
-                            weights[x] = x_weight-r*target_weight
+                            weights[x] = x_weight - r * target_weight
                         if len(indices_bin) > 0:
                             x = indices_bin.pop()
                         else:
@@ -680,10 +762,10 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                     else:
                         y = indices_bin.pop()
                         y_weight = weights[y]
-                        xy_weight = x_weight+y_weight
+                        xy_weight = x_weight + y_weight
                         p = np.random.random()
                         # swap x and y
-                        if p < y_weight/xy_weight:
+                        if p < y_weight / xy_weight:
                             temp = x
                             x = y
                             y = temp
@@ -716,23 +798,23 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                         walker_list[global_index].ball_key = key_to_ball[ball_center]
                         ball_to_walkers[ball_center].append(new_index)
 
-    if excess_index-num_occupied_balls*gv.num_walkers != len(vacant_walker_indices):
+    if excess_index - num_occupied_balls * gv.num_walkers != len(vacant_walker_indices):
         print 'Something wrong with resampling'
 
     if num_occupied_balls >= gv.num_occupied_balls:
-        for i in range(num_occupied_balls*gv.num_walkers, excess_index):
+        for i in range(num_occupied_balls * gv.num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
     else:
-        for i in range(gv.num_occupied_balls*gv.num_walkers, excess_index):
+        for i in range(gv.num_occupied_balls * gv.num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
-        for i in range(num_occupied_balls*gv.num_walkers, gv.num_occupied_balls*gv.num_walkers):
+        for i in range(num_occupied_balls * gv.num_walkers, gv.num_occupied_balls * gv.num_walkers):
             if occupied_indices[i] == 1:
                 new_index = vacant_walker_indices.pop()
-                while new_index >= num_occupied_balls*gv.num_walkers:
+                while new_index >= num_occupied_balls * gv.num_walkers:
                     new_index = vacant_walker_indices.pop()
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
@@ -742,11 +824,11 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
 
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices):
     num_occupied_balls = 0
-    weights = [walker_list[i].weight for i in range(gv.num_occupied_balls*gv.num_walkers)]
-    occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers, int)
-    excess_index = gv.num_occupied_balls*gv.num_walkers
+    weights = [walker_list[i].weight for i in range(gv.num_occupied_balls * gv.num_walkers)]
+    occupied_indices = np.zeros(gv.max_num_balls * gv.num_walkers, int)
+    excess_index = gv.num_occupied_balls * gv.num_walkers
     for current_ball in range(balls.shape[0]):
-        if int(balls[current_ball][gv.num_cvs+1]) > 0:
+        if int(balls[current_ball][gv.num_cvs + 1]) > 0:
             num_occupied_balls += 1
             current_ball_center = balls[current_ball][0:gv.num_cvs].tolist()
             initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(current_ball_center)]]
@@ -767,7 +849,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                                              ball_to_walkers[tuple(current_ball_center)]]
                 std = np.sqrt(np.var(distance_from_center_list))
                 if std != 0.0:
-                    num_bins = int(np.ceil(gv.radius/std))+2
+                    num_bins = int(np.ceil(gv.radius / std)) + 2
                     true_num_bins = 0
                     bins = []
                     num_walkers_bin = []
@@ -778,11 +860,11 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             if nb == 0:
                                 if distance <= std:
                                     num_walkers += 1
-                            elif nb == num_bins-1:
-                                if nb*std < distance:
+                            elif nb == num_bins - 1:
+                                if nb * std < distance:
                                     num_walkers += 1
                             else:
-                                if nb*std < distance <= (nb+1)*std:
+                                if nb * std < distance <= (nb + 1) * std:
                                     num_walkers += 1
                         if num_walkers != 0:
                             true_num_bins += 1
@@ -795,8 +877,8 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         num_walkers_bin = [len(initial_indices)]
                         std = 0.0
 
-            target_num_walkers = int(np.floor(float(gv.num_walkers)/true_num_bins))
-            remainder = gv.num_walkers-target_num_walkers*true_num_bins
+            target_num_walkers = int(np.floor(float(gv.num_walkers) / true_num_bins))
+            remainder = gv.num_walkers - target_num_walkers * true_num_bins
             # reset ball_to_walkers
             ball_to_walkers[tuple(current_ball_center)] = []
 
@@ -805,11 +887,11 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                 new_indices = []
                 new_num_walkers = 0
                 # add the remaining walkers to the very last bin if there are any
-                if remainder != 0 and b == (true_num_bins-1):
+                if remainder != 0 and b == (true_num_bins - 1):
                     target_num_walkers += remainder
 
-                weights_bin = [float]*num_walkers_bin[b]
-                indices_bin = [int]*num_walkers_bin[b]
+                weights_bin = [float] * num_walkers_bin[b]
+                indices_bin = [int] * num_walkers_bin[b]
 
                 if gv.enhanced_sampling_flag != 1 or (gv.enhanced_sampling_flag == 1 and std == 0.0):
                     weights_bin = initial_weights
@@ -824,33 +906,33 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                                 weights_bin[k] = temp_walker_list[j].weight
                                 indices_bin[k] = temp_walker_list[j].global_index
                                 k += 1
-                        elif bin_index == num_bins-1:
-                            if bin_index*std < distance:
+                        elif bin_index == num_bins - 1:
+                            if bin_index * std < distance:
                                 weights_bin[k] = temp_walker_list[j].weight
                                 indices_bin[k] = temp_walker_list[j].global_index
                                 k += 1
                         else:
-                            if bin_index*std < distance <= (bin_index+1)*std:
+                            if bin_index * std < distance <= (bin_index + 1) * std:
                                 weights_bin[k] = temp_walker_list[j].weight
                                 indices_bin[k] = temp_walker_list[j].global_index
                                 k += 1
 
                 total_weight = np.sum(weights_bin)
-                target_weight = total_weight/target_num_walkers
+                target_weight = total_weight / target_num_walkers
 
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
                     if x_weight >= target_weight or len(indices_bin) == 0:
-                        r = max(1, int(np.floor(x_weight/target_weight)))
-                        r = min(r, target_num_walkers-new_num_walkers)
+                        r = max(1, int(np.floor(x_weight / target_weight)))
+                        r = min(r, target_num_walkers - new_num_walkers)
                         new_num_walkers += r
                         for item in np.repeat(x, r):
                             new_indices.append(item)
                             new_weights.append(target_weight)
-                        if new_num_walkers < target_num_walkers and x_weight-r*target_weight > 0.0:
+                        if new_num_walkers < target_num_walkers and x_weight - r * target_weight > 0.0:
                             indices_bin.append(x)
-                            weights[x] = x_weight-r*target_weight
+                            weights[x] = x_weight - r * target_weight
                         if len(indices_bin) > 0:
                             x = indices_bin.pop()
                         else:
@@ -858,10 +940,10 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                     else:
                         y = indices_bin.pop()
                         y_weight = weights[y]
-                        xy_weight = x_weight+y_weight
+                        xy_weight = x_weight + y_weight
                         p = np.random.random()
                         # swap x and y
-                        if p < y_weight/xy_weight:
+                        if p < y_weight / xy_weight:
                             temp = x
                             x = y
                             y = temp
@@ -873,7 +955,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             os.system('rm -rf walker' + str(y))
 
                 if b == 0:  # reset balls
-                    balls[current_ball][gv.num_cvs+1] = 0
+                    balls[current_ball][gv.num_cvs + 1] = 0
                 for ni, global_index in enumerate(new_indices):
                     if occupied_indices[global_index] == 0:
                         occupied_indices[global_index] = 1
@@ -904,13 +986,13 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         f = open('weight_trajectory.txt', 'a')
                         f.write('% 1.20e' % walker_list[new_index].weight + '\n')
                         f.close()
-                    balls[current_ball][gv.num_cvs+1] += 1
+                    balls[current_ball][gv.num_cvs + 1] += 1
 
-    if excess_index-num_occupied_balls*gv.num_walkers != len(vacant_walker_indices):
+    if excess_index - num_occupied_balls * gv.num_walkers != len(vacant_walker_indices):
         print 'Something wrong with resampling'
 
     if num_occupied_balls >= gv.num_occupied_balls:
-        for i in range(num_occupied_balls*gv.num_walkers, excess_index):
+        for i in range(num_occupied_balls * gv.num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
@@ -918,17 +1000,17 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
             os.chdir(gv.main_directory + '/WE')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
     else:
-        for i in range(gv.num_occupied_balls*gv.num_walkers, excess_index):
+        for i in range(gv.num_occupied_balls * gv.num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
             os.chdir(gv.main_directory + '/WE')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
-        for i in range(num_occupied_balls*gv.num_walkers, gv.num_occupied_balls*gv.num_walkers):
+        for i in range(num_occupied_balls * gv.num_walkers, gv.num_occupied_balls * gv.num_walkers):
             if occupied_indices[i] == 1:
                 new_index = vacant_walker_indices.pop()
-                while new_index >= num_occupied_balls*gv.num_walkers:
+                while new_index >= num_occupied_balls * gv.num_walkers:
                     new_index = vacant_walker_indices.pop()
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
@@ -944,7 +1026,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
 def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_list, key_to_ball):
     os.chdir(gv.main_directory + '/WE')
     total_weight = 0.0
-    f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')
+    f = open('total_weight_on_each_ball_' + str(step_num + 1) + '.txt', 'w')
     for current_ball in range(balls.shape[0]):
         ball_center = balls[current_ball][0:gv.num_cvs].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
@@ -954,7 +1036,7 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
         f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
         f.write('\n')
         # reset walkers and number of walkers that belong in each ball
-        balls[current_ball][gv.num_cvs+1] = 0
+        balls[current_ball][gv.num_cvs + 1] = 0
         ball_to_walkers[tuple(ball_center)] = []
         key_to_ball[tuple(ball_center)] = []
         ball_clusters_list[tuple(ball_center)] = []
@@ -962,4 +1044,4 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
 
     # verify that total weight of all balls is 1.0
     f = open('total_weight.txt', 'a')
-    f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + '\n')
+    f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + '\n')

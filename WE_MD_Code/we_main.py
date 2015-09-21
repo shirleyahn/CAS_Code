@@ -66,7 +66,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
                                            key_to_ball)
         else:
             # fourth, resample walkers for every ball
-            we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
+            we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers, vacant_walker_indices)
 
         # finally, output the results in text files
         we_functions.print_status(step_num, walker_list, new_balls, ball_to_walkers, ball_clusters_list, key_to_ball)
