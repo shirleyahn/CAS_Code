@@ -17,7 +17,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
     walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
     temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
     vacant_walker_indices = []
-    balls = np.zeros((1, gv.num_cvs+2))
+    balls = np.zeros((1, gv.num_cvs+3))
     ball_to_walkers = {}
     key_to_ball = {}
     ball_clusters_list = {}
@@ -29,7 +29,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
         # reset ball objects so that balls are newly created at every step
         if gv.balls_flag == 0 and step_num != gv.initial_step_num:
-            balls = np.zeros((1, gv.num_cvs+2))
+            balls = np.zeros((1, gv.num_cvs+3))
             ball_to_walkers = {}
             key_to_ball = {}
             ball_clusters_list = {}

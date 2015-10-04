@@ -30,9 +30,11 @@ global properties_to_keep_track
 
 global num_balls_for_sc
 global num_clusters
+global num_walkers_for_sc
 
 ###
 # parameters that are set by we_functions.py
 ###
 global max_num_balls
 global current_num_balls
+global total_num_walkers

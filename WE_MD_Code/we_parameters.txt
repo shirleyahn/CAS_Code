@@ -40,7 +40,7 @@ rate_flag  # 0: off. 1: on. rates/fluxes between pre-defined states  will be cal
 num_states  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
 enhanced_sampling_flag  # 0: off. 1: sub-binning balls by standard deviation distance from center of ball. 2: binning
                           walkers if the walkers have some property less or greater than threshold. 3: spectral
-                          clustering. 4: flux (to-do).
+                          clustering.
 
 num_balls_limit  # limit is set depending on the available memory. parameter needed in case the calculated max_num_balls
                    is greater or too much smaller than the limit.
@@ -75,12 +75,15 @@ properties_to_keep_track  # properties of the walker that are compared against t
 
 see above as an example.
 
-### for the next two lines, if enhanced_sampling flag == 3 ###
+### for the next four lines, if enhanced_sampling flag == 3 ###
 num_balls_for_sc  # minimum number of balls present to perform spectral clustering for that step
 num_clusters  # number of clusters for k-means part of spectral clustering
+num_walkers_for_sc  # number of walkers for each macro-state, usually set equal to the avg number of walkers per
+                      macro-state, which is (num_balls_for_sc/num_clusters)*num_walkers
 timestep  # length of timestep in ps
 
 as an example,
 1000
 10
+10000
 10.0
