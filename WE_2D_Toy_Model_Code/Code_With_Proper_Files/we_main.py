@@ -57,8 +57,8 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
         if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and step_num != 0:
             we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
-            we_functions.resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clusters_list,
-                                           key_to_ball)
+            we_functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers,
+                                           ball_clusters_list)
         else:
             # fourth, resample walkers for every ball
             we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)

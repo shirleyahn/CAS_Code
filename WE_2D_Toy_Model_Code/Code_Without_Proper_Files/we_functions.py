@@ -491,6 +491,7 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
                 ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                balls[j][gv.num_cvs+2] -= 1
             elif labels[j] == i and first != 0:
                 ball_center = balls[j, 0:gv.num_cvs].tolist()
                 ball_cluster = copy.deepcopy(ball_center)
@@ -501,6 +502,7 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
                 ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+                balls[j][gv.num_cvs+2] -= 1
     f.close()
 
     np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
@@ -508,7 +510,7 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
     np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', symmetric_transition_matrix, fmt=' %1.10e')
 
 
-def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clusters_list, key_to_ball):
+def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers_for_sc, int)
@@ -523,8 +525,8 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                 num_bins = gv.num_walkers_for_sc
             bins = ball_clusters_list[current_cluster][0:num_bins]
 
-            target_num_walkers = int(np.floor(float(gv.num_walkers_for_sc) / num_bins))
-            remainder = gv.num_walkers_for_sc - target_num_walkers * num_bins
+            target_num_walkers = int(np.floor(float(gv.num_walkers_for_sc)/num_bins))
+            remainder = gv.num_walkers_for_sc-target_num_walkers*num_bins
 
             for b, ball_center in enumerate(bins):
                 new_weights = []
@@ -594,10 +596,8 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                         occupied_indices[global_index] = 1
                         walker_list[global_index].copy_walker(temp_walker_list[global_index])
                         walker_list[global_index].weight = new_weights[ni]
-                        walker_list[global_index].current_ball_center = ball_center
-                        walker_list[global_index].current_distance_from_center = \
-                            calculate_distance_from_center(ball_center, walker_list[global_index].current_coordinates)
-                        walker_list[global_index].ball_key = key_to_ball[ball_center]
+                        ball_key = walker_list[global_index].ball_key
+                        balls[ball_key][gv.num_cvs+2] += 1
                         ball_to_walkers[ball_center].append(global_index)
                     else:
                         if len(vacant_walker_indices) > 0:
@@ -607,27 +607,24 @@ def resampling_for_sc(walker_list, temp_walker_list, ball_to_walkers, ball_clust
                             excess_index += 1
                         occupied_indices[new_index] = 1
                         walker_list[new_index].copy_walker(walker_list[global_index])
-                        walker_list[new_index].global_index = new_index
-                        walker_list[global_index].current_ball_center = ball_center
-                        walker_list[global_index].current_distance_from_center = \
-                            calculate_distance_from_center(ball_center, walker_list[global_index].current_coordinates)
-                        walker_list[global_index].ball_key = key_to_ball[ball_center]
+                        ball_key = walker_list[new_index].ball_key
+                        balls[ball_key][gv.num_cvs+2] += 1
                         ball_to_walkers[ball_center].append(new_index)
 
     if excess_index-num_occupied_balls*gv.num_walkers_for_sc != len(vacant_walker_indices):
         print 'Something wrong with resampling'
 
-    if num_occupied_balls >= gv.num_occupied_balls:
+    if num_occupied_balls*gv.num_walkers_for_sc >= gv.total_num_walkers:
         for i in range(num_occupied_balls*gv.num_walkers_for_sc, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
     else:
-        for i in range(gv.num_occupied_balls*gv.num_walkers_for_sc, excess_index):
+        for i in range(gv.total_num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
-        for i in range(num_occupied_balls*gv.num_walkers_for_sc, gv.num_occupied_balls*gv.num_walkers_for_sc):
+        for i in range(num_occupied_balls*gv.num_walkers_for_sc, gv.total_num_walkers):
             if occupied_indices[i] == 1:
                 new_index = vacant_walker_indices.pop()
                 while new_index >= num_occupied_balls*gv.num_walkers_for_sc:
@@ -792,17 +789,17 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
     if excess_index-num_occupied_balls*gv.num_walkers != len(vacant_walker_indices):
         print 'Something wrong with resampling'
 
-    if num_occupied_balls >= gv.num_occupied_balls:
+    if num_occupied_balls*gv.num_walkers >= gv.total_num_walkers:
         for i in range(num_occupied_balls*gv.num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
     else:
-        for i in range(gv.num_occupied_balls*gv.num_walkers, excess_index):
+        for i in range(gv.total_num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
-        for i in range(num_occupied_balls*gv.num_walkers, gv.num_occupied_balls*gv.num_walkers):
+        for i in range(num_occupied_balls*gv.num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
                 new_index = vacant_walker_indices.pop()
                 while new_index >= num_occupied_balls*gv.num_walkers:

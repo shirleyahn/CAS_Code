@@ -11,7 +11,7 @@
 100000
 10.0
 10
-23
+31
 -180.0
 180.0
 
@@ -85,5 +85,5 @@ timestep  # length of timestep in ps
 as an example,
 1000
 10
-10000
+1000
 10.0
