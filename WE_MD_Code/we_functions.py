@@ -492,18 +492,18 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
                 gv.current_num_balls += 1
 
-            # finally, write the new ball on the trajectory file
-            if gv.enhanced_sampling_flag != 2:
-                current_ball_center = temp_walker_list[i].current_ball_center
-                ball_key = temp_walker_list[i].ball_key
-                center_r_key_state = copy.deepcopy(current_ball_center)
-                center_r_key_state.append(gv.radius)
-                center_r_key_state.append(ball_key)
-                center_r_key_state.append(state)
-                f = open('ball_trajectory.txt', 'a')
-                f.write(' '.join(map(lambda coordinate: str(coordinate), center_r_key_state)))
-                f.write('\n')
-                f.close()
+        # finally, write the new ball on the trajectory file
+        if gv.enhanced_sampling_flag != 2:
+            current_ball_center = temp_walker_list[i].current_ball_center
+            ball_key = temp_walker_list[i].ball_key
+            center_r_key_state = copy.deepcopy(current_ball_center)
+            center_r_key_state.append(gv.radius)
+            center_r_key_state.append(ball_key)
+            center_r_key_state.append(state)
+            f = open('ball_trajectory.txt', 'a')
+            f.write(' '.join(map(lambda coordinate: str(coordinate), center_r_key_state)))
+            f.write('\n')
+            f.close()
 
     # if enhanced_sampling_flag = 2, replace "inadequate" walkers with ref_walker
     if gv.enhanced_sampling_flag == 2:
