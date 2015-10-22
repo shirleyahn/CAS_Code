@@ -64,7 +64,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
             we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
             we_functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers,
-                                           ball_clusters_list)
+                                           ball_clusters_list, vacant_walker_indices)
         else:
             # fourth, resample walkers for every ball
             we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers, vacant_walker_indices)

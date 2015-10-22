@@ -725,12 +725,11 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', symmetric_transition_matrix, fmt=' %1.10e')
 
 
-def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
+def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers_for_sc, int)
     excess_index = gv.total_num_walkers
-    vacant_walker_indices = []
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
             num_occupied_balls += 1
@@ -805,6 +804,9 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         weights[x] = xy_weight
                         if y not in new_indices:
                             vacant_walker_indices.append(y)
+                            # remove walker y directory
+                            os.chdir(gv.main_directory + '/WE')
+                            os.system('rm -rf walker' + str(y))
 
                 for ni, global_index in enumerate(new_indices):
                     if occupied_indices[global_index] == 0:
@@ -870,6 +872,8 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 os.chdir(gv.main_directory + '/WE')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
+    while len(vacant_walker_indices) > 0:
+        vacant_walker_indices.pop()
     gv.num_occupied_balls = num_occupied_balls
     gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers_for_sc
 
@@ -1028,7 +1032,6 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                             excess_index += 1
                         occupied_indices[new_index] = 1
                         walker_list[new_index].copy_walker(walker_list[global_index])
-                        walker_list[new_index].global_index = new_index
                         ball_to_walkers[tuple(current_ball_center)].append(new_index)
                         old_directory = gv.main_directory + '/WE/walker' + str(global_index)
                         new_directory = gv.main_directory + '/WE/walker' + str(new_index)
