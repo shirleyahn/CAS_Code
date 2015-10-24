@@ -48,8 +48,7 @@ grid_dimensions  # since num_cvs = 2, then type x_lower_bound x_upper_bound y_lo
                    space with appropriate values, i.e. -1.0 1.0 -1.0 1.0
 
 max_num_steps  # maximum number of steps for the simulation.
-num_occupied_balls  # num_occupied_balls should be changed when restarting a simulation. NOTE: when simulation_flag = 3,
-                      this should be equal to the highest walker number inside the WE folder
+num_occupied_balls  # number of occupied balls in the beginning of the simulation.
 
 m_steps_per_step  # how many times the metropolis algorithm should be executed per step
 step_size  # how large the step size should be for each walker

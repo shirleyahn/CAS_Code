@@ -74,7 +74,10 @@ def set_parameters(input_parameter_file):
         gv.max_num_balls = gv.num_balls_limit
     print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
     gv.current_num_balls = 0
-    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
+    if gv.simulation_flag == 0:
+        gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
+    else:
+        gv.total_num_walkers = gv.last_walker-gv.first_walker+1
 
 
 def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers, vacant_walker_indices):
@@ -171,8 +174,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
             previous_balls_walker_count[i] = previous_balls_weights[i]
             previous_balls_walker_count[i][-1] = gv.num_walkers
 
-        # TODO: make sure that gv.num_occupied_balls is equal to the highest walker number inside the WE folder
-        for i in range(gv.num_occupied_balls + 1):
+        for i in range(gv.last_walker+1):
             walker_directory = gv.main_directory + '/WE/walker' + str(i)
             # if all of the files exist in the walker folder, it is a complete walker
             if os.path.isfile(walker_directory + '/weight_trajectory.txt') and \
@@ -244,7 +246,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
                 vacant_walker_indices.append(i)
 
         # create new walkers for the remaining weights
-        excess_index = gv.num_occupied_balls + 1
+        excess_index = gv.last_walker+1
         for i in range(previous_balls_weights.shape[0]):
             if previous_balls_weights[i][-1] > 0.0:
                 if previous_balls_walker_count[i][-1] <= 0:
