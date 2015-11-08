@@ -87,9 +87,13 @@ do
     echo 0 | ${GROMACS}/trjconv -s ../../init.gro -f run.xtc -b 10.0 -o run.xtc
     ${GROMACS}/g_angle -f run.xtc -n ../../dihedrals.ndx -ov -all -type dihedral
     awk -v f=1 -v t=2 'END {for(i=1;i<=NF;i++)if(i>=f&&i<=t)continue;else printf("%s%s",$i,(i!=NF)?OFS:ORS)}' angaver.xvg > coordinates.out
+    echo 24 27 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
+    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
     echo 24 29 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg > coordinates.out
+    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
     echo 25 28 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
+    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
+    echo 26 29 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
     awk 'END {print $2*10}' mindist.xvg >> coordinates.out
     echo 26 27 | ${GROMACS}/g_mindist -s ../../init.gro -f run.xtc -n ../../index.ndx
     awk 'END {print $2*10}' mindist.xvg >> coordinates.out
