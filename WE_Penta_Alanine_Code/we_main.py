@@ -2,24 +2,20 @@ import numpy as np
 from time import time
 import os
 import sys
-main_directory = '/scratch/users/sahn1/WE_Penta_Alanine'  # TODO: set main directory for WE simulation
+main_directory = '/scratch/users/jbirgmei/CS229/penta_alanine'  # TODO: set main directory for WE simulation
 sys.path.append(main_directory)
 os.chdir(main_directory)
 import we_global_variables as gv
 import we_functions
 
 
-def weighted_ensemble_simulation(input_parameters_file, input_initial_values_file):
+def weighted_ensemble_simulation(input_initial_values_file):
     # set simulation parameters
-    we_functions.set_parameters(input_parameters_file)
+    we_functions.set_parameters()
 
     # create python objects for walkers and balls
-    if gv.enhanced_sampling_flag == 3:
-        walker_list = [None]*(gv.max_num_balls*gv.num_walkers_for_sc)
-        temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers_for_sc)
-    else:
-        walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
-        temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
+    walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
+    temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
     vacant_walker_indices = []
     balls = np.zeros((1, gv.num_cvs+3))  # ball coordinates / ball radius / ball key / # of walkers
     ball_to_walkers = {}
@@ -68,7 +64,7 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
             we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
             we_functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers,
-                                           ball_clusters_list)
+                                           ball_clusters_list, vacant_walker_indices)
         else:
             # fourth, resample walkers for every ball
             we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers, vacant_walker_indices)
@@ -84,4 +80,4 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
                 str(t2-t1) + '\n')
         f.close()
         
-weighted_ensemble_simulation('we_parameters.txt', 'we_initial_values.txt')
+weighted_ensemble_simulation('we_initial_values.txt')
