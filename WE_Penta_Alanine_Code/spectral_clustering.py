@@ -1,10 +1,67 @@
+#! /usr/bin/env python
+
 import numpy as np
 import copy
-import os
 from scipy.cluster.vq import kmeans2, ClusterError
+import sys
 
+def delta2(c1, c2):
+  minDist = np.inf
+  for i in xrange(0, len(c1)):
+    for j in xrange(0, len(c2)):
+      p1 = c1[i,:]
+      p2 = c2[j,:]
+      dist = np.sqrt(np.sum(np.square(p2 - p1)))
+      if dist < minDist:
+        minDist = dist
+  return minDist
 
-def spectral_clustering(balls_file, evectors_file, num_clusters, new_ball_clustering_file_name):
+def delta1(c):
+  maxDist = 0
+  for i in xrange(0, len(c)):
+    for j in xrange(0, len(c)):
+      if i == j:
+        continue
+      p1 = c[i,:]
+      p2 = c[j,:]
+      dist = np.sqrt(np.sum(np.square(p2 - p1)))
+      if dist > maxDist:
+        maxDist = dist
+  return maxDist
+
+def minDelta2(ball_coords):
+  column = ball_coords.shape[1]-1
+  num_clusters = int(np.max(ball_coords[:,column])+1)
+  min_delta2 = np.inf
+  for i in xrange(0,num_clusters):
+    for j in xrange(0,num_clusters):
+      if i == j:
+        continue
+      i = float(i)
+      j = float(j)
+      c1 = ball_coords[ball_coords[:,column] == i,:-1]
+      c2 = ball_coords[ball_coords[:,column] == j,:-1]
+      d2 = delta2(c1, c2)
+      if d2 < min_delta2:
+        min_delta2 = d2
+  return min_delta2
+
+def maxDelta1(ball_coords):
+  column = ball_coords.shape[1]-1
+  num_clusters = int(np.max(ball_coords[:,column])+1)
+  max_delta1 = 0
+  for i in xrange(0,num_clusters):
+    i = float(i)
+    c1 = ball_coords[ball_coords[:,column] == i,:-1]
+    d1 = delta1(c1)
+    if d1 > max_delta1:
+      max_delta1 = d1
+  return max_delta1
+
+def dunn(ball_coords):
+  return minDelta2(ball_coords) / maxDelta1(ball_coords)
+
+def spectral_clustering(balls_file, evectors_file, num_clusters):
     evectors = np.loadtxt(evectors_file)
     balls = np.loadtxt(balls_file)
 
@@ -18,86 +75,33 @@ def spectral_clustering(balls_file, evectors_file, num_clusters, new_ball_cluste
             log_second_evector[i] = 0.0
         else:
             log_second_evector[i] = np.log(second_evector[i])
-
-    '''
-    sorted_second_evector = np.sort(second_evector, axis=0)
-    second_evector_order = np.ndarray.argsort(second_evector)
-    num_balls = int(np.ceil(len(sorted_second_evector) / num_clusters))
-    array_of_clusters = [sorted_second_evector[i:i + num_balls] for i in
-                         range(0, len(sorted_second_evector), num_balls)]
-    array_of_orderings = [second_evector_order[i:i + num_balls] for i in range(0, len(second_evector_order), num_balls)]
-    num_clusters = len(array_of_clusters)
-    '''
+    a = balls
+    b = log_second_evector
+    matrix = np.hstack((balls, log_second_evector))
 
     while True:
         try:
-            centroids, labels = kmeans2(log_second_evector, num_clusters, minit='points', iter=30, missing='raise')
+            centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=200, missing='raise')
             break
         except ClusterError:
             num_clusters -= 1
 
-    f = open(new_ball_clustering_file_name, 'w')
+    ball_coords = np.zeros((balls.shape[0], 10))
+    for j in xrange(balls.shape[0]):
+        ball_coords[j,0:6] = balls[j, 0:6].tolist()
+        ball_coords[j, 6] = abs(evectors[j, 0])
+        ball_coords[j, 7] = log_second_evector[j, 0]
+        ball_coords[j, 8] = evectors[j, 2]
+        ball_coords[j, 9] = labels[j]
+        print ' '.join([str(x) for x in ball_coords[j, :]])
+    dunnIndex = dunn(ball_coords)
+    print >>sys.stderr, "Dunn index: %f" % dunnIndex
 
-    '''
-    for i in range(num_clusters):
-        first = 0
-        cluster = array_of_clusters[i]
-        ordering = array_of_orderings[i]
-        for j in range(cluster.shape[0]):
-            if first == 0:
-                first += 1
-                ref_ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ref_ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[ordering[j], 0]))
-                ball_cluster.append(second_evector[ordering[j]])
-                ball_cluster.append(final_evectors[ordering[j], 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-            else:
-                ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[ordering[j], 0]))
-                ball_cluster.append(second_evector[ordering[j]])
-                ball_cluster.append(final_evectors[ordering[j], 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-    '''
-
-    for i in range(num_clusters):
-        first = 0
-        for j in range(balls.shape[0]):
-            if labels[j] == i and first == 0:
-                first += 1
-                ref_ball_center = balls[j, 0:6].tolist()
-                ball_cluster = copy.deepcopy(ref_ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(evectors[j, 0]))
-                ball_cluster.append(log_second_evector[j, 0])
-                ball_cluster.append(evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                #ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-                #balls[j][gv.num_cvs+2] -= 1
-            elif labels[j] == i and first != 0:
-                ball_center = balls[j, 0:6].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(evectors[j, 0]))
-                ball_cluster.append(log_second_evector[j, 0])
-                ball_cluster.append(evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                #ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-                #balls[j][gv.num_cvs+2] -= 1
-    f.close()
-
-    #np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
-    #np.savetxt('evectors_' + str(step_num + 1) + '.txt', final_evectors, fmt=' %1.10e')
-    #np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', symmetric_transition_matrix, fmt=' %1.10e')
-
-os.chdir('/Users/Ahn/Dropbox (Stanford Mechanics)/Hee Sun Shirley/WE_Enhanced_Sampling/Penta_Alanine/WE_v2')
-spectral_clustering('balls_62.txt', 'evectors_62.txt', 5, 'ball_clustering_62_new.txt')
+if __name__ == "__main__":
+  if len(sys.argv) != 4:
+    print >>sys.stderr, "Need 3 args: balls file, evectors file, number of clusters"
+    sys.exit(1)
+  balls_file = sys.argv[1]
+  evectors_file = sys.argv[2]
+  num_clusters = int(sys.argv[3])
+  spectral_clustering(balls_file, evectors_file, num_clusters)
