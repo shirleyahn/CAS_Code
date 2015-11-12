@@ -43,7 +43,7 @@ def set_parameters():
         gv.less_or_greater_flag = p.less_or_greater_flag
         gv.static_threshold_flag = p.static_threshold_flag
         gv.threshold_values = p.threshold_values
-        gv.properties_to_keep_track = p.properties_to_keep_track_of
+        gv.properties_to_keep_track = p.properties_to_keep_track
     elif gv.enhanced_sampling_flag == 3:
         gv.num_balls_for_sc = p.num_balls_for_sc
         gv.num_clusters = p.num_clusters

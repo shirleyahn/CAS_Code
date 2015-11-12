@@ -36,7 +36,7 @@ static_threshold_flag=0  # 0: off, then the lowest (less_or_greater_flag = 0) or
                        # throughout the simulation.
 threshold_values=[20.0, 20.0, 20.0]  # if some properties of the walker have values less or greater than the threshold
                                      # values, then it is binned to the nearest existing ball.
-properties_to_keep_track=[20, 21, 22]  # properties of the 
+properties_to_keep_track=[20, 21, 22]  # properties of the
                           # walker that are compared against the threshold values. this can be weight
                           # and/or some collective variable(s). if one of them is weight, then type -1. otherwise type
                           # the indices of the collective variable, e.g. if there are 3 collective variables and you

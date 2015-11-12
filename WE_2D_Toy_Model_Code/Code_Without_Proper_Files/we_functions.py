@@ -7,6 +7,7 @@ import walker
 import we_global_variables as gv
 import we_check_state_function
 import we_energy_function as ef
+import we_parameters as p
 
 
 def calculate_distance_from_center(center, values):
@@ -18,43 +19,33 @@ def calculate_distance_from_center(center, values):
     return np.sqrt(distance)
 
 
-def set_parameters(input_parameter_file):
-    with open(input_parameter_file, 'r') as f:
-        gv.main_directory = f.readline().strip()
-        f.readline()
-        gv.balls_flag = int(f.readline())
-        gv.sorting_flag = int(f.readline())
-        gv.rate_flag = int(f.readline())
-        gv.num_states = int(f.readline())
-        gv.enhanced_sampling_flag = int(f.readline())
-        f.readline()
-        gv.num_balls_limit = int(f.readline())
-        gv.radius = float(f.readline())
-        gv.num_walkers = int(f.readline())
-        gv.num_cvs = int(f.readline())
-        temp_list = f.readline().strip().split()
-        gv.grid_dimensions = [float(i) for i in temp_list]
-        f.readline()
-        gv.max_num_steps = int(f.readline())
-        gv.num_occupied_balls = int(f.readline())
-        f.readline()
-        gv.m_steps_per_step = int(f.readline())
-        gv.step_size = float(f.readline())
-        gv.beta = float(f.readline())
-        gv.pbc = int(f.readline())
-        if gv.enhanced_sampling_flag == 2:
-            f.readline()
-            gv.less_or_greater_flag = int(f.readline())
-            gv.static_threshold_flag = int(f.readline())
-            temp_list = f.readline().strip().split()
-            gv.threshold_values = [float(i) for i in temp_list]
-            temp_list = f.readline().strip().split()
-            gv.properties_to_keep_track = [int(i) for i in temp_list]
-        elif gv.enhanced_sampling_flag == 3:
-            f.readline()
-            gv.num_balls_for_sc = int(f.readline())
-            gv.num_clusters = int(f.readline())
-            gv.num_walkers_for_sc = int(f.readline())
+def set_parameters():
+    gv.main_directory = p.main_directory
+    gv.balls_flag = p.balls_flag
+    gv.sorting_flag = p.sorting_flag
+    gv.rate_flag = p.rate_flag
+    gv.num_states = p.num_states
+    gv.enhanced_sampling_flag = p.enhanced_sampling_flag
+    gv.num_balls_limit = p.num_balls_limit
+    gv.radius = p.radius
+    gv.num_walkers = p.num_walkers
+    gv.num_cvs = p.num_cvs
+    gv.grid_dimensions = p.grid_dimensions
+    gv.max_num_steps = p.max_num_steps
+    gv.num_occupied_balls = p.num_occupied_balls
+    gv.m_steps_per_step = p.m_steps_per_step
+    gv.step_size = p.step_size
+    gv.beta = p.beta
+    gv.pbc = p.pbc
+    if gv.enhanced_sampling_flag == 2:
+        gv.less_or_greater_flag = p.less_or_greater_flag
+        gv.static_threshold_flag = p.static_threshold_flag
+        gv.threshold_values = p.threshold_values
+        gv.properties_to_keep_track = p.properties_to_keep_track
+    elif gv.enhanced_sampling_flag == 3:
+        gv.num_balls_for_sc = p.num_balls_for_sc
+        gv.num_clusters = p.num_clusters
+        gv.num_walkers_for_sc = p.num_walkers_for_sc
 
     ball_volume = (np.pi**(gv.num_cvs/2)*gv.radius**gv.num_cvs)/special.gamma((gv.num_cvs/2)+1)
     grid_volume = 1.0

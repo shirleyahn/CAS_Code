@@ -9,9 +9,9 @@ import we_global_variables as gv
 import we_functions
 
 
-def weighted_ensemble_simulation(input_parameters_file, input_initial_values_file):
+def weighted_ensemble_simulation(input_initial_values_file):
     # set simulation parameters
-    we_functions.set_parameters(input_parameters_file)
+    we_functions.set_parameters()
 
     # create python objects for walkers and balls
     walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
@@ -64,4 +64,4 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
                 str(t2-t1) + '\n')
         f.close()
         
-weighted_ensemble_simulation('we_parameters.txt', 'we_initial_values.txt')
+weighted_ensemble_simulation('we_initial_values.txt')
