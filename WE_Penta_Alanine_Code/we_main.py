@@ -2,16 +2,16 @@ import numpy as np
 from time import time
 import os
 import sys
-main_directory = '/scratch/users/sahn1/WE_Penta_Alanine'  # TODO: set main directory for WE simulation
+main_directory = '/scratch/users/jbirgmei/CS229/penta_alanine'  # TODO: set main directory for WE simulation
 sys.path.append(main_directory)
 os.chdir(main_directory)
 import we_global_variables as gv
 import we_functions
 
 
-def weighted_ensemble_simulation(input_parameters_file, input_initial_values_file):
+def weighted_ensemble_simulation(input_initial_values_file):
     # set simulation parameters
-    we_functions.set_parameters(input_parameters_file)
+    we_functions.set_parameters()
 
     # create python objects for walkers and balls
     if gv.enhanced_sampling_flag == 3:
@@ -84,4 +84,4 @@ def weighted_ensemble_simulation(input_parameters_file, input_initial_values_fil
                 str(t2-t1) + '\n')
         f.close()
         
-weighted_ensemble_simulation('we_parameters.txt', 'we_initial_values.txt')
+weighted_ensemble_simulation('we_initial_values.txt')

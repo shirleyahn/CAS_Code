@@ -7,6 +7,7 @@ from scipy.cluster.vq import kmeans2, ClusterError
 import walker
 import we_global_variables as gv
 import we_check_state_function
+import we_parameters as p
 
 
 def calculate_distance_from_center(center, values):
@@ -18,44 +19,36 @@ def calculate_distance_from_center(center, values):
     return np.sqrt(distance)
 
 
-def set_parameters(input_parameter_file):
-    with open(input_parameter_file, 'r') as f:
-        gv.main_directory = f.readline().strip()
-        gv.initial_configuration_directory = f.readline().strip()
-        f.readline()
-        gv.simulation_flag = int(f.readline())
-        gv.balls_flag = int(f.readline())
-        gv.sorting_flag = int(f.readline())
-        gv.rate_flag = int(f.readline())
-        gv.num_states = int(f.readline())
-        gv.enhanced_sampling_flag = int(f.readline())
-        f.readline()
-        gv.num_balls_limit = int(f.readline())
-        gv.radius = float(f.readline())
-        gv.num_walkers = int(f.readline())
-        gv.num_cvs = int(f.readline())
-        gv.lower_bound = float(f.readline())
-        gv.upper_bound = float(f.readline())
-        f.readline()
-        gv.initial_step_num = int(f.readline())
-        gv.max_num_steps = int(f.readline())
-        gv.num_occupied_balls = int(f.readline())
-        gv.first_walker = int(f.readline())
-        gv.last_walker = int(f.readline())
-        if gv.enhanced_sampling_flag == 2:
-            f.readline()
-            gv.less_or_greater_flag = int(f.readline())
-            gv.static_threshold_flag = int(f.readline())
-            temp_list = f.readline().strip().split()
-            gv.threshold_values = [float(i) for i in temp_list]
-            temp_list = f.readline().strip().split()
-            gv.properties_to_keep_track = [int(i) for i in temp_list]
-        elif gv.enhanced_sampling_flag == 3:
-            f.readline()
-            gv.num_balls_for_sc = int(f.readline())
-            gv.num_clusters = int(f.readline())
-            gv.num_walkers_for_sc = int(f.readline())
-            gv.timestep = float(f.readline())
+def set_parameters():
+    gv.main_directory = p.main_directory
+    gv.initial_configuration_directory = p.initial_configuration_directory
+    gv.simulation_flag = p.simulation_flag
+    gv.balls_flag = p.balls_flag
+    gv.sorting_flag = p.sorting_flag
+    gv.rate_flag = p.rate_flag
+    gv.num_states = p.num_states
+    gv.enhanced_sampling_flag = p.enhanced_sampling_flag
+    gv.num_balls_limit = p.num_balls_limit
+    gv.radius = p.radius
+    gv.num_walkers = p.num_walkers
+    gv.num_cvs = p.num_cvs
+    gv.lower_bound = p.lower_bound
+    gv.upper_bound = p.upper_bound
+    gv.initial_step_num = p.initial_step_num
+    gv.max_num_steps = p.max_num_steps
+    gv.num_occupied_balls = p.num_occupied_balls
+    gv.first_walker = p.first_walker
+    gv.last_walker = p.last_walker
+    if gv.enhanced_sampling_flag == 2:
+        gv.less_or_greater_flag = p.less_or_greater_flag
+        gv.static_threshold_flag = p.static_threshold_flag
+        gv.threshold_values = p.threshold_values
+        gv.properties_to_keep_track = p.properties_to_keep_track_of
+    elif gv.enhanced_sampling_flag == 3:
+        gv.num_balls_for_sc = p.num_balls_for_sc
+        gv.num_clusters = p.num_clusters
+        gv.num_walkers_for_sc = p.num_walkers_for_sc
+        gv.timestep = p.timestep
 
     ball_volume = (np.pi ** (gv.num_cvs / 2) * gv.radius ** gv.num_cvs) / special.gamma((gv.num_cvs / 2) + 1)
     gv.max_num_balls = 0
@@ -66,7 +59,6 @@ def set_parameters(input_parameter_file):
     print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
     gv.current_num_balls = 0
     gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
-
 
 def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers, vacant_walker_indices):
     for i in range(len(walker_list)):
@@ -163,6 +155,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
             previous_balls_walker_count[i][-1] = gv.num_walkers
 
         # TODO: make sure that gv.num_occupied_balls is equal to the highest walker number inside the WE folder
+
         for i in range(gv.num_occupied_balls + 1):
             walker_directory = gv.main_directory + '/WE/walker' + str(i)
             # if all of the files exist in the walker folder, it is a complete walker
@@ -492,7 +485,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
                 gv.current_num_balls += 1
 
-            # finally, write the new ball on the trajectory file
+        # finally, write the new ball on the trajectory file
         if gv.enhanced_sampling_flag != 2:
             current_ball_center = temp_walker_list[i].current_ball_center
             ball_key = temp_walker_list[i].ball_key
@@ -650,6 +643,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             log_second_evector[i] = 0.0
         else:
             log_second_evector[i] = np.log(second_evector[i])
+
 
     '''
     sorted_second_evector = np.sort(second_evector, axis=0)
