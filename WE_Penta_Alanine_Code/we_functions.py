@@ -641,6 +641,15 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         if abs(final_evalues[i]) < 1.0e-10:
             final_evalues[i] = 0.0
     second_evector = final_evectors[:, 1]
+    second_evector = second_evector.reshape(second_evector.shape[0], 1)
+    log_second_evector = np.zeros((second_evector.shape[0], 1))
+    for i in range(second_evector.shape[0]):
+        if second_evector[i] < 0.0:
+            log_second_evector[i] = -np.log(-second_evector[i])
+        elif second_evector[i] == 0.0 or second_evector[i] == 1.0:
+            log_second_evector[i] = 0.0
+        else:
+            log_second_evector[i] = np.log(second_evector[i])
 
     '''
     sorted_second_evector = np.sort(second_evector, axis=0)
@@ -654,8 +663,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
     while True:
         try:
-            second_evector = second_evector.reshape(second_evector.shape[0], 1)
-            centroids, labels = kmeans2(second_evector, num_clusters, minit='points', iter=10, missing='raise')
+            centroids, labels = kmeans2(log_second_evector, num_clusters, minit='points', iter=30, missing='raise')
             break
         except ClusterError:
             num_clusters -= 1
@@ -701,7 +709,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster = copy.deepcopy(ref_ball_center)
                 ball_cluster.append(i)
                 ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(second_evector[j, 0])
+                ball_cluster.append(log_second_evector[j, 0])
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
@@ -712,7 +720,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster = copy.deepcopy(ball_center)
                 ball_cluster.append(i)
                 ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(second_evector[j, 0])
+                ball_cluster.append(log_second_evector[j, 0])
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')

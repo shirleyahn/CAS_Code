@@ -697,7 +697,7 @@ def spectral_clustering(step_num,  temp_walker_list, balls, ball_clusters_list):
     while True:
         try:
             second_evector = second_evector.reshape(second_evector.shape[0], 1)
-            centroids, labels = kmeans2(second_evector, num_clusters, minit='points', iter=10, missing='raise')
+            centroids, labels = kmeans2(second_evector, num_clusters, minit='points', iter=30, missing='raise')
             break
         except ClusterError:
             num_clusters -= 1
