@@ -60,6 +60,7 @@ def set_parameters():
     gv.current_num_balls = 0
     gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
 
+
 def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers, vacant_walker_indices):
     for i in range(len(walker_list)):
         walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, 0.0, [-1000.0] * gv.num_cvs,
