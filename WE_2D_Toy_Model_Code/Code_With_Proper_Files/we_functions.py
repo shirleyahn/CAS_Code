@@ -777,8 +777,8 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             num_occupied_balls += 1
 
             num_bins = len(ball_clusters_list[current_cluster])
-            if num_bins > gv.num_walkers_for_sc:
-                num_bins = gv.num_walkers_for_sc
+            if num_bins > gv.num_balls_for_sc:
+                num_bins = gv.num_balls_for_sc
             bins = ball_clusters_list[current_cluster][0:num_bins]
 
             target_num_walkers = int(np.floor(float(gv.num_walkers_for_sc)/num_bins))
