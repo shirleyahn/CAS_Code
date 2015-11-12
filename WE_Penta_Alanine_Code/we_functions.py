@@ -58,11 +58,7 @@ def set_parameters():
         gv.max_num_balls = gv.num_balls_limit
     print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
     gv.current_num_balls = 0
-    if gv.simulation_flag == 0:
-        gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
-    else:
-        gv.total_num_walkers = gv.last_walker-gv.first_walker+1
-
+    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
 
 def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers, vacant_walker_indices):
     for i in range(len(walker_list)):
@@ -158,7 +154,9 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
             previous_balls_walker_count[i] = previous_balls_weights[i]
             previous_balls_walker_count[i][-1] = gv.num_walkers
 
-        for i in range(gv.last_walker+1):
+        # TODO: make sure that gv.num_occupied_balls is equal to the highest walker number inside the WE folder
+
+        for i in range(gv.num_occupied_balls + 1):
             walker_directory = gv.main_directory + '/WE/walker' + str(i)
             # if all of the files exist in the walker folder, it is a complete walker
             if os.path.isfile(walker_directory + '/weight_trajectory.txt') and \
@@ -231,7 +229,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
                 vacant_walker_indices.append(i)
 
         # create new walkers for the remaining weights
-        excess_index = gv.last_walker+1
+        excess_index = gv.num_occupied_balls + 1
         for i in range(previous_balls_weights.shape[0]):
             if previous_balls_weights[i][-1] > 0.0:
                 if previous_balls_walker_count[i][-1] <= 0:
@@ -636,6 +634,16 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         if abs(final_evalues[i]) < 1.0e-10:
             final_evalues[i] = 0.0
     second_evector = final_evectors[:, 1]
+    second_evector = second_evector.reshape(second_evector.shape[0], 1)
+    log_second_evector = np.zeros((second_evector.shape[0], 1))
+    for i in range(second_evector.shape[0]):
+        if second_evector[i] < 0.0:
+            log_second_evector[i] = -np.log(-second_evector[i])
+        elif second_evector[i] == 0.0 or second_evector[i] == 1.0:
+            log_second_evector[i] = 0.0
+        else:
+            log_second_evector[i] = np.log(second_evector[i])
+
 
     '''
     sorted_second_evector = np.sort(second_evector, axis=0)
@@ -649,8 +657,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
     while True:
         try:
-            second_evector = second_evector.reshape(second_evector.shape[0], 1)
-            centroids, labels = kmeans2(second_evector, num_clusters, minit='points', iter=10, missing='raise')
+            centroids, labels = kmeans2(log_second_evector, num_clusters, minit='points', iter=30, missing='raise')
             break
         except ClusterError:
             num_clusters -= 1
@@ -696,7 +703,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster = copy.deepcopy(ref_ball_center)
                 ball_cluster.append(i)
                 ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(second_evector[j, 0])
+                ball_cluster.append(log_second_evector[j, 0])
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
@@ -707,7 +714,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster = copy.deepcopy(ball_center)
                 ball_cluster.append(i)
                 ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(second_evector[j, 0])
+                ball_cluster.append(log_second_evector[j, 0])
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
@@ -720,11 +727,12 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', symmetric_transition_matrix, fmt=' %1.10e')
 
 
-def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
+def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers_for_sc, int)
     excess_index = gv.total_num_walkers
+    vacant_walker_indices = []
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
             num_occupied_balls += 1
@@ -799,9 +807,6 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         weights[x] = xy_weight
                         if y not in new_indices:
                             vacant_walker_indices.append(y)
-                            # remove walker y directory
-                            os.chdir(gv.main_directory + '/WE')
-                            os.system('rm -rf walker' + str(y))
 
                 for ni, global_index in enumerate(new_indices):
                     if occupied_indices[global_index] == 0:
