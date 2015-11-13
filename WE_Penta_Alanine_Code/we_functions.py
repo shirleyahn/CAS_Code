@@ -869,6 +869,9 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         weights[x] = xy_weight
                         if y not in new_indices:
                             vacant_walker_indices.append(y)
+                            # remove walker y directory
+                            os.chdir(gv.main_directory + '/WE')
+                            os.system('rm -rf walker' + str(y))
 
                 for ni, global_index in enumerate(new_indices):
                     if occupied_indices[global_index] == 0:
