@@ -565,7 +565,61 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
     if gv.enhanced_sampling_flag == 2 and gv.static_threshold_flag == 0:
         gv.threshold_values = new_threshold_values
     return balls
+def delta2(c1, c2):
+  minDist = np.inf
+  for i in xrange(0, len(c1)):
+    for j in xrange(0, len(c2)):
+      p1 = c1[i,:]
+      p2 = c2[j,:]
+      dist = np.sqrt(np.sum(np.square(p2 - p1)))
+      if dist < minDist:
+        minDist = dist
+  return minDist
 
+def delta1(c):
+  maxDist = 0
+  for i in xrange(0, len(c)):
+    for j in xrange(0, len(c)):
+      if i == j:
+        continue
+      p1 = c[i,:]
+      p2 = c[j,:]
+      dist = np.sqrt(np.sum(np.square(p2 - p1)))
+      if dist > maxDist:
+        maxDist = dist
+  return maxDist
+
+def minDelta2(ball_coords):
+  column = ball_coords.shape[1]-1
+  num_clusters = int(np.max(ball_coords[:,column])+1)
+  min_delta2 = np.inf
+  for i in xrange(0,num_clusters):
+    for j in xrange(0,num_clusters):
+      if i == j:
+        continue
+      i = float(i)
+      j = float(j)
+      c1 = ball_coords[ball_coords[:,column] == i,:-1]
+      c2 = ball_coords[ball_coords[:,column] == j,:-1]
+      d2 = delta2(c1, c2)
+      if d2 < min_delta2:
+        min_delta2 = d2
+  return min_delta2
+
+def maxDelta1(ball_coords):
+  column = ball_coords.shape[1]-1
+  num_clusters = int(np.max(ball_coords[:,column])+1)
+  max_delta1 = 0
+  for i in xrange(0,num_clusters):
+    i = float(i)
+    c1 = ball_coords[ball_coords[:,column] == i,:-1]
+    d1 = delta1(c1)
+    if d1 > max_delta1:
+      max_delta1 = d1
+  return max_delta1
+
+def dunn(ball_coords):
+  return minDelta2(ball_coords) / maxDelta1(ball_coords)
 
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
@@ -656,14 +710,21 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     num_clusters = len(array_of_clusters)
     '''
 
+    matrix = np.hstack((balls, log_second_evector))
+
     while True:
         try:
-            centroids, labels = kmeans2(log_second_evector, num_clusters, minit='points', iter=30, missing='raise')
+            centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
             break
         except ClusterError:
             num_clusters -= 1
 
     os.chdir(gv.main_directory + '/WE')
+    with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
+        labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
+        labeled_matrix[:,0:matrix.shape[1]] = matrix
+        labeled_matrix[:,matrix.shape[1]] = labels
+        print >>dunn_index_f, dunn(labeled_matrix)
     f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
 
     '''
