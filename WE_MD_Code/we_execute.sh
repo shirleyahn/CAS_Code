@@ -28,6 +28,7 @@ num_cpu=16  # TODO: set number of cores per node
 
 cd $MAIN_DIRECTORY
 scontrol show hostname $SLURM_JOB_NODELIST > initial_nodefilelist.txt
+rm -rf nodefilelist.txt
 for i in `seq 1 $num_nodes`;
 do 
     for j in `seq 1 $num_cpu`;
