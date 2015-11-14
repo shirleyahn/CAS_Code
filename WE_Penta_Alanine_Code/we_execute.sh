@@ -4,7 +4,7 @@
 #SBATCH --partition=normal
 #SBATCH --qos=normal
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=2
+#SBATCH --ntasks-per-node=8
 #SBATCH --job-name=6_80_10ps
 #SBATCH --output=6_80_10ps.out
 #SBATCH --error=6_80_10ps.err
@@ -23,7 +23,7 @@ echo `scontrol show hostname $SLURM_JOB_NODELIST`
 
 export MAIN_DIRECTORY=/scratch/users/jbirgmei/CS229/penta_alanine  # TODO: set main directory for WE simulation
 num_nodes=1  # TODO: set number of nodes requested
-num_cpu=2  # TODO: set number of cores per node
+num_cpu=8  # TODO: set number of cores per node
 
 cd $MAIN_DIRECTORY
 scontrol show hostname $SLURM_JOB_NODELIST > initial_nodefilelist.txt

@@ -565,61 +565,68 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
     if gv.enhanced_sampling_flag == 2 and gv.static_threshold_flag == 0:
         gv.threshold_values = new_threshold_values
     return balls
+
+
 def delta2(c1, c2):
-  minDist = np.inf
-  for i in xrange(0, len(c1)):
-    for j in xrange(0, len(c2)):
-      p1 = c1[i,:]
-      p2 = c2[j,:]
-      dist = np.sqrt(np.sum(np.square(p2 - p1)))
-      if dist < minDist:
-        minDist = dist
-  return minDist
+    min_dist = np.inf
+    for i in xrange(0, len(c1)):
+        for j in xrange(0, len(c2)):
+            p1 = c1[i, :]
+            p2 = c2[j, :]
+            dist = np.sqrt(np.sum(np.square(p2 - p1)))
+            if dist < min_dist:
+                min_dist = dist
+    return min_dist
+
 
 def delta1(c):
-  maxDist = 0
-  for i in xrange(0, len(c)):
-    for j in xrange(0, len(c)):
-      if i == j:
-        continue
-      p1 = c[i,:]
-      p2 = c[j,:]
-      dist = np.sqrt(np.sum(np.square(p2 - p1)))
-      if dist > maxDist:
-        maxDist = dist
-  return maxDist
+    max_dist = 0
+    for i in xrange(0, len(c)):
+        for j in xrange(0, len(c)):
+            if i == j:
+                continue
+            p1 = c[i, :]
+            p2 = c[j, :]
+            dist = np.sqrt(np.sum(np.square(p2 - p1)))
+            if dist > max_dist:
+                max_dist = dist
+    return max_dist
+
 
 def minDelta2(ball_coords):
-  column = ball_coords.shape[1]-1
-  num_clusters = int(np.max(ball_coords[:,column])+1)
-  min_delta2 = np.inf
-  for i in xrange(0,num_clusters):
-    for j in xrange(0,num_clusters):
-      if i == j:
-        continue
-      i = float(i)
-      j = float(j)
-      c1 = ball_coords[ball_coords[:,column] == i,:-1]
-      c2 = ball_coords[ball_coords[:,column] == j,:-1]
-      d2 = delta2(c1, c2)
-      if d2 < min_delta2:
-        min_delta2 = d2
-  return min_delta2
+    column = ball_coords.shape[1]-1
+    num_clusters = int(np.max(ball_coords[:, column])+1)
+    min_delta2 = np.inf
+    for i in xrange(0,num_clusters):
+        for j in xrange(0,num_clusters):
+            if i == j:
+                continue
+            i = float(i)
+            j = float(j)
+            c1 = ball_coords[ball_coords[:, column] == i, :-1]
+            c2 = ball_coords[ball_coords[:, column] == j, :-1]
+            d2 = delta2(c1, c2)
+            if d2 < min_delta2:
+                min_delta2 = d2
+    return min_delta2
+
 
 def maxDelta1(ball_coords):
-  column = ball_coords.shape[1]-1
-  num_clusters = int(np.max(ball_coords[:,column])+1)
-  max_delta1 = 0
-  for i in xrange(0,num_clusters):
-    i = float(i)
-    c1 = ball_coords[ball_coords[:,column] == i,:-1]
-    d1 = delta1(c1)
-    if d1 > max_delta1:
-      max_delta1 = d1
-  return max_delta1
+    column = ball_coords.shape[1]-1
+    num_clusters = int(np.max(ball_coords[:, column])+1)
+    max_delta1 = 0
+    for i in xrange(0,num_clusters):
+        i = float(i)
+        c1 = ball_coords[ball_coords[:, column] == i, :-1]
+        d1 = delta1(c1)
+        if d1 > max_delta1:
+            max_delta1 = d1
+    return max_delta1
+
 
 def dunn(ball_coords):
-  return minDelta2(ball_coords) / maxDelta1(ball_coords)
+    return minDelta2(ball_coords)/maxDelta1(ball_coords)
+
 
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
