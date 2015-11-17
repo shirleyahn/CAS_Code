@@ -674,6 +674,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             if row_sum != 0.0:
                 new_transition_matrix[i][j] /= row_sum
 
+    '''
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
     idx = abs(evalues).argsort()[::-1]
     evectors = evectors[:, idx]
@@ -685,8 +686,9 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             inv_eq_vec_diag_matrix[i][i] = 1.0 / eq_vec_diag_matrix[i][i]
     symmetric_transition_matrix = np.dot(np.sqrt(eq_vec_diag_matrix),
                                          np.dot(new_transition_matrix, np.sqrt(inv_eq_vec_diag_matrix)))
+    '''
 
-    final_evalues, final_evectors = np.linalg.eig(symmetric_transition_matrix)
+    final_evalues, final_evectors = np.linalg.eig(new_transition_matrix)
     idx = abs(final_evalues).argsort()[::-1]
     final_evalues = np.real(final_evalues[idx])
     final_evectors = np.real(final_evectors[:, idx])
@@ -695,17 +697,9 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     for i in range(len(final_evalues)):
         if abs(final_evalues[i]) < 1.0e-10:
             final_evalues[i] = 0.0
-    second_evector = final_evectors[:, 1]
-    second_evector = second_evector.reshape(second_evector.shape[0], 1)
-    log_second_evector = np.zeros((second_evector.shape[0], 1))
-    for i in range(second_evector.shape[0]):
-        if second_evector[i] < 0.0:
-            log_second_evector[i] = -np.log(-second_evector[i])
-        elif second_evector[i] == 0.0 or second_evector[i] == 1.0:
-            log_second_evector[i] = 0.0
-        else:
-            log_second_evector[i] = np.log(second_evector[i])
-
+    normalized_second_evector = np.zeros((final_evectors.shape[0], 1))
+    for i in range(final_evectors.shape[0]):
+        normalized_second_evector[i] = final_evectors[i, 1]/final_evectors[i, 0]
 
     '''
     sorted_second_evector = np.sort(second_evector, axis=0)
@@ -717,7 +711,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     num_clusters = len(array_of_clusters)
     '''
 
-    matrix = np.hstack((balls, log_second_evector))
+    matrix = np.hstack((balls, normalized_second_evector))
 
     while True:
         try:
