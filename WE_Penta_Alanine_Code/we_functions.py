@@ -597,8 +597,8 @@ def minDelta2(ball_coords):
     column = ball_coords.shape[1]-1
     num_clusters = int(np.max(ball_coords[:, column])+1)
     min_delta2 = np.inf
-    for i in xrange(0,num_clusters):
-        for j in xrange(0,num_clusters):
+    for i in xrange(0, num_clusters):
+        for j in xrange(0, num_clusters):
             if i == j:
                 continue
             i = float(i)
@@ -766,7 +766,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster = copy.deepcopy(ref_ball_center)
                 ball_cluster.append(i)
                 ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(log_second_evector[j, 0])
+                ball_cluster.append(normalized_second_evector[j, 0])
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
@@ -777,7 +777,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster = copy.deepcopy(ball_center)
                 ball_cluster.append(i)
                 ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(log_second_evector[j, 0])
+                ball_cluster.append(normalized_second_evector[j, 0])
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
@@ -787,7 +787,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
     np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
     np.savetxt('evectors_' + str(step_num + 1) + '.txt', final_evectors, fmt=' %1.10e')
-    np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', symmetric_transition_matrix, fmt=' %1.10e')
+    np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
