@@ -691,7 +691,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                                          np.dot(new_transition_matrix, np.sqrt(inv_eq_vec_diag_matrix)))
     '''
 
-    final_evalues, final_evectors = np.linalg.eig(new_transition_matrix)
+    final_evalues, final_evectors = np.linalg.eig(new_transition_matrix.T)
     idx = abs(final_evalues).argsort()[::-1]
     final_evalues = np.real(final_evalues[idx])
     final_evectors = np.real(final_evectors[:, idx])
@@ -705,7 +705,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     normalized_second_evector = np.zeros((final_evectors.shape[0], 1))
     for i in range(final_evectors.shape[0]):
         if final_evectors[i, 0] != 0.0:
-            normalized_second_evector[i] = final_evectors[i, 1] / final_evectors[i, 0]
+            normalized_second_evector[i] = final_evectors[i, 1] / abs(final_evectors[i, 0])
         else:
             normalized_second_evector[i] = 0.0
 
