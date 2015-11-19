@@ -14,8 +14,12 @@ def weighted_ensemble_simulation(input_initial_values_file):
     we_functions.set_parameters()
 
     # create python objects for walkers and balls
-    walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
-    temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
+    if gv.enhanced_sampling_flag == 3:
+        walker_list = [None]*(gv.max_num_balls*gv.num_walkers_for_sc)
+        temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers_for_sc)
+    else:
+        walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
+        temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
     vacant_walker_indices = []
     balls = np.zeros((1, gv.num_cvs+3))
     ball_to_walkers = {}

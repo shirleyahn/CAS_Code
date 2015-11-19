@@ -667,12 +667,14 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(new_transition_matrix.shape[0]):
         for j in range(new_transition_matrix.shape[1]):
-            new_transition_matrix[i][j] = (transition_matrix[i][j] + transition_matrix[j][i]) / 2.0
+            new_transition_matrix[i][j] = transition_matrix[i][j] + transition_matrix[j][i]
     for i in range(new_transition_matrix.shape[0]):
         row_sum = np.sum(new_transition_matrix[i])
         for j in range(new_transition_matrix.shape[1]):
             if row_sum != 0.0:
                 new_transition_matrix[i][j] /= row_sum
+    os.chdir(gv.main_directory + '/WE')
+    np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     '''
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
@@ -692,6 +694,8 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     idx = abs(final_evalues).argsort()[::-1]
     final_evalues = np.real(final_evalues[idx])
     final_evectors = np.real(final_evectors[:, idx])
+    np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
+    np.savetxt('evectors_' + str(step_num + 1) + '.txt', final_evectors, fmt=' %1.10e')
 
     num_clusters = gv.num_clusters
     for i in range(len(final_evalues)):
@@ -699,7 +703,10 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             final_evalues[i] = 0.0
     normalized_second_evector = np.zeros((final_evectors.shape[0], 1))
     for i in range(final_evectors.shape[0]):
-        normalized_second_evector[i] = final_evectors[i, 1]/final_evectors[i, 0]
+        if final_evectors[i, 0] != 0.0:
+            normalized_second_evector[i] = final_evectors[i, 1] / final_evectors[i, 0]
+        else:
+            normalized_second_evector[i] = 0.0
 
     '''
     sorted_second_evector = np.sort(second_evector, axis=0)
@@ -720,14 +727,12 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         except ClusterError:
             num_clusters -= 1
 
-    os.chdir(gv.main_directory + '/WE')
     with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
         labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
         labeled_matrix[:,0:matrix.shape[1]] = matrix
         labeled_matrix[:,matrix.shape[1]] = labels
         print >>dunn_index_f, dunn(labeled_matrix)
     f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
-
     '''
     for i in range(num_clusters):
         first = 0
@@ -756,7 +761,6 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 f.write('\n')
                 ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
     '''
-
     for i in range(num_clusters):
         first = 0
         for j in range(balls.shape[0]):
@@ -784,10 +788,6 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                 balls[j][gv.num_cvs+2] -= 1
     f.close()
-
-    np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
-    np.savetxt('evectors_' + str(step_num + 1) + '.txt', final_evectors, fmt=' %1.10e')
-    np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
