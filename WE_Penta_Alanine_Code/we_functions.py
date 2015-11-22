@@ -9,6 +9,7 @@ import we_global_variables as gv
 import we_check_state_function
 import we_parameters as p
 
+from sklearn.metrics import silhouette_score, silhouette_samples
 
 def calculate_distance_from_center(center, values):
     distance = 0.0
@@ -729,6 +730,12 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         labeled_matrix[:,0:matrix.shape[1]] = matrix
         labeled_matrix[:,matrix.shape[1]] = labels
         print >>dunn_index_f, dunn(labeled_matrix)
+        silhouette_avg = silhouette_score(matrix, labels)
+        print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
+        sample_silhouette_values = silhouette_samples(matrix, labels)
+        for i in xrange(int(max(labels))+1):
+            print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+
     f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
     '''
     for i in range(num_clusters):
