@@ -716,20 +716,20 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     num_clusters = len(array_of_clusters)
     '''
 
-    #matrix = np.hstack((balls, normalized_second_evector))
+    matrix = np.hstack((balls, normalized_second_evector))
 
     while True:
         try:
-            centroids, labels = kmeans2(normalized_second_evector, num_clusters, minit='points', iter=100, missing='raise')
+            centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
             break
         except ClusterError:
             num_clusters -= 1
 
-    #with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
-        #labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
-        #labeled_matrix[:,0:matrix.shape[1]] = matrix
-        #labeled_matrix[:,matrix.shape[1]] = labels
-        #print >>dunn_index_f, dunn(labeled_matrix)
+    with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
+        labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
+        labeled_matrix[:,0:matrix.shape[1]] = matrix
+        labeled_matrix[:,matrix.shape[1]] = labels
+        print >>dunn_index_f, dunn(labeled_matrix)
     f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
     '''
     for i in range(num_clusters):
