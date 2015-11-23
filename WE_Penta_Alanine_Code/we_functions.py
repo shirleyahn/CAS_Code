@@ -8,8 +8,8 @@ import walker
 import we_global_variables as gv
 import we_check_state_function
 import we_parameters as p
+#from sklearn.metrics import silhouette_score, silhouette_samples
 
-from sklearn.metrics import silhouette_score, silhouette_samples
 
 def calculate_distance_from_center(center, values):
     distance = 0.0
@@ -18,6 +18,20 @@ def calculate_distance_from_center(center, values):
     if abs(distance) < 1.0e-10:
         distance = 0.0
     return np.sqrt(distance)
+
+
+def calculate_dihedral_distance_from_center(center, values):
+    distance = 0.0
+    for i in range(len(center)):
+        if values[i] - center[i] > 180.0:
+            distance += abs(values[i] - center[i] - 360.0) ** 2
+        elif values[i] - center[i] < -180.0:
+            distance += abs(values[i] - center[i] + 360.0) ** 2
+        else:
+            distance += abs(values[i] - center[i]) ** 2
+    if abs(distance) < 1.0e-10:
+        distance = 0.0
+    return np.sqrt(distance/len(center))  # ranges from 0 to 180 degrees
 
 
 def set_parameters():
@@ -35,6 +49,7 @@ def set_parameters():
     gv.num_cvs = p.num_cvs
     gv.lower_bound = p.lower_bound
     gv.upper_bound = p.upper_bound
+    gv.angle_cvs = p.angle_cvs
     gv.initial_step_num = p.initial_step_num
     gv.max_num_steps = p.max_num_steps
     gv.num_occupied_balls = p.num_occupied_balls
@@ -109,10 +124,16 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
             walker_list[i].previous_ball_center = previous_ball_center
             walker_list[i].current_ball_center = current_ball_center
             walker_list[i].radius = current_ball_radius
-            walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
+            if gv.angle_cvs == 0:
+                walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
                                                                                           previous_ball_center)
-            walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates,
+                walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates,
                                                                                          current_ball_center)
+            else:
+                walker_list[i].previous_distance_from_center = \
+                    calculate_dihedral_distance_from_center(previous_coordinates, previous_ball_center)
+                walker_list[i].current_distance_from_center = \
+                    calculate_dihedral_distance_from_center(current_coordinates, current_ball_center)
             if gv.rate_flag == 1:
                 walker_list[i].state = int(ball_trajectory[-1][-1])
 
@@ -140,10 +161,16 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
             walker_list[i].previous_ball_center = previous_ball_center
             walker_list[i].current_ball_center = current_ball_center
             walker_list[i].radius = current_ball_radius
-            walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
+            if gv.angle_cvs == 0:
+                walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
                                                                                           previous_ball_center)
-            walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates,
+                walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates,
                                                                                          current_ball_center)
+            else:
+                walker_list[i].previous_distance_from_center = \
+                    calculate_dihedral_distance_from_center(previous_coordinates, previous_ball_center)
+                walker_list[i].current_distance_from_center = \
+                    calculate_dihedral_distance_from_center(current_coordinates, current_ball_center)
             if gv.rate_flag == 1:
                 walker_list[i].state = int(ball_trajectory[-1][-1])
 
@@ -212,9 +239,12 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
                     current_state = -1
                 walker_list[i].state = current_state
                 walker_list[i].ball_key = current_ball_key
-                previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
-                                                                               previous_ball_center)
-                current_distance_from_center = calculate_distance_from_center(current_coordinates, current_ball_center)
+                if gv.angle_cvs == 0:
+                    previous_distance_from_center = calculate_distance_from_center(previous_coordinates, previous_ball_center)
+                    current_distance_from_center = calculate_distance_from_center(current_coordinates, current_ball_center)
+                else:
+                    previous_distance_from_center = calculate_dihedral_distance_from_center(previous_coordinates, previous_ball_center)
+                    current_distance_from_center = calculate_dihedral_distance_from_center(current_coordinates, current_ball_center)
                 walker_list[i].previous_distance_from_center = previous_distance_from_center
                 walker_list[i].current_distance_from_center = current_distance_from_center
 
@@ -276,10 +306,16 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to
                     walker_list[walker_index].state = current_state
                     walker_list[walker_index].ball_key = current_ball_key
                     walker_list[walker_index].radius = current_ball_radius
-                    previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
-                                                                                   previous_ball_center)
-                    current_distance_from_center = calculate_distance_from_center(current_coordinates,
-                                                                                  current_ball_center)
+                    if gv.angle_cvs == 0:
+                        previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
+                                                                                       previous_ball_center)
+                        current_distance_from_center = calculate_distance_from_center(current_coordinates,
+                                                                                      current_ball_center)
+                    else:
+                        previous_distance_from_center = calculate_dihedral_distance_from_center(previous_coordinates,
+                                                                                                previous_ball_center)
+                        current_distance_from_center = calculate_dihedral_distance_from_center(current_coordinates,
+                                                                                               current_ball_center)
                     walker_list[i].previous_distance_from_center = previous_distance_from_center
                     walker_list[i].current_distance_from_center = current_distance_from_center
 
@@ -401,10 +437,13 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         if inside == 0:
             for j in range(balls.shape[0]):
                 current_ball_center = balls[j][0:gv.num_cvs].tolist()
-                distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
+                if gv.angle_cvs == 0:
+                    distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
+                else:
+                    distance_from_center = calculate_dihedral_distance_from_center(current_ball_center, new_coordinates)
                 if distance_from_center <= gv.radius or abs(distance_from_center - gv.radius) < 1.0e-10:
                     inside += 1
-                if distance == 0.0:
+                if j == 0:
                     distance = distance_from_center
                     ball_key = j
                 else:
@@ -416,7 +455,10 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             if inside != 0:
                 balls[ball_key][gv.num_cvs+2] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
-                distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
+                if gv.angle_cvs == 0:
+                    distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
+                else:
+                    distance_from_center = calculate_dihedral_distance_from_center(current_ball_center, new_coordinates)
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                     previous_ball_center, current_ball_center, ball_key,
                                                     previous_distance_from_center, distance_from_center,
@@ -636,19 +678,15 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             previous_coordinates = temp_walker_list[i].previous_ball_center
         else:
             previous_coordinates = temp_walker_list[i].previous_coordinates
-        if temp_walker_list[i].current_distance_from_center > gv.radius:
-            current_coordinates = temp_walker_list[i].current_ball_center
-        else:
-            current_coordinates = temp_walker_list[i].current_coordinates
 
         previous_distance = 0.0
         previous_ball_key = 0
-        current_distance = 0.0
-        current_ball_key = 0
         for j in range(balls.shape[0]):
             ball_center = balls[j][0:gv.num_cvs].tolist()
-            previous_distance_from_center = calculate_distance_from_center(ball_center, previous_coordinates)
-            current_distance_from_center = calculate_distance_from_center(ball_center, current_coordinates)
+            if gv.angle_cvs == 0:
+                previous_distance_from_center = calculate_distance_from_center(ball_center, previous_coordinates)
+            else:
+                previous_distance_from_center = calculate_dihedral_distance_from_center(ball_center, previous_coordinates)
             if j == 0:
                 previous_distance = previous_distance_from_center
                 previous_ball_key = j
@@ -656,24 +694,19 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 if previous_distance_from_center < previous_distance:
                     previous_distance = previous_distance_from_center
                     previous_ball_key = j
-            if j == 0:
-                current_distance = current_distance_from_center
-                current_ball_key = j
-            else:
-                if current_distance_from_center < current_distance:
-                    current_distance = current_distance_from_center
-                    current_ball_key = j
-        transition_matrix[previous_ball_key][current_ball_key] += temp_walker_list[i].weight
+        transition_matrix[previous_ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
 
+    # transition matrix should fulfill detailed balance if simulation is run under Hamiltonian dynamics in the
+    # canonical ensemble. equation is from Prinz, et al JCP (2011).
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(new_transition_matrix.shape[0]):
         for j in range(new_transition_matrix.shape[1]):
             new_transition_matrix[i][j] = transition_matrix[i][j] + transition_matrix[j][i]
+
     for i in range(new_transition_matrix.shape[0]):
-        row_sum = np.sum(new_transition_matrix[i])
-        for j in range(new_transition_matrix.shape[1]):
-            if row_sum != 0.0:
-                new_transition_matrix[i][j] /= row_sum
+        row_sum = np.sum(new_transition_matrix, axis=1)
+        if row_sum[i] != 0.0:
+            new_transition_matrix[i, :] /= row_sum[i]
     os.chdir(gv.main_directory + '/WE')
     np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
@@ -692,7 +725,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     '''
 
     final_evalues, final_evectors = np.linalg.eig(new_transition_matrix.T)
-    idx = abs(final_evalues).argsort()[::-1]
+    idx = abs(np.real(final_evalues)).argsort()[::-1]
     final_evalues = np.real(final_evalues[idx])
     final_evectors = np.real(final_evectors[:, idx])
     np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
@@ -716,7 +749,8 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     num_clusters = len(array_of_clusters)
     '''
 
-    matrix = np.hstack((balls, normalized_second_evector))
+    #matrix = np.hstack((balls, normalized_second_evector))
+    matrix = normalized_second_evector
 
     while True:
         try:
@@ -727,14 +761,14 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
     with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
         labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
-        labeled_matrix[:,0:matrix.shape[1]] = matrix
-        labeled_matrix[:,matrix.shape[1]] = labels
+        labeled_matrix[:, 0:matrix.shape[1]] = matrix
+        labeled_matrix[:, matrix.shape[1]] = labels
         print >>dunn_index_f, dunn(labeled_matrix)
-        silhouette_avg = silhouette_score(matrix, labels)
-        print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
-        sample_silhouette_values = silhouette_samples(matrix, labels)
-        for i in xrange(int(max(labels))+1):
-            print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+        #silhouette_avg = silhouette_score(matrix, labels)
+        #print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
+        #sample_silhouette_values = silhouette_samples(matrix, labels)
+        #for i in xrange(int(max(labels))+1):
+            #print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
 
     f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
     '''
