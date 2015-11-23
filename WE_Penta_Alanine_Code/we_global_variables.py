@@ -17,6 +17,7 @@ global num_walkers
 global num_cvs
 global lower_bound
 global upper_bound
+global angle_cvs
 
 global initial_step_num
 global max_num_steps

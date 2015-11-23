@@ -21,6 +21,7 @@ num_cvs=6  # number of collective variables (num_cvs) should be fixed.
 lower_bound=-180.0  # lower bound value for the collective variables. set it to arbitrary value if collective variables have
              # different units. this is only used to calculate the volume of the free energy landscape.
 upper_bound=180.0  # upper bound value for the collective variables.
+angle_cvs=1 # 0: if there is at least one cv that is not an angle. 1: if all of the cvs are angles.
 
 initial_step_num=0  # initial_step_num should be changed from 0 when restarting a simulation.
 max_num_steps=50  # maximum number of steps for the simulation.

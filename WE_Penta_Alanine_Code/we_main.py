@@ -27,7 +27,7 @@ def weighted_ensemble_simulation(input_initial_values_file):
     ball_clusters_list = {}
 
     # create walkers and their directories
-    we_functions.initialize(input_initial_values_file, walker_list, temp_walker_list, ball_to_walkers,
+    we_functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers,
                             vacant_walker_indices)
 
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
