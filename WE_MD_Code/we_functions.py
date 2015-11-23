@@ -744,9 +744,11 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     '''
 
     final_evalues, final_evectors = np.linalg.eig(new_transition_matrix.T)
-    idx = abs(np.real(final_evalues)).argsort()[::-1]
-    final_evalues = np.real(final_evalues[idx])
-    final_evectors = np.real(final_evectors[:, idx])
+    final_evalues = np.real(final_evalues)
+    final_evectors = np.real(final_evectors)
+    idx = final_evalues.argsort()[::-1]
+    final_evalues = final_evalues[idx]
+    final_evectors = final_evectors[:, idx]
     np.savetxt('evalues_' + str(step_num + 1) + '.txt', final_evalues, fmt=' %1.10e')
     np.savetxt('evectors_' + str(step_num + 1) + '.txt', final_evectors, fmt=' %1.10e')
 
