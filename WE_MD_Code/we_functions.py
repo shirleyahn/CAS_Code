@@ -24,14 +24,14 @@ def calculate_dihedral_distance_from_center(center, values):
     distance = 0.0
     for i in range(len(center)):
         if values[i] - center[i] > 180.0:
-            distance += abs(values[i] - center[i] - 360.0) ** 2
+            distance += (values[i] - center[i] - 360.0) ** 2
         elif values[i] - center[i] < -180.0:
-            distance += abs(values[i] - center[i] + 360.0) ** 2
+            distance += (values[i] - center[i] + 360.0) ** 2
         else:
-            distance += abs(values[i] - center[i]) ** 2
+            distance += (values[i] - center[i]) ** 2
     if abs(distance) < 1.0e-10:
         distance = 0.0
-    return np.sqrt(distance/len(center))  # ranges from 0 to 180 degrees
+    return np.sqrt(distance)
 
 
 def set_parameters():
@@ -116,8 +116,12 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].weight = weight
             f.close()
             trajectory = np.loadtxt('trajectory.txt')
-            previous_coordinates = trajectory[-2].tolist()
-            current_coordinates = trajectory[-1].tolist()
+            if gv.num_cvs == 1:
+                previous_coordinates = [trajectory[-2]]
+                current_coordinates = [trajectory[-1]]
+            else:
+                previous_coordinates = trajectory[-2].tolist()
+                current_coordinates = trajectory[-1].tolist()
             walker_list[i].previous_coordinates = previous_coordinates
             walker_list[i].current_coordinates = current_coordinates
             ball_trajectory = np.loadtxt('ball_trajectory.txt')
@@ -553,8 +557,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
     # if enhanced_sampling_flag = 2, replace "inadequate" walkers with ref_walker
     if gv.enhanced_sampling_flag == 2:
         for i in walker_indices:
-            new_coordinates = walker_list[i].current_coordinates
-            weight = walker_list[i].weight
+            new_coordinates = temp_walker_list[i].current_coordinates
+            weight = temp_walker_list[i].weight
             properties_to_keep_track = []
             for k in range(len(gv.properties_to_keep_track)):
                 if gv.properties_to_keep_track[k] < 0:
