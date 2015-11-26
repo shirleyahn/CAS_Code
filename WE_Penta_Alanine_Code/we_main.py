@@ -27,8 +27,9 @@ def weighted_ensemble_simulation(input_initial_values_file):
     ball_clusters_list = {}
 
     # create walkers and their directories
-    we_functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers,
-                            vacant_walker_indices)
+    new_balls = we_functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls,
+                                        ball_to_walkers, vacant_walker_indices)
+    balls = new_balls
 
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
         # reset ball objects so that balls are newly created at every step
@@ -64,7 +65,7 @@ def weighted_ensemble_simulation(input_initial_values_file):
 
         # third, perform spectral clustering if enhanced_sampling_flag = 3
         if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and \
-                        step_num != gv.initial_step_num:
+                        step_num != gv.initial_step_num and gv.sc_performed == 0:
             we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
             we_functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers,

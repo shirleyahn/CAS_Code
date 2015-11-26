@@ -14,6 +14,7 @@ global radius
 global num_walkers
 global num_cvs
 global grid_dimensions
+global angle_cvs
 
 global max_num_steps
 global num_occupied_balls
@@ -38,3 +39,5 @@ global num_walkers_for_sc
 global max_num_balls
 global current_num_balls
 global total_num_walkers
+global num_occupied_clusters
+global sc_performed

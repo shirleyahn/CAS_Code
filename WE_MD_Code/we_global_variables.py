@@ -33,7 +33,6 @@ global properties_to_keep_track
 global num_balls_for_sc
 global num_clusters
 global num_walkers_for_sc
-global timestep
 
 ###
 # parameters that are set by we_functions.py
@@ -41,3 +40,5 @@ global timestep
 global max_num_balls
 global current_num_balls
 global total_num_walkers
+global num_occupied_clusters
+global sc_performed
