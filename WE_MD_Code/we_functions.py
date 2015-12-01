@@ -828,7 +828,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             leftover_bins = []
             if num_bins > gv.num_balls_for_sc:
                 num_bins = gv.num_balls_for_sc
-                bin_indices = np.zeros(len(ball_clusters_list[current_cluster]), 1)
+                bin_indices = np.zeros((len(ball_clusters_list[current_cluster]), 1))
                 while len(bins) < num_bins:
                     bin_index = np.random.randint(0, len(ball_clusters_list[current_cluster]))
                     if bin_index[bin_index] == 0:
@@ -975,7 +975,6 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 # rename the directory with name 'i' to 'new_index'
                 os.chdir(gv.main_directory + '/WE')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
-
 
     while len(vacant_walker_indices) > 0:
         vacant_walker_indices.pop()
