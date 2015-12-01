@@ -44,7 +44,7 @@ def weighted_ensemble_simulation(input_initial_values_file):
             pass
         else:
             gv.first_walker = 0
-            gv.last_walker = gv.num_occupied_balls*gv.num_walkers-1
+            gv.last_walker = gv.total_num_walkers-1
         print 'running   ' + str(step_num+1) + '-th step'
 
         # first, run simulation
