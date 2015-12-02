@@ -600,7 +600,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 bin_indices = np.zeros((len(ball_clusters_list[current_cluster]), 1))
                 while len(bins) < num_bins:
                     bin_index = np.random.randint(0, len(ball_clusters_list[current_cluster]))
-                    if bin_index[bin_index] == 0:
+                    if bin_indices[bin_index] == 0:
                         bin_indices[bin_index] = 1
                         bins.append(ball_clusters_list[current_cluster][bin_index])
                 for i in range(len(ball_clusters_list[current_cluster])):
@@ -628,15 +628,16 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                     indices_bin.append(temp_walker_list[walker_index].global_index)
                 # reset ball_to_walkers
                 ball_to_walkers[ball_center] = []
-                if b == num_bins-1:
-                    for i in range(len(leftover_bins)):
-                        bin_index = leftover_bins[i]
-                        ball = ball_clusters_list[current_cluster][bin_index]
-                        for walker_index in ball_to_walkers[ball]:
-                            weights_bin.append(temp_walker_list[walker_index].weight)
-                            indices_bin.append(temp_walker_list[walker_index].global_index)
-                        # reset ball_to_walkers
-                        ball_to_walkers[ball] = []
+                if b == num_bins - 1:
+                    if len(leftover_bins) > 0:
+                        for i in range(len(leftover_bins)):
+                            bin_index = leftover_bins[i]
+                            ball = ball_clusters_list[current_cluster][bin_index]
+                            for walker_index in ball_to_walkers[ball]:
+                                weights_bin.append(temp_walker_list[walker_index].weight)
+                                indices_bin.append(temp_walker_list[walker_index].global_index)
+                            # reset ball_to_walkers
+                            ball_to_walkers[ball] = []
 
                 weights_array = np.array(weights_bin)
                 walker_indices = np.argsort(-weights_array)
