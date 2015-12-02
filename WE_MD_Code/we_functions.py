@@ -862,8 +862,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 if b == num_bins - 1:
                     if len(leftover_bins) > 0:
                         for i in range(len(leftover_bins)):
-                            bin_index = leftover_bins[i]
-                            ball = ball_clusters_list[current_cluster][bin_index]
+                            ball = leftover_bins[i]
                             for walker_index in ball_to_walkers[ball]:
                                 weights_bin.append(temp_walker_list[walker_index].weight)
                                 indices_bin.append(temp_walker_list[walker_index].global_index)
