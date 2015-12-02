@@ -595,8 +595,8 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             num_bins = len(ball_clusters_list[current_cluster])
             bins = []
             leftover_bins = []
-            if num_bins > gv.num_balls_for_sc:
-                num_bins = gv.num_balls_for_sc
+            if num_bins > gv.num_walkers_for_sc:
+                num_bins = gv.num_walkers_for_sc
                 bin_indices = np.zeros((len(ball_clusters_list[current_cluster]), 1))
                 while len(bins) < num_bins:
                     bin_index = np.random.randint(0, len(ball_clusters_list[current_cluster]))
