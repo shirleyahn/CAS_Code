@@ -658,12 +658,7 @@ def maxDelta1(ball_coords):
 
 
 def dunn(ball_coords):
-    num = minDelta2(ball_coords)
-    den = maxDelta1(ball_coords)
-    if den == 0:
-        return -1
-    else:
-        return num/den
+    return minDelta2(ball_coords)/maxDelta1(ball_coords)
 
 
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
@@ -754,7 +749,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         labeled_matrix[:, matrix.shape[1]] = labels
         print >>dunn_index_f, dunn(labeled_matrix)
         
-        if len(labels) == 1:
+        if len(labels) > 1:
             silhouette_avg = silhouette_score(matrix, labels)
             sample_silhouette_values = silhouette_samples(matrix, labels)
         else:
