@@ -658,7 +658,12 @@ def maxDelta1(ball_coords):
 
 
 def dunn(ball_coords):
-    return minDelta2(ball_coords)/maxDelta1(ball_coords)
+    num = minDelta2(ball_coords)
+    den = maxDelta1(ball_coords)
+    if den == 0:
+        return -1
+    else:
+        return num/den
 
 
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
