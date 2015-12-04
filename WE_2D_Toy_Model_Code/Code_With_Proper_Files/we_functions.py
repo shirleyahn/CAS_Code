@@ -791,9 +791,14 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         labeled_matrix[:, 0:matrix.shape[1]] = matrix
         labeled_matrix[:, matrix.shape[1]] = labels
         print >>dunn_index_f, dunn(labeled_matrix)
-        silhouette_avg = silhouette_score(matrix, labels)
+
+        if len(labels) > 1:
+            silhouette_avg = silhouette_score(matrix, labels)
+            sample_silhouette_values = silhouette_samples(matrix, labels)
+        else:
+            sample_silhouette_values = [-1] * len(labels)
+
         print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
-        sample_silhouette_values = silhouette_samples(matrix, labels)
         for i in xrange(int(max(labels))+1):
             print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
 

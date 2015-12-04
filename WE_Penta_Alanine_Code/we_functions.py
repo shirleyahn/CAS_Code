@@ -665,6 +665,7 @@ def dunn(ball_coords):
     else:
         return num/den
 
+
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.total_num_walkers):
@@ -752,7 +753,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         labeled_matrix[:, 0:matrix.shape[1]] = matrix
         labeled_matrix[:, matrix.shape[1]] = labels
         print >>dunn_index_f, dunn(labeled_matrix)
-        
+
         if len(labels) > 1:
             silhouette_avg = silhouette_score(matrix, labels)
             sample_silhouette_values = silhouette_samples(matrix, labels)
