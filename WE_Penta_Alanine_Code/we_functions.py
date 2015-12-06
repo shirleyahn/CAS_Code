@@ -681,7 +681,7 @@ def create_outlier_labels(outlier_labels, new_outlier_label, matrix):
     return outlier_labels, inliers
 
 def merge_with_outliers(outlier_labels, labels):
-    assert len(labels) == len(outlier_labels[outlier_labels == -1])
+    assert len(labels) == len(outlier_labels[outlier_labels == -1]), '%d, %d, %s, %s' % (len(labels), len(outlier_labels[outlier_labels == -1]), str(labels), str(outlier_labels))
     rv = []
     i = 0
     j = 0
@@ -779,7 +779,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         while True:
             try:
                 centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
-                labels = merge_with_outliers(labels, outlier_labels)
+                labels = merge_with_outliers(outlier_labels, labels)
                 break
             except ClusterError:
                 num_clusters -= 1
