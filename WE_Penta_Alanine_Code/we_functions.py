@@ -784,8 +784,8 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             except ClusterError:
                 num_clusters -= 1
 
-        unique, n_labels = np.unique(labels, return_counts=True)
-        if n_labels > 1:
+        unique = np.unique(labels)
+        if len(unique) > 1:
             try:
                 silhouette_avg = silhouette_score(matrix, labels)
                 sample_silhouette_values = silhouette_samples(matrix, labels)
