@@ -786,8 +786,12 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
         unique, n_labels = np.unique(labels, return_counts=True)
         if n_labels > 1:
-            silhouette_avg = silhouette_score(matrix, labels)
-            sample_silhouette_values = silhouette_samples(matrix, labels)
+            try:
+                silhouette_avg = silhouette_score(matrix, labels)
+                sample_silhouette_values = silhouette_samples(matrix, labels)
+            except ValueError:
+                silhouette_avg = -1
+                sample_silhouette_values = [-2] * num_clusters
         else:
             silhouette_avg = 0
             sample_silhouette_values = [-1] * num_clusters
@@ -797,6 +801,9 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             cont = True
             outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, matrix)
             matrix = matrix[inliers]
+            with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
+            num_clusters -= 1
 
         if not cont:
             with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
