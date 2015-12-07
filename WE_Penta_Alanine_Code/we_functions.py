@@ -666,6 +666,7 @@ def dunn(ball_coords):
     else:
         return num/den
 
+
 def create_outlier_labels(outlier_labels, new_outlier_label, matrix):
     clf = EllipticEnvelope(contamination=0.05)
     try:
@@ -682,6 +683,7 @@ def create_outlier_labels(outlier_labels, new_outlier_label, matrix):
         return outlier_labels, inliers
     except ValueError: # singular cov matrix
         return outlier_labels, [True] * len(matrix)
+
 
 def merge_with_outliers(outlier_labels, labels):
     assert len(labels) == len(outlier_labels[outlier_labels == -1]), '%d, %d, %s, %s' % (len(labels), len(outlier_labels[outlier_labels == -1]), str(labels), str(outlier_labels))

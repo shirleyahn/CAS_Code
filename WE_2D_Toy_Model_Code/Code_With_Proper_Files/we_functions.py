@@ -704,6 +704,42 @@ def dunn(ball_coords):
         return num/den
 
 
+def create_outlier_labels(outlier_labels, new_outlier_label, matrix):
+    clf = EllipticEnvelope(contamination=0.05)
+    try:
+        clf.fit(matrix)
+        inliers = clf.predict(matrix) == 1
+        i = 0
+        assert len(matrix) == len(outlier_labels[outlier_labels == -1])
+        for label in clf.predict(matrix):
+            while outlier_labels[i] != -1:
+                i += 1
+            if label == -1:
+                outlier_labels[i] = new_outlier_label
+            i += 1
+        return outlier_labels, inliers
+    except ValueError: # singular cov matrix
+        return outlier_labels, [True] * len(matrix)
+
+
+def merge_with_outliers(outlier_labels, labels):
+    assert len(labels) == len(outlier_labels[outlier_labels == -1]), '%d, %d, %s, %s' % (len(labels), len(outlier_labels[outlier_labels == -1]), str(labels), str(outlier_labels))
+    rv = []
+    i = 0
+    j = 0
+    while True:
+        while i < len(outlier_labels) and outlier_labels[i] != -1:
+            rv.append(outlier_labels[i])
+            i += 1
+        while i < len(outlier_labels) and j < len(labels) and outlier_labels[i] == -1:
+            rv.append(labels[j])
+            i += 1
+            j += 1
+        if i == len(outlier_labels):
+            break
+    return np.array(rv)
+
+
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.total_num_walkers):
@@ -779,28 +815,54 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
     matrix = np.hstack((balls, normalized_second_evector))
 
-    while True:
-        try:
-            centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
-            break
-        except ClusterError:
-            num_clusters -= 1
+    cont = True
+    outlier_labels = np.ones(len(matrix)) * -1
+    while cont:
+        while True:
+            try:
+                centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
+                labels = merge_with_outliers(outlier_labels, labels)
+                break
+            except ClusterError:
+                num_clusters -= 1
 
-    with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
-        labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
-        labeled_matrix[:, 0:matrix.shape[1]] = matrix
-        labeled_matrix[:, matrix.shape[1]] = labels
-        print >>dunn_index_f, dunn(labeled_matrix)
-
-        if len(labels) > 1:
-            silhouette_avg = silhouette_score(matrix, labels)
-            sample_silhouette_values = silhouette_samples(matrix, labels)
+        unique = np.unique(labels)
+        if len(unique) > 1:
+            try:
+                silhouette_avg = silhouette_score(matrix, labels)
+                sample_silhouette_values = silhouette_samples(matrix, labels)
+            except ValueError:
+                silhouette_avg = -1
+                sample_silhouette_values = [-2] * num_clusters
         else:
-            sample_silhouette_values = [-1] * len(labels)
+            silhouette_avg = 0
+            sample_silhouette_values = [-1] * num_clusters
 
-        print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
-        for i in xrange(int(max(labels))+1):
-            print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+        cont = False
+        if silhouette_avg > 0.8 and num_clusters >= 3:
+            outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, matrix)
+            if len(matrix[inliers]) == len(matrix):
+                # couldn't remove any outliers; singular cov matrix (?)
+                cont = False
+                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                    print >>outlier_f, "Couldn't remove any outliers; just continuing"
+            else:
+                cont = True
+                num_clusters -= 1
+                matrix = matrix[inliers]
+                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                    print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
+
+        if not cont:
+            with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
+                labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
+                labeled_matrix[:, 0:matrix.shape[1]] = matrix
+                labeled_matrix[:, matrix.shape[1]] = labels
+                print >>dunn_index_f, dunn(labeled_matrix)
+
+                print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
+                for i in xrange(int(max(labels))+1):
+                    print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
 
     f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
     '''
