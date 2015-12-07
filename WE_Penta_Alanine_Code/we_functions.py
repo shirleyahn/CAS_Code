@@ -668,17 +668,20 @@ def dunn(ball_coords):
 
 def create_outlier_labels(outlier_labels, new_outlier_label, matrix):
     clf = EllipticEnvelope(contamination=0.05)
-    clf.fit(matrix)
-    inliers = clf.predict(matrix) == 1
-    i = 0
-    assert len(matrix) == len(outlier_labels[outlier_labels == -1])
-    for label in clf.predict(matrix):
-        while outlier_labels[i] != -1:
+    try:
+        clf.fit(matrix)
+        inliers = clf.predict(matrix) == 1
+        i = 0
+        assert len(matrix) == len(outlier_labels[outlier_labels == -1])
+        for label in clf.predict(matrix):
+            while outlier_labels[i] != -1:
+                i += 1
+            if label == -1:
+                outlier_labels[i] = new_outlier_label
             i += 1
-        if label == -1:
-            outlier_labels[i] = new_outlier_label
-        i += 1
-    return outlier_labels, inliers
+        return outlier_labels, inliers
+    except ValueError: # singular cov matrix
+        return outlier_labels, [True] * len(matrix)
 
 def merge_with_outliers(outlier_labels, labels):
     assert len(labels) == len(outlier_labels[outlier_labels == -1]), '%d, %d, %s, %s' % (len(labels), len(outlier_labels[outlier_labels == -1]), str(labels), str(outlier_labels))
@@ -798,12 +801,18 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
         cont = False
         if silhouette_avg > 0.8 and num_clusters >= 3:
-            cont = True
             outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, matrix)
-            matrix = matrix[inliers]
-            with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
-                print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
-            num_clusters -= 1
+            if len(matrix[inliers]) == len(matrix):
+                # couldn't remove any outliers; singular cov matrix (?)
+                cont = False
+                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                    print >>outlier_f, "Couldn't remove any outliers; just continuing"
+            else:
+                cont = True
+                num_clusters -= 1
+                matrix = matrix[inliers]
+                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                    print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
 
         if not cont:
             with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
