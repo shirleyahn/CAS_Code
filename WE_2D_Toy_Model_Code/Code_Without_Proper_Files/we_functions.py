@@ -9,6 +9,7 @@ import we_check_state_function
 import we_energy_function as ef
 import we_parameters as p
 from sklearn.metrics import silhouette_score, silhouette_samples
+from sklearn.covariance import EllipticEnvelope
 
 
 def calculate_distance_from_center(center, values):
@@ -196,7 +197,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                     if properties_to_keep_track[m] > gv.threshold_values[m]:
                         walker_binning_value += 1
                         walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
-
 
         inside = 0  # indicates whether we are dealing with the very first walker or not
         # if we're dealing with the very first walker, create the very first ball for the walker

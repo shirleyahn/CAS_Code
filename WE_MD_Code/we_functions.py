@@ -9,6 +9,7 @@ import we_global_variables as gv
 import we_check_state_function
 import we_parameters as p
 from sklearn.metrics import silhouette_score, silhouette_samples
+from sklearn.covariance import EllipticEnvelope
 
 
 def calculate_distance_from_center(center, values):
@@ -336,6 +337,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         ref_walker_properties_value = 0.0
         if gv.static_threshold_flag == 0:
             new_threshold_values = gv.threshold_values
+        better_than_ref_flag = 0
 
     for i in walker_indices:
         # first, go to walker directory i
@@ -399,7 +401,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                         walker_binning_value += 1
                         walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
 
-
         inside = 0  # indicates whether we are dealing with the very first walker or not
         # if we're dealing with the very first walker, create the very first ball for the walker
         if (gv.balls_flag == 0 and start == 0) or (gv.balls_flag == 1 and start == 0 and step_num == 0):
@@ -423,6 +424,13 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 ref_walker_binning_value = walker_binning_value
                 ref_walker_properties_value = walker_properties_value
             gv.current_num_balls += 1
+
+        if gv.enhanced_sampling_flag == 2:
+            if walker_binning_value == ref_walker_binning_value \
+                    and walker_properties_value < ref_walker_properties_value:
+                better_than_ref_flag = 1
+            elif walker_binning_value < ref_walker_binning_value:
+                better_than_ref_flag = 1
 
         distance = 0.0
         ball_key = 0
@@ -451,7 +459,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                                                     previous_ball_center, current_ball_center, ball_key,
                                                     previous_distance_from_center, distance_from_center,
                                                     initial_step_num, weight, state)
-                if gv.enhanced_sampling_flag == 2 and ((gv.balls_flag == 1 and start == 0) or (walker_binning_value == ref_walker_binning_value and walker_properties_value < ref_walker_properties_value) or walker_binning_value < ref_walker_binning_value):
+                if gv.enhanced_sampling_flag == 2 \
+                        and ((gv.balls_flag == 1 and start == 0) or better_than_ref_flag == 1):
                     ref_walker = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                previous_ball_center, current_ball_center, ball_key,
                                                previous_distance_from_center, distance_from_center, initial_step_num,
@@ -477,7 +486,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
 
             # or if enhanced_sampling_flag = 2 and ref_walker is a "better" walker in terms of its values -> replace
             # walker with ref_walker and put the walker in ref_walker's ball
-            elif gv.enhanced_sampling_flag == 2 and ((walker_binning_value == ref_walker_binning_value and walker_properties_value > ref_walker_properties_value) or walker_binning_value > ref_walker_binning_value):
+            elif gv.enhanced_sampling_flag == 2 and better_than_ref_flag == 0:
                 balls[ref_walker.ball_key][gv.num_cvs+2] += 1
                 temp_walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, 0.0,
                                                     [-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0,
@@ -489,7 +498,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
 
             # or if enhanced_sampling_flag = 2 and walker is a "better" or "equivalent" walker in terms of its values
             # -> create a new ball
-            elif gv.enhanced_sampling_flag == 2 and ((gv.balls_flag == 1 and start == 0) or (walker_binning_value == ref_walker_binning_value and walker_properties_value <= ref_walker_properties_value) or walker_binning_value < ref_walker_binning_value):
+            elif gv.enhanced_sampling_flag == 2 and ((gv.balls_flag == 1 and start == 0) or better_than_ref_flag == 1):
                 current_ball_center = [coordinate for coordinate in new_coordinates]
                 center_r_key_num = copy.deepcopy(current_ball_center)
                 center_r_key_num.append(gv.radius)
@@ -545,7 +554,14 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                     if properties_to_keep_track[m] > gv.threshold_values[m]:
                         walker_binning_value += 1
                         walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
-            if (walker_binning_value > ref_walker_binning_value or (walker_binning_value == ref_walker_binning_value and walker_properties_value > ref_walker_properties_value)):
+            if walker_binning_value == ref_walker_binning_value \
+                    and walker_properties_value < ref_walker_properties_value:
+                better_than_ref_flag = 1
+            elif walker_binning_value < ref_walker_binning_value:
+                better_than_ref_flag = 1
+            else:
+                better_than_ref_flag = 0
+            if better_than_ref_flag == 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 previous_ball_key = temp_walker_list[i].ball_key
                 balls[previous_ball_key][gv.num_cvs+2] -= 1
