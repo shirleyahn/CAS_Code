@@ -792,13 +792,13 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     '''
 
     matrix = np.hstack((balls, normalized_second_evector))
-
+    clustering_matrix = matrix
     cont = True
     outlier_labels = np.ones(len(matrix)) * -1
     while cont:
         while True:
             try:
-                centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
+                centroids, labels = kmeans2(clustering_matrix, num_clusters, minit='points', iter=100, missing='raise')
                 labels = merge_with_outliers(outlier_labels, labels)
                 break
             except ClusterError:
@@ -818,8 +818,8 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
         cont = False
         if silhouette_avg > 0.8 and num_clusters >= 3:
-            outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, matrix)
-            if len(matrix[inliers]) == len(matrix):
+            outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, clustering_matrix)
+            if len(clustering_matrix[inliers]) == len(clustering_matrix):
                 # couldn't remove any outliers; singular cov matrix (?)
                 cont = False
                 with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
@@ -827,7 +827,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             else:
                 cont = True
                 num_clusters -= 1
-                matrix = matrix[inliers]
+                clustering_matrix = clustering_matrix[inliers]
                 with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                     print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
 
