@@ -68,11 +68,12 @@ def weighted_ensemble_simulation(input_initial_values_file):
                         step_num != gv.initial_step_num and gv.sc_performed == 0:
             we_functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
-        if gv.sc_performed == 1:
-            we_functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers,
-                                           ball_clusters_list, vacant_walker_indices)
+            if gv.sc_performed == 1:
+                we_functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers,
+                                               ball_clusters_list, vacant_walker_indices)
+            else:
+                we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers, vacant_walker_indices)
         else:
-            # fourth, resample walkers for every ball
             we_functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers, vacant_walker_indices)
 
         # finally, output the results in text files

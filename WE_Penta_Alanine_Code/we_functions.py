@@ -831,6 +831,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                     with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                         print >>outlier_f, "Couldn't remove any outliers; just continuing"
                 else:
+                    gv.sc_performed = 0
                     cont = True
                     num_clusters -= 1
                     clustering_matrix = clustering_matrix[inliers]
