@@ -337,7 +337,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         ref_walker_properties_value = 0.0
         if gv.static_threshold_flag == 0:
             new_threshold_values = gv.threshold_values
-        #better_than_ref_flag = 0
+        better_than_ref_flag = 0
 
     for i in walker_indices:
         # first, go to walker directory i
@@ -389,17 +389,17 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 else:
                     properties_to_keep_track.append(new_coordinates[gv.properties_to_keep_track[k]])
             walker_binning_value = 0
-            #walker_properties_value = 0.0
+            walker_properties_value = 0.0
             if gv.less_or_greater_flag == 0:
                 for m in range(len(gv.properties_to_keep_track)):
                     if properties_to_keep_track[m] < gv.threshold_values[m]:
                         walker_binning_value += 1
-                        #walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
+                        walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
             else:
                 for m in range(len(gv.properties_to_keep_track)):
                     if properties_to_keep_track[m] > gv.threshold_values[m]:
                         walker_binning_value += 1
-                        #walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
+                        walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
 
         inside = 0  # indicates whether we are dealing with the very first walker or not
         # if we're dealing with the very first walker, create the very first ball for the walker
@@ -422,15 +422,15 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                                            current_ball_center, gv.current_num_balls, previous_distance_from_center,
                                            0.0, initial_step_num, weight, state)
                 ref_walker_binning_value = walker_binning_value
-                #ref_walker_properties_value = walker_properties_value
+                ref_walker_properties_value = walker_properties_value
             gv.current_num_balls += 1
 
-        #if gv.enhanced_sampling_flag == 2:
-            #if walker_binning_value == ref_walker_binning_value \
-                    #and walker_properties_value < ref_walker_properties_value:
-                #better_than_ref_flag = 1
-            #if walker_binning_value < ref_walker_binning_value:
-                #better_than_ref_flag = 1
+        if gv.enhanced_sampling_flag == 2:
+            if walker_binning_value == ref_walker_binning_value \
+                    and walker_properties_value < ref_walker_properties_value:
+                better_than_ref_flag = 1
+            elif walker_binning_value < ref_walker_binning_value:
+                better_than_ref_flag = 1
 
         distance = 0.0
         ball_key = 0
@@ -460,13 +460,13 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                                                     previous_distance_from_center, distance_from_center,
                                                     initial_step_num, weight, state)
                 if gv.enhanced_sampling_flag == 2 \
-                        and ((gv.balls_flag == 1 and start == 0) or walker_binning_value == 0):
+                        and ((gv.balls_flag == 1 and start == 0) or better_than_ref_flag == 1):
                     ref_walker = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                previous_ball_center, current_ball_center, ball_key,
                                                previous_distance_from_center, distance_from_center, initial_step_num,
                                                weight, state)
                     ref_walker_binning_value = walker_binning_value
-                    #ref_walker_properties_value = walker_properties_value
+                    ref_walker_properties_value = walker_properties_value
                     new_threshold_values = properties_to_keep_track
 
             # or walker does not belong in any ball -> create a new ball
@@ -548,7 +548,20 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 better_than_ref_flag = 1
             else:
                 better_than_ref_flag = 0
-            if better_than_ref_flag == 0:
+            if gv.static_threshold_flag == 0 and better_than_ref_flag == 0:
+                previous_ball_center = temp_walker_list[i].current_ball_center
+                previous_ball_key = temp_walker_list[i].ball_key
+                balls[previous_ball_key][gv.num_cvs+2] -= 1
+                balls[ref_walker.ball_key][gv.num_cvs+2] += 1
+                temp_walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, 0.0,
+                                                    [-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0,
+                                                    -1)
+                temp_walker_list[i].copy_walker(ref_walker)
+                temp_walker_list[i].weight = weight
+                ball_to_walkers[tuple(previous_ball_center)].remove(i)
+                current_ball_center = temp_walker_list[i].current_ball_center
+                ball_to_walkers[tuple(current_ball_center)].append(i)
+            elif gv.static_threshold_flag == 1 and walker_binning_value > 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 previous_ball_key = temp_walker_list[i].ball_key
                 balls[previous_ball_key][gv.num_cvs+2] -= 1
@@ -706,6 +719,7 @@ def merge_with_outliers(outlier_labels, labels):
 
 
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
+    gv.sc_performed = 1
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.total_num_walkers):
         previous_coordinates = temp_walker_list[i].previous_coordinates
@@ -779,112 +793,121 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     '''
 
     matrix = np.hstack((balls, normalized_second_evector))
-
+    clustering_matrix = matrix
     cont = True
     outlier_labels = np.ones(len(matrix)) * -1
     while cont:
         while True:
             try:
-                centroids, labels = kmeans2(matrix, num_clusters, minit='points', iter=100, missing='raise')
+                centroids, labels = kmeans2(clustering_matrix, num_clusters, minit='points', iter=100, missing='raise')
                 labels = merge_with_outliers(outlier_labels, labels)
                 break
             except ClusterError:
                 num_clusters -= 1
 
-        unique = np.unique(labels)
-        if len(unique) > 1:
-            try:
-                silhouette_avg = silhouette_score(matrix, labels)
-                sample_silhouette_values = silhouette_samples(matrix, labels)
-            except ValueError:
-                silhouette_avg = -1
-                sample_silhouette_values = [-2] * num_clusters
+        if num_clusters <= 2:
+            gv.sc_performed = 0
+            break
         else:
-            silhouette_avg = 0
-            sample_silhouette_values = [-1] * num_clusters
-
-        cont = False
-        if silhouette_avg > 0.8 and num_clusters >= 3:
-            outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, matrix)
-            if len(matrix[inliers]) == len(matrix):
-                # couldn't remove any outliers; singular cov matrix (?)
-                cont = False
-                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
-                    print >>outlier_f, "Couldn't remove any outliers; just continuing"
+            unique = np.unique(labels)
+            if len(unique) > 1:
+                try:
+                    silhouette_avg = silhouette_score(matrix, labels)
+                    sample_silhouette_values = silhouette_samples(matrix, labels)
+                except ValueError:
+                    silhouette_avg = -1
+                    sample_silhouette_values = [-2] * num_clusters
             else:
-                cont = True
-                num_clusters -= 1
-                matrix = matrix[inliers]
-                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
-                    print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
+                silhouette_avg = 0
+                sample_silhouette_values = [-1] * num_clusters
 
-        if not cont:
-            with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
-                labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
-                labeled_matrix[:, 0:matrix.shape[1]] = matrix
-                labeled_matrix[:, matrix.shape[1]] = labels
-                print >>dunn_index_f, dunn(labeled_matrix)
+            cont = False
+            if silhouette_avg > 0.8 and num_clusters >= 3:
+                outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, clustering_matrix)
+                if len(clustering_matrix[inliers]) == len(clustering_matrix):
+                    # couldn't remove any outliers; singular cov matrix (?)
+                    gv.sc_performed = 0
+                    cont = False
+                    with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                        print >>outlier_f, "Couldn't remove any outliers; just continuing"
+                else:
+                    gv.sc_performed = 0
+                    cont = True
+                    num_clusters -= 1
+                    clustering_matrix = clustering_matrix[inliers]
+                    with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                        print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
 
-                print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
-                for i in xrange(int(max(labels))+1):
-                    print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+            if not cont:
+                with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
+                    labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
+                    labeled_matrix[:, 0:matrix.shape[1]] = matrix
+                    labeled_matrix[:, matrix.shape[1]] = labels
+                    print >>dunn_index_f, dunn(labeled_matrix)
 
-    f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
-    '''
-    for i in range(num_clusters):
-        first = 0
-        cluster = array_of_clusters[i]
-        ordering = array_of_orderings[i]
-        for j in range(cluster.shape[0]):
-            if first == 0:
-                first += 1
-                ref_ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ref_ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[ordering[j], 0]))
-                ball_cluster.append(second_evector[ordering[j]])
-                ball_cluster.append(final_evectors[ordering[j], 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-            else:
-                ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[ordering[j], 0]))
-                ball_cluster.append(second_evector[ordering[j]])
-                ball_cluster.append(final_evectors[ordering[j], 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-    '''
-    for i in range(num_clusters):
-        first = 0
-        for j in range(balls.shape[0]):
-            if labels[j] == i and first == 0:
-                first += 1
-                ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ref_ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(final_evectors[j, 1])
-                ball_cluster.append(final_evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-                balls[j][gv.num_cvs+2] -= 1
-            elif labels[j] == i and first != 0:
-                ball_center = balls[j, 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(final_evectors[j, 1])
-                ball_cluster.append(final_evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-                balls[j][gv.num_cvs+2] -= 1
-    f.close()
+                    print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
+                    for i in xrange(int(max(labels))+1):
+                        print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+
+    if gv.sc_performed == 1:
+        f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
+
+        '''
+        for i in range(num_clusters):
+            first = 0
+            cluster = array_of_clusters[i]
+            ordering = array_of_orderings[i]
+            for j in range(cluster.shape[0]):
+                if first == 0:
+                    first += 1
+                    ref_ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ref_ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[ordering[j], 0]))
+                    ball_cluster.append(second_evector[ordering[j]])
+                    ball_cluster.append(final_evectors[ordering[j], 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                else:
+                    ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[ordering[j], 0]))
+                    ball_cluster.append(second_evector[ordering[j]])
+                    ball_cluster.append(final_evectors[ordering[j], 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+        '''
+
+        for i in range(num_clusters):
+            first = 0
+            for j in range(balls.shape[0]):
+                if labels[j] == i and first == 0:
+                    first += 1
+                    ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ref_ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[j, 0]))
+                    ball_cluster.append(final_evectors[j, 1])
+                    ball_cluster.append(final_evectors[j, 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                    balls[j][gv.num_cvs+2] -= 1
+                elif labels[j] == i and first != 0:
+                    ball_center = balls[j, 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[j, 0]))
+                    ball_cluster.append(final_evectors[j, 1])
+                    ball_cluster.append(final_evectors[j, 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+                    balls[j][gv.num_cvs+2] -= 1
+        f.close()
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
