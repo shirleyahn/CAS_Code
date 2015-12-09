@@ -719,6 +719,7 @@ def merge_with_outliers(outlier_labels, labels):
 
 
 def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
+    gv.sc_performed = 1
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(gv.total_num_walkers):
         previous_coordinates = temp_walker_list[i].previous_coordinates
@@ -804,100 +805,108 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             except ClusterError:
                 num_clusters -= 1
 
-        unique = np.unique(labels)
-        if len(unique) > 1:
-            try:
-                silhouette_avg = silhouette_score(matrix, labels)
-                sample_silhouette_values = silhouette_samples(matrix, labels)
-            except ValueError:
-                silhouette_avg = -1
-                sample_silhouette_values = [-2] * num_clusters
+        if num_clusters <= 2:
+            gv.sc_performed = 0
+            break
         else:
-            silhouette_avg = 0
-            sample_silhouette_values = [-1] * num_clusters
-
-        cont = False
-        if silhouette_avg > 0.8 and num_clusters >= 3:
-            outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, clustering_matrix)
-            if len(clustering_matrix[inliers]) == len(clustering_matrix):
-                # couldn't remove any outliers; singular cov matrix (?)
-                cont = False
-                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
-                    print >>outlier_f, "Couldn't remove any outliers; just continuing"
+            unique = np.unique(labels)
+            if len(unique) > 1:
+                try:
+                    silhouette_avg = silhouette_score(matrix, labels)
+                    sample_silhouette_values = silhouette_samples(matrix, labels)
+                except ValueError:
+                    silhouette_avg = -1
+                    sample_silhouette_values = [-2] * num_clusters
             else:
-                cont = True
-                num_clusters -= 1
-                clustering_matrix = clustering_matrix[inliers]
-                with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
-                    print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
+                silhouette_avg = 0
+                sample_silhouette_values = [-1] * num_clusters
 
-        if not cont:
-            with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
-                labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
-                labeled_matrix[:, 0:matrix.shape[1]] = matrix
-                labeled_matrix[:, matrix.shape[1]] = labels
-                print >>dunn_index_f, dunn(labeled_matrix)
+            cont = False
+            if silhouette_avg > 0.8 and num_clusters >= 3:
+                outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, clustering_matrix)
+                if len(clustering_matrix[inliers]) == len(clustering_matrix):
+                    # couldn't remove any outliers; singular cov matrix (?)
+                    gv.sc_performed = 0
+                    cont = False
+                    with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                        print >>outlier_f, "Couldn't remove any outliers; just continuing"
+                else:
+                    cont = True
+                    num_clusters -= 1
+                    clustering_matrix = clustering_matrix[inliers]
+                    with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
+                        print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
 
-                print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
-                for i in xrange(int(max(labels))+1):
-                    print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+            if not cont:
+                with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
+                    labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
+                    labeled_matrix[:, 0:matrix.shape[1]] = matrix
+                    labeled_matrix[:, matrix.shape[1]] = labels
+                    print >>dunn_index_f, dunn(labeled_matrix)
 
-    f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
-    '''
-    for i in range(num_clusters):
-        first = 0
-        cluster = array_of_clusters[i]
-        ordering = array_of_orderings[i]
-        for j in range(cluster.shape[0]):
-            if first == 0:
-                first += 1
-                ref_ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ref_ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[ordering[j], 0]))
-                ball_cluster.append(second_evector[ordering[j]])
-                ball_cluster.append(final_evectors[ordering[j], 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-            else:
-                ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[ordering[j], 0]))
-                ball_cluster.append(second_evector[ordering[j]])
-                ball_cluster.append(final_evectors[ordering[j], 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-    '''
-    for i in range(num_clusters):
-        first = 0
-        for j in range(balls.shape[0]):
-            if labels[j] == i and first == 0:
-                first += 1
-                ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ref_ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(final_evectors[j, 1])
-                ball_cluster.append(final_evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-                balls[j][gv.num_cvs+2] -= 1
-            elif labels[j] == i and first != 0:
-                ball_center = balls[j, 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(i)
-                ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(final_evectors[j, 1])
-                ball_cluster.append(final_evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-                balls[j][gv.num_cvs+2] -= 1
-    f.close()
+                    print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
+                    for i in xrange(int(max(labels))+1):
+                        print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+
+    if gv.sc_performed == 1:
+        f = open('ball_clustering_' + str(step_num + 1) + '.txt', 'w')
+
+        '''
+        for i in range(num_clusters):
+            first = 0
+            cluster = array_of_clusters[i]
+            ordering = array_of_orderings[i]
+            for j in range(cluster.shape[0]):
+                if first == 0:
+                    first += 1
+                    ref_ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ref_ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[ordering[j], 0]))
+                    ball_cluster.append(second_evector[ordering[j]])
+                    ball_cluster.append(final_evectors[ordering[j], 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                else:
+                    ball_center = balls[ordering[j], 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[ordering[j], 0]))
+                    ball_cluster.append(second_evector[ordering[j]])
+                    ball_cluster.append(final_evectors[ordering[j], 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+        '''
+
+        for i in range(num_clusters):
+            first = 0
+            for j in range(balls.shape[0]):
+                if labels[j] == i and first == 0:
+                    first += 1
+                    ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ref_ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[j, 0]))
+                    ball_cluster.append(final_evectors[j, 1])
+                    ball_cluster.append(final_evectors[j, 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                    balls[j][gv.num_cvs+2] -= 1
+                elif labels[j] == i and first != 0:
+                    ball_center = balls[j, 0:gv.num_cvs].tolist()
+                    ball_cluster = copy.deepcopy(ball_center)
+                    ball_cluster.append(i)
+                    ball_cluster.append(abs(final_evectors[j, 0]))
+                    ball_cluster.append(final_evectors[j, 1])
+                    ball_cluster.append(final_evectors[j, 2])
+                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                    f.write('\n')
+                    ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+                    balls[j][gv.num_cvs+2] -= 1
+        f.close()
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
