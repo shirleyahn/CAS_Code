@@ -25,7 +25,7 @@ last_walker=$(echo $output | cut -d'_' -f 2)
 cd $WALKER_DIRECTORY
 counter=0
 pin=0
-for i in `seq $first_walker $last_walker`;
+for i in `seq 0 $last_walker`;
 do
 	if [ $counter -lt $num_sim_walkers ];
 	then

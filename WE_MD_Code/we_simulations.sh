@@ -61,7 +61,7 @@ wait
 
 # post-process data after simulations are done. this needs to be modified depending on how the output files are named
 # and what collective variables are being collected from the simulations.
-for i in `seq $first_walker $last_walker`;
+for i in `seq 0 $last_walker`;
 do
     cd walker$i
     echo "post-processing walker$i"
