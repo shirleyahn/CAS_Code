@@ -8,7 +8,7 @@ Please see the TODO sections in main.py, execute.sh, simulations.sh to get start
 etc.). Then edit the initial_values.txt and parameters.py for your simulation.
 
 Note that if more than one initial condition is provided, then write the initial values in order in the same file 
-(initial_values.txt) on the next line, i.e. if I have two initial conditions x = 1.0, y = 2.0, and x = 3.0, y = 4.0, 
+(initial_values.txt) on the next line, i.e., if I have two initial conditions x = 1.0, y = 2.0, and x = 3.0, y = 4.0, 
 then my initial_values.txt would look like the following:
 1.0
 2.0
