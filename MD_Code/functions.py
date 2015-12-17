@@ -545,9 +545,9 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                         walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
             replace_walker_flag = 0
             if walker_binning_value == ref_walker_binning_value \
-                    and walker_properties_value < ref_walker_properties_value:
+                    and walker_properties_value > ref_walker_properties_value:
                 replace_walker_flag = 1
-            elif walker_binning_value < ref_walker_binning_value:
+            elif walker_binning_value > ref_walker_binning_value:
                 replace_walker_flag = 1
             if gv.static_threshold_flag == 0 and replace_walker_flag == 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
