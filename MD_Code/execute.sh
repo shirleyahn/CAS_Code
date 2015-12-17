@@ -36,5 +36,5 @@ do
         awk NR==$i initial_nodefilelist.txt >> nodefilelist.txt
     done
 done
-python we_main.py
+python main.py
 exit
