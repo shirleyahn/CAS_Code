@@ -549,7 +549,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 replace_walker_flag = 1
             elif walker_binning_value > ref_walker_binning_value:
                 replace_walker_flag = 1
-            if gv.static_threshold_flag == 0 and replace_walker_flag == 0:
+            if gv.static_threshold_flag == 0 and replace_walker_flag == 1:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 previous_ball_key = temp_walker_list[i].ball_key
                 balls[previous_ball_key][gv.num_cvs+2] -= 1
@@ -567,7 +567,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 old_directory = gv.main_directory + '/CAS/walker' + str(ref_walker.global_index)
                 new_directory = gv.main_directory + '/CAS/walker' + str(i)
                 shutil.copytree(old_directory, new_directory)
-                os.chdir(new_directory)
             elif gv.static_threshold_flag == 1 and walker_binning_value > 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 previous_ball_key = temp_walker_list[i].ball_key
@@ -586,7 +585,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 old_directory = gv.main_directory + '/CAS/walker' + str(ref_walker.global_index)
                 new_directory = gv.main_directory + '/CAS/walker' + str(i)
                 shutil.copytree(old_directory, new_directory)
-                os.chdir(new_directory)
             current_ball_center = temp_walker_list[i].current_ball_center
             ball_key = temp_walker_list[i].ball_key
             center_r_key_state = copy.deepcopy(current_ball_center)
