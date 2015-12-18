@@ -394,12 +394,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 for m in range(len(gv.properties_to_keep_track)):
                     if properties_to_keep_track[m] < gv.threshold_values[m]:
                         walker_binning_value += 1
-                        walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
+                    walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
             else:
                 for m in range(len(gv.properties_to_keep_track)):
                     if properties_to_keep_track[m] > gv.threshold_values[m]:
                         walker_binning_value += 1
-                        walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
+                    walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
             if walker_binning_value == ref_walker_binning_value \
                     and walker_properties_value <= ref_walker_properties_value:
                 better_than_ref_flag = 1
@@ -535,12 +535,12 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 for m in range(len(gv.properties_to_keep_track)):
                     if properties_to_keep_track[m] < gv.threshold_values[m]:
                         walker_binning_value += 1
-                        walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
+                    walker_properties_value += (gv.threshold_values[m]-properties_to_keep_track[m])
             else:
                 for m in range(len(gv.properties_to_keep_track)):
                     if properties_to_keep_track[m] > gv.threshold_values[m]:
                         walker_binning_value += 1
-                        walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
+                    walker_properties_value += (properties_to_keep_track[m]-gv.threshold_values[m])
             if walker_binning_value == ref_walker_binning_value \
                     and walker_properties_value <= ref_walker_properties_value:
                 better_than_ref_flag = 1
