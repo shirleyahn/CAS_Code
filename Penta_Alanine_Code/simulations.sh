@@ -85,7 +85,8 @@ do
     rm -rf nodefile*
     rm -rf mdout.mdp
     mv run.gro minim.gro
-    echo 0 | ${GROMACS}/trjconv -s ../../init.gro -f run.xtc -b 10.0 -o run.xtc
+    mv run.tpr minim.tpr
+    echo 0 | ${GROMACS}/trjconv -s minim.tpr -f run.xtc -b 10.0 -o run.xtc
     ${GROMACS}/g_angle -f run.xtc -n ../../dihedrals.ndx -ov -all -type dihedral
     awk -v f=1 -v t=2 'END {for(i=1;i<=NF;i++)if(i>=f&&i<=t)continue;else printf("%s%s",$i,(i!=NF)?OFS:ORS)}' angaver.xvg > coordinates.out
     rm -rf ang*

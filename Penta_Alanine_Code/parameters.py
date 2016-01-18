@@ -1,5 +1,5 @@
 main_directory='/scratch/users/sahn1/Penta_Alanine'
-initial_configuration_directory='scratch/users/sahn1/Penta_Alanine/InitConfig'
+initial_configuration_directory='/scratch/users/sahn1/Penta_Alanine/InitConfig'
 
 simulation_flag=1  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
                    # from middle of binning. 3: restarting simulation from middle of resampling.
