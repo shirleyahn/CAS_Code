@@ -8,7 +8,7 @@
 
 export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine
 export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS
-export GROMACS=/home/jbirgmei/gromacs/4.6.4/bin
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin
 
 num_nodes=1
 num_cpu=8

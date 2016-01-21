@@ -69,7 +69,6 @@ def set_parameters():
     print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
     gv.current_num_balls = 0
     gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
-    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
     gv.num_occupied_clusters = 1
     gv.sc_performed = 0
 
@@ -577,11 +576,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 ball_to_walkers[tuple(previous_ball_center)].remove(i)
                 current_ball_center = temp_walker_list[i].current_ball_center
                 ball_to_walkers[tuple(current_ball_center)].append(i)
-                os.chdir(gv.main_directory + '/CAS')
-                os.system('rm -rf walker' + str(i))
-                old_directory = gv.main_directory + '/CAS/walker' + str(ref_walker.global_index)
-                new_directory = gv.main_directory + '/CAS/walker' + str(i)
-                shutil.copytree(old_directory, new_directory)
             elif gv.static_threshold_flag == 1 and walker_binning_value > 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 previous_ball_key = temp_walker_list[i].ball_key
@@ -592,40 +586,23 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 ball_to_walkers[tuple(previous_ball_center)].remove(i)
                 current_ball_center = temp_walker_list[i].current_ball_center
                 ball_to_walkers[tuple(current_ball_center)].append(i)
-                ball_key = temp_walker_list[i].ball_key
-                center_r_key_state = copy.deepcopy(current_ball_center)
-                center_r_key_state.append(gv.radius)
-                center_r_key_state.append(ball_key)
-                center_r_key_state.append(state)
-                new_coordinates = temp_walker_list[i].current_coordinates
-                walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-                os.chdir(walker_directory)
-                f = open('ball_trajectory.txt', 'a')
-                f.write(' '.join(map(lambda coordinate: str(coordinate), center_r_key_state)))
-                f.write('\n')
-                f.close()
-                f = open('trajectory.txt', 'a')
-                f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
-                f.write('\n')
-                f.close()
-            else:
-                current_ball_center = temp_walker_list[i].current_ball_center
-                ball_key = temp_walker_list[i].ball_key
-                center_r_key_state = copy.deepcopy(current_ball_center)
-                center_r_key_state.append(gv.radius)
-                center_r_key_state.append(ball_key)
-                center_r_key_state.append(state)
-                new_coordinates = temp_walker_list[i].current_coordinates
-                walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-                os.chdir(walker_directory)
-                f = open('ball_trajectory.txt', 'a')
-                f.write(' '.join(map(lambda coordinate: str(coordinate), center_r_key_state)))
-                f.write('\n')
-                f.close()
-                f = open('trajectory.txt', 'a')
-                f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
-                f.write('\n')
-                f.close()
+            current_ball_center = temp_walker_list[i].current_ball_center
+            ball_key = temp_walker_list[i].ball_key
+            center_r_key_state = copy.deepcopy(current_ball_center)
+            center_r_key_state.append(gv.radius)
+            center_r_key_state.append(ball_key)
+            center_r_key_state.append(state)
+            new_coordinates = temp_walker_list[i].current_coordinates
+            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            os.chdir(walker_directory)
+            f = open('ball_trajectory.txt', 'a')
+            f.write(' '.join(map(lambda coordinate: str(coordinate), center_r_key_state)))
+            f.write('\n')
+            f.close()
+            f = open('trajectory.txt', 'a')
+            f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
+            f.write('\n')
+            f.close()
 
     os.chdir(gv.main_directory + '/CAS')
     np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
@@ -970,7 +947,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                     indices_bin.append(temp_walker_list[walker_index].global_index)
                 # reset ball_to_walkers and balls
                 ball_to_walkers[ball_center] = []
-                ball_key = temp_walker_list[ball_to_walkers[ball_center][0]].ball_key
+                ball_key = temp_walker_list[walker_index].ball_key
                 balls[ball_key][gv.num_cvs+2] = 0
 
             weights_array = np.array(weights_bin)
@@ -1022,11 +999,11 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                     walker_list[global_index].copy_walker(temp_walker_list[global_index])
                     walker_list[global_index].weight = new_weights[ni]
                     ball_key = walker_list[global_index].ball_key
-                    if balls[ball_key][gv.num_cvs] == 0:
+                    if balls[ball_key][gv.num_cvs+2] == 0:
                         num_occupied_balls += 1
                     balls[ball_key][gv.num_cvs+2] += 1
                     ball_center = walker_list[global_index].current_ball_center
-                    ball_to_walkers[ball_center].append(global_index)
+                    ball_to_walkers[tuple(ball_center)].append(global_index)
                     directory = gv.main_directory + '/CAS/walker' + str(global_index)
                     os.chdir(directory)
                     # write new weights on the trajectory file
@@ -1042,11 +1019,11 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                     occupied_indices[new_index] = 1
                     walker_list[new_index].copy_walker(walker_list[global_index])
                     ball_key = walker_list[new_index].ball_key
-                    if balls[ball_key][gv.num_cvs] == 0:
+                    if balls[ball_key][gv.num_cvs+2] == 0:
                         num_occupied_balls += 1
                     balls[ball_key][gv.num_cvs+2] += 1
                     ball_center = walker_list[new_index].current_ball_center
-                    ball_to_walkers[ball_center].append(new_index)
+                    ball_to_walkers[tuple(ball_center)].append(new_index)
                     old_directory = gv.main_directory + '/CAS/walker' + str(global_index)
                     new_directory = gv.main_directory + '/CAS/walker' + str(new_index)
                     shutil.copytree(old_directory, new_directory)
