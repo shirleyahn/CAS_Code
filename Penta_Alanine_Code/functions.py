@@ -576,6 +576,11 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 ball_to_walkers[tuple(previous_ball_center)].remove(i)
                 current_ball_center = temp_walker_list[i].current_ball_center
                 ball_to_walkers[tuple(current_ball_center)].append(i)
+                os.chdir(gv.main_directory + '/CAS')
+                os.system('rm -rf walker' + str(i))
+                old_directory = gv.main_directory + '/CAS/walker' + str(ref_walker.global_index)
+                new_directory = gv.main_directory + '/CAS/walker' + str(i)
+                shutil.copytree(old_directory, new_directory)
             elif gv.static_threshold_flag == 1 and walker_binning_value > 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 previous_ball_key = temp_walker_list[i].ball_key
@@ -595,6 +600,11 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             new_coordinates = temp_walker_list[i].current_coordinates
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
+            if os.path.isfile('ball_trajectory.txt'):
+                num_lines = sum(1 for line in open('ball_trajectory.txt'))
+                if num_lines > step_num:
+                    os.system('sed -i \'$d\' ball_trajectory.txt')
+                    os.system('sed -i \'$d\' trajectory.txt')
             f = open('ball_trajectory.txt', 'a')
             f.write(' '.join(map(lambda coordinate: str(coordinate), center_r_key_state)))
             f.write('\n')
