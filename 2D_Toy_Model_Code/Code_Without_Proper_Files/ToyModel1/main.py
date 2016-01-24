@@ -20,6 +20,7 @@ def CAS_simulation(input_initial_values_file):
     else:
         walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
         temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
+    vacant_walker_indices = []
     balls = np.zeros((1, gv.num_cvs+3))  # ball coordinates / ball radius / ball key / # of walkers
     ball_to_walkers = {}
     key_to_ball = {}
@@ -29,9 +30,9 @@ def CAS_simulation(input_initial_values_file):
     functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers,
                          vacant_walker_indices)
 
-    for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
+    for step_num in range(gv.max_num_steps):
         # reset ball objects so that balls are newly created at every step
-        if gv.balls_flag == 0 and step_num != gv.initial_step_num:
+        if gv.balls_flag == 0:
             balls = np.zeros((1, gv.num_cvs+3))
             ball_to_walkers = {}
             key_to_ball = {}
@@ -47,8 +48,7 @@ def CAS_simulation(input_initial_values_file):
         new_balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 3
-        if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and \
-                        step_num != gv.initial_step_num and gv.sc_performed == 0:
+        if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and gv.sc_performed == 0:
             functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
             if gv.sc_performed == 1:

@@ -49,10 +49,10 @@ def set_parameters():
     gv.num_occupied_balls = p.num_occupied_balls
     gv.first_walker = p.first_walker
     gv.last_walker = p.last_walker
-    gv.m_steps_per_step = p.m_steps_per_step 
-    gv.step_size = p.step_size 
-    gv.beta = p.beta 
-    gv.pbc = p.pbc 
+    gv.m_steps_per_step = p.m_steps_per_step
+    gv.step_size = p.step_size
+    gv.beta = p.beta
+    gv.pbc = p.pbc
     if gv.enhanced_sampling_flag == 2:
         gv.less_or_greater_flag = p.less_or_greater_flag
         gv.static_threshold_flag = p.static_threshold_flag
