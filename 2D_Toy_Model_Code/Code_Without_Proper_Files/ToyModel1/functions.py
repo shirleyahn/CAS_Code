@@ -165,10 +165,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         better_than_ref_flag = 0
 
     for i in walker_indices:
-        # first, go to walker directory i
-        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-        os.chdir(walker_directory)
-
         new_coordinates = walker_list[i].current_coordinates
         previous_coordinates = walker_list[i].previous_coordinates
         previous_ball_center = walker_list[i].current_ball_center

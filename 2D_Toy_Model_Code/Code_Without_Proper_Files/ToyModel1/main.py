@@ -39,6 +39,8 @@ def CAS_simulation(input_initial_values_file):
             ball_clusters_list = {}
             gv.current_num_balls = 0
 
+        print 'running   ' + str(step_num + 1) + '-th step'
+
         # first, run simulation with bash script
         t0 = time()
         functions.m_simulation(walker_list)
