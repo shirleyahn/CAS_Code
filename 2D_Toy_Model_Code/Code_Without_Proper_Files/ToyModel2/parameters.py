@@ -43,7 +43,7 @@ properties_to_keep_track=[-1]  # properties of the walker that are compared agai
                                # then type them sequentially.
 
 ### for the next three lines, if enhanced_sampling flag == 3 ###
-num_balls_for_sc=100  # minimum number of balls present to perform spectral clustering for that step
-num_clusters=10  # number of clusters for k-means part of spectral clustering
-num_walkers_for_sc=100  # number of walkers for each macrostate, usually set equal to the avg number of walkers per
-                        # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers
+num_balls_for_sc=1000  # minimum number of balls present to perform spectral clustering for that step
+num_clusters=5  # number of clusters for k-means part of spectral clustering
+num_walkers_for_sc=1000  # number of walkers for each macrostate, usually set equal to the avg number of walkers per
+                         # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers

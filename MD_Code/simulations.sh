@@ -11,9 +11,9 @@ export WALKER_DIRECTORY=/scratch/users/sahn1/Triazine/CAS
 export GROMACS=/home/sahn1/gromacs/4.6.4/bin
 
 num_nodes=1
-num_cpu=8
-num_gpu=4
-num_sim_walkers=8
+num_cpu=16
+num_gpu=8
+num_sim_walkers=16
 
 # get sequence of walker indices from sh_input.txt
 cd $MAIN_DIRECTORY
@@ -89,30 +89,6 @@ do
     ${GROMACS}/g_angle -f run.xtc -n ../../dihedrals.ndx -ov -all -type dihedral
     awk -v f=1 -v t=2 'END {for(i=1;i<=NF;i++)if(i>=f&&i<=t)continue;else printf("%s%s",$i,(i!=NF)?OFS:ORS)}' angaver.xvg > coordinates.out
     echo 24 27 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 24 29 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 25 28 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 26 29 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 26 27 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 30 31 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 32 33 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 34 35 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 36 37 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 38 39 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 40 41 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 42 43 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    echo 44 45 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
     awk 'END {print $2*10}' mindist.xvg >> coordinates.out
     awk '{printf $0" ";next;}' coordinates.out > new_coordinates.out
     mv new_coordinates.out coordinates.out

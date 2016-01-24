@@ -6,15 +6,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --gres=gpu:8
-#SBATCH --job-name=9_40_10ps
-#SBATCH --output=9_40_10ps.out
-#SBATCH --error=9_40_10ps.err
+#SBATCH --job-name=2D_Toy_Model
+#SBATCH --output=2D_Toy_Model.out
+#SBATCH --error=2D_Toy_Model.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sahn1@stanford.edu
 
 ###
-# Bash shell script is specific for SLURM and GROMACS. This can be easily modified for other cluster systems
-# (e.g. PBS) and other molecular dynamics simulation programs (e.g. LAMMPS).
+# Bash shell script is specific for SLURM. This can be easily modified for other cluster systems (e.g. PBS).
 ###
 
 echo The master node of this job is `hostname`
@@ -22,7 +21,7 @@ echo The working directory is `echo $WORKDIR`
 echo This job runs on the following nodes:
 echo `scontrol show hostname $SLURM_JOB_NODELIST`
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Triazine  # TODO: set main directory for WE simulation
+export MAIN_DIRECTORY=/scratch/users/sahn1/WE_Triazine  # TODO: set main directory for WE simulation
 num_nodes=1  # TODO: set number of nodes requested
 num_cpu=16  # TODO: set number of cores per node
 
@@ -36,5 +35,5 @@ do
         awk NR==$i initial_nodefilelist.txt >> nodefilelist.txt
     done
 done
-python main.py
+python we_main.py
 exit

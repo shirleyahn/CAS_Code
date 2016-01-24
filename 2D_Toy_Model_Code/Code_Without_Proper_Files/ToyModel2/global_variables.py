@@ -1,5 +1,5 @@
 ###
-# parameters that are set by we_parameters.txt
+# parameters that are set by parameters.txt
 ###
 global main_directory
 
@@ -34,7 +34,7 @@ global num_clusters
 global num_walkers_for_sc
 
 ###
-# parameters that are set by we_functions.py
+# parameters that are set by functions.py
 ###
 global max_num_balls
 global current_num_balls

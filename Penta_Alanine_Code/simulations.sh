@@ -11,9 +11,9 @@ export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS
 export GROMACS=/home/sahn1/gromacs/4.6.4/bin
 
 num_nodes=1
-num_cpu=8
+num_cpu=16
 #num_gpu=4
-num_sim_walkers=8
+num_sim_walkers=16
 
 # get sequence of walker indices from sh_input.txt
 cd $MAIN_DIRECTORY

@@ -1,5 +1,7 @@
 main_directory='/scratch/users/sahn1/WE_2D_Toy_Model'
 
+simulation_flag=0  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
+                   # from middle of binning. 3: restarting simulation from middle of resampling.
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 sorting_flag=1  # 0: sort walkers' weights in descending order (most probable walkers first). 1: sort walkers' weights
                 # in ascending order (rare walkers first).
@@ -19,8 +21,11 @@ grid_dimensions=[-1.0, 1.0, -1.0, 1.0]  # since num_cvs = 2, then type x_lower_b
                                         # upper_bound
 angle_cvs=[0, 0]  # 0: if the cv is not an angle. 1: if the cv is an angle.
 
+initial_step_num=0  # initial_step_num should be changed from 0 when restarting a simulation.
 max_num_steps=200  # maximum number of steps for the simulation.
 num_occupied_balls=1  # num_occupied_balls should be changed when restarting a simulation.
+first_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
+last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
 
 m_steps_per_step=5  # how many times the metropolis algorithm should be executed per step
 step_size=0.05  # how large the step size should be for each walker
@@ -44,6 +49,6 @@ properties_to_keep_track=[-1]  # properties of the walker that are compared agai
 
 ### for the next three lines, if enhanced_sampling flag == 3 ###
 num_balls_for_sc=100  # minimum number of balls present to perform spectral clustering for that step
-num_clusters=10  # number of clusters for k-means part of spectral clustering
-num_walkers_for_sc=100  # number of walkers for each macrostate, usually set equal to the avg number of walkers per
-                        # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers
+num_clusters=5  # number of clusters for k-means part of spectral clustering
+num_walkers_for_sc=1000  # number of walkers for each macrostate, usually set equal to the avg number of walkers per
+                         # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers

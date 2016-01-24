@@ -2,7 +2,6 @@
 # parameters that are set by parameters.txt
 ###
 global main_directory
-global initial_configuration_directory
 
 global simulation_flag
 global balls_flag
@@ -15,8 +14,7 @@ global num_balls_limit
 global radius
 global num_walkers
 global num_cvs
-global lower_bound
-global upper_bound
+global grid_dimensions
 global angle_cvs
 
 global initial_step_num
@@ -24,6 +22,11 @@ global max_num_steps
 global num_occupied_balls
 global first_walker
 global last_walker
+
+global m_steps_per_step
+global step_size
+global beta
+global pbc
 
 global less_or_greater_flag
 global static_threshold_flag

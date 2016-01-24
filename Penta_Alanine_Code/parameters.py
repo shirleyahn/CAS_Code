@@ -1,7 +1,7 @@
 main_directory='/scratch/users/sahn1/Penta_Alanine'
 initial_configuration_directory='/scratch/users/sahn1/Penta_Alanine/InitConfig'
 
-simulation_flag=1  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
+simulation_flag=0  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
                    # from middle of binning. 3: restarting simulation from middle of resampling.
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 sorting_flag=1  # 0: sort walkers' weights in descending order (most probable walkers first). 1: sort walkers' weights
@@ -23,11 +23,11 @@ lower_bound=-180.0  # lower bound value for the collective variables. set it to 
 upper_bound=180.0  # upper bound value for the collective variables.
 angle_cvs=[1, 1, 1, 1, 1, 1]  # 0: if the cv is not an angle. 1: if the cv is an angle.
 
-initial_step_num=60  # initial_step_num should be changed from 0 when restarting a simulation.
-max_num_steps=5  # maximum number of steps for the simulation.
-num_occupied_balls=1118  # num_occupied_balls should be changed when restarting a simulation.
+initial_step_num=0  # initial_step_num should be changed from 0 when restarting a simulation.
+max_num_steps=50  # maximum number of steps for the simulation.
+num_occupied_balls=1  # num_occupied_balls should be changed when restarting a simulation.
 first_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
-last_walker=11179  # only needed if simulation_flag is not equal to 0, otherwise put 0.
+last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
 
 ### for the next four lines, if enhanced_sampling_flag = 2 ###
 less_or_greater_flag=1  # 0: criteria for binning walkers is if the walkers have some property LESS than the threshold.
@@ -45,7 +45,7 @@ properties_to_keep_track=[20, 21, 22]  # properties of the walker that are compa
                                        # if more than one property is kept track of, then type them sequentially.
 
 ### for the next three lines, if enhanced_sampling flag == 3 ###
-num_balls_for_sc=1000  # minimum number of balls present to perform spectral clustering for that step
+num_balls_for_sc=500  # minimum number of balls present to perform spectral clustering for that step
 num_clusters=5  # number of clusters for k-means part of spectral clustering
-num_walkers_for_sc=2000  # number of walkers for each macrostate, usually set equal to the avg number of walkers per
-                         # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers
+num_walkers_for_sc=500  # number of walkers for each macrostate, usually set equal to the avg number of walkers per
+                        # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers
