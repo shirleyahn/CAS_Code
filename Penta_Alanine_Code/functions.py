@@ -766,8 +766,8 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
         for j in range(new_transition_matrix.shape[1]):
             new_transition_matrix[i][j] = transition_matrix[i][j] + transition_matrix[j][i]
 
+    row_sum = np.sum(new_transition_matrix, axis=1)
     for i in range(new_transition_matrix.shape[0]):
-        row_sum = np.sum(new_transition_matrix, axis=1)
         if row_sum[i] != 0.0:
             new_transition_matrix[i, :] /= row_sum[i]
     os.chdir(gv.main_directory + '/CAS')

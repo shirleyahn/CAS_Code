@@ -18,8 +18,8 @@ def y_coord(y_step, y_index):
 
 
 beta = 1.0/0.1
-delta_x = 0.01
-delta_y = 0.01
+delta_x = 0.02
+delta_y = 0.02
 delta_t = 1.0
 x_right = 1.0
 x_left = -1.0
@@ -31,23 +31,24 @@ trans_mat = np.zeros((int(x_total/delta_x)*int(y_total/delta_y), int(x_total/del
 
 for i in range(0, trans_mat.shape[0]):
     for j in range(0, trans_mat.shape[1]):
-        old_x_index = i/int(y_total/delta_y)
-        old_y_index = i%int(y_total/delta_y)
-        new_x_index = j/int(y_total/delta_y)
-        new_y_index = j%int(y_total/delta_y)
-        old_x = x_coord(delta_x, old_x_index)
-        old_y = y_coord(delta_y, old_y_index)
-        new_x = x_coord(delta_x, new_x_index)
-        new_y = y_coord(delta_y, new_y_index)
-        if (old_x == new_x and abs(old_y - new_y) <= delta_y) or (abs(old_x - new_x) <= delta_x and old_y == new_y):
-            old_energy = np.exp(-beta*two_dim_energy_function(old_x, old_y))
-            new_energy = np.exp(-beta*two_dim_energy_function(new_x, new_y))
-            trans_mat[i, j] = np.minimum(1.0, new_energy/old_energy)
+        if i != j:
+            old_x_index = i / int(y_total/delta_y)
+            old_y_index = i % int(y_total/delta_y)
+            new_x_index = j / int(y_total/delta_y)
+            new_y_index = j % int(y_total/delta_y)
+            if (old_x_index == new_x_index and abs(new_y_index-old_y_index) == 1) \
+                    or (abs(new_x_index-old_x_index) == 1 and old_y_index == new_y_index):
+                old_x = x_coord(delta_x, old_x_index)
+                old_y = y_coord(delta_y, old_y_index)
+                new_x = x_coord(delta_x, new_x_index)
+                new_y = y_coord(delta_y, new_y_index)
+                old_energy = np.exp(-beta*two_dim_energy_function(old_x, old_y))
+                new_energy = np.exp(-beta*two_dim_energy_function(new_x, new_y))
+                trans_mat[i, j] = np.minimum(1.0, new_energy/old_energy)*0.25
 
+row_sum = np.sum(trans_mat, axis=1)
 for i in range(trans_mat.shape[0]):
-    row_sum = np.sum(trans_mat, axis=1)
-    if row_sum[i] != 0.0:
-        trans_mat[i, :] /= row_sum[i]
+    trans_mat[i, i] = 1.0 - row_sum[i]
 
 evalues, evectors = np.linalg.eig(trans_mat.T)
 idx = abs(evalues).argsort()[::-1]
