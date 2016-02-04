@@ -623,25 +623,25 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 current_ball_center = temp_walker_list[i].current_ball_center
                 ball_to_walkers[tuple(current_ball_center)].append(i)
             elif gv.static_threshold_flag == 1 and walker_binning_value > 0 and ref_walker_for_failures_made == 0:
-                previous_ball_center = temp_walker_list[i].current_ball_center
-                ball_to_walkers[tuple(previous_ball_center)].remove(i)
-                previous_ball_key = temp_walker_list[i].ball_key
-                balls[previous_ball_key][gv.num_cvs+2] -= 1
                 current_ball_center = temp_walker_list[i].current_coordinates
-                center_r_key_num = copy.deepcopy(current_ball_center)
-                center_r_key_num.append(gv.radius)
-                center_r_key_num.append(gv.current_num_balls)
-                center_r_key_num.append(1)
-                balls = np.append(balls, [np.asarray(center_r_key_num)], axis=0)
                 if tuple(current_ball_center) in ball_to_walkers:
-                    ball_to_walkers[tuple(current_ball_center)].append(i)
+                    pass
                 else:
+                    previous_ball_center = temp_walker_list[i].current_ball_center
+                    ball_to_walkers[tuple(previous_ball_center)].remove(i)
+                    previous_ball_key = temp_walker_list[i].ball_key
+                    balls[previous_ball_key][gv.num_cvs+2] -= 1
+                    center_r_key_num = copy.deepcopy(current_ball_center)
+                    center_r_key_num.append(gv.radius)
+                    center_r_key_num.append(gv.current_num_balls)
+                    center_r_key_num.append(1)
+                    balls = np.append(balls, [np.asarray(center_r_key_num)], axis=0)
                     ball_to_walkers[tuple(current_ball_center)] = [i]
-                key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
-                temp_walker_list[i].current_ball_center = current_ball_center
-                temp_walker_list[i].ball_key = gv.current_num_balls
-                temp_walker_list[i].current_distance_from_center = 0.0
-                gv.current_num_balls += 1
+                    key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
+                    temp_walker_list[i].current_ball_center = current_ball_center
+                    temp_walker_list[i].ball_key = gv.current_num_balls
+                    temp_walker_list[i].current_distance_from_center = 0.0
+                    gv.current_num_balls += 1
                 ref_walker_for_failures.copy_walker(temp_walker_list[i])
                 ref_walker_for_failures.global_index = i
                 ref_walker_for_failures_made = 1
