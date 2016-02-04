@@ -583,14 +583,16 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 ball_to_walkers[tuple(previous_ball_center)].remove(i)
                 previous_ball_key = temp_walker_list[i].ball_key
                 balls[previous_ball_key][gv.num_cvs+2] -= 1
-                new_coordinates = temp_walker_list[i].current_coordinates
-                current_ball_center = [coordinate for coordinate in new_coordinates]
+                current_ball_center = temp_walker_list[i].current_coordinates
                 center_r_key_num = copy.deepcopy(current_ball_center)
                 center_r_key_num.append(gv.radius)
                 center_r_key_num.append(gv.current_num_balls)
                 center_r_key_num.append(1)
                 balls = np.append(balls, [np.asarray(center_r_key_num)], axis=0)
-                ball_to_walkers[tuple(current_ball_center)] = [i]
+                if tuple(current_ball_center) in ball_to_walkers:
+                    ball_to_walkers[tuple(current_ball_center)].append(i)
+                else:
+                    ball_to_walkers[tuple(current_ball_center)] = [i]
                 key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
                 temp_walker_list[i].current_ball_center = current_ball_center
                 temp_walker_list[i].ball_key = gv.current_num_balls
