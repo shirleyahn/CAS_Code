@@ -568,6 +568,16 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 old_directory = gv.main_directory + '/CAS/walker' + str(ref_walker.global_index)
                 new_directory = gv.main_directory + '/CAS/walker' + str(i)
                 shutil.copytree(old_directory, new_directory)
+            elif gv.static_threshold_flag == 1 and walker_binning_value > 0 and ref_walker_for_failures_made == 1:
+                previous_ball_center = temp_walker_list[i].current_ball_center
+                ball_to_walkers[tuple(previous_ball_center)].remove(i)
+                previous_ball_key = temp_walker_list[i].ball_key
+                balls[previous_ball_key][gv.num_cvs+2] -= 1
+                balls[ref_walker_for_failures.ball_key][gv.num_cvs+2] += 1
+                temp_walker_list[i].current_ball_center = ref_walker_for_failures.current_ball_center
+                temp_walker_list[i].ball_key = ref_walker_for_failures.ball_key
+                current_ball_center = temp_walker_list[i].current_ball_center
+                ball_to_walkers[tuple(current_ball_center)].append(i)
             elif gv.static_threshold_flag == 1 and walker_binning_value > 0 and ref_walker_for_failures_made == 0:
                 previous_ball_center = temp_walker_list[i].current_ball_center
                 ball_to_walkers[tuple(previous_ball_center)].remove(i)
@@ -589,16 +599,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 ref_walker_for_failures.copy_walker(temp_walker_list[i])
                 ref_walker_for_failures.global_index = i
                 ref_walker_for_failures_made = 1
-            elif gv.static_threshold_flag == 1 and walker_binning_value > 0 and ref_walker_for_failures_made == 1:
-                previous_ball_center = temp_walker_list[i].current_ball_center
-                ball_to_walkers[tuple(previous_ball_center)].remove(i)
-                previous_ball_key = temp_walker_list[i].ball_key
-                balls[previous_ball_key][gv.num_cvs+2] -= 1
-                balls[ref_walker_for_failures.ball_key][gv.num_cvs+2] += 1
-                temp_walker_list[i].current_ball_center = ref_walker_for_failures.current_ball_center
-                temp_walker_list[i].ball_key = ref_walker_for_failures.ball_key
-                current_ball_center = temp_walker_list[i].current_ball_center
-                ball_to_walkers[tuple(current_ball_center)].append(i)
             current_ball_center = temp_walker_list[i].current_ball_center
             ball_key = temp_walker_list[i].ball_key
             center_r_key_state = copy.deepcopy(current_ball_center)
