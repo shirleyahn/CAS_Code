@@ -20,8 +20,8 @@ def y_coord(y_step, y_index):
 
 
 beta = 1.0/0.1
-delta_x = 0.05
-delta_y = 0.05
+delta_x = 0.5
+delta_y = 0.5
 delta_t = 1.0
 x_right = 1.0
 x_left = -1.0
@@ -53,7 +53,7 @@ trans_mat = trans_mat.tocsr()
 
 t1 = time()
 
-evalues, evectors = linalg.eigs(trans_mat, 3)
+evalues, evectors = linalg.eigs(trans_mat.T, 3)
 #idx = abs(evalues).argsort()[::-1]
 #evalues = evalues[idx]
 #final_evalues = np.real(evalues)

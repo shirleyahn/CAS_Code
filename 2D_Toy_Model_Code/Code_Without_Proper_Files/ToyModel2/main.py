@@ -47,7 +47,11 @@ def CAS_simulation(input_initial_values_file):
 
         # second, create balls and assign walkers to balls
         t1 = time()
-        new_balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball)
+        if gv.enhanced_sampling_flag == 2:
+            new_balls = functions.threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers,
+                                                    key_to_ball)
+        else:
+            new_balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 3
         if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and gv.sc_performed == 0:
