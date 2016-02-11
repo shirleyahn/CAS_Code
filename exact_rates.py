@@ -20,8 +20,8 @@ def y_coord(y_step, y_index):
 
 
 beta = 1.0/0.1
-delta_x = 0.5
-delta_y = 0.5
+delta_x = 0.01
+delta_y = 0.01
 delta_t = 1.0
 x_right = 1.0
 x_left = -1.0
@@ -29,13 +29,21 @@ x_total = x_right-x_left
 y_up = 1.0
 y_down = -1.0
 y_total = y_up-y_down
-trans_mat = lil_matrix(((int(x_total/delta_x)+1)*(int(y_total/delta_y)+1),
+proposal_mat = lil_matrix(((int(x_total/delta_x)+1)*(int(y_total/delta_y)+1),
+                        (int(x_total/delta_x)+1)*(int(y_total/delta_y)+1)))
+acceptance_mat = lil_matrix(((int(x_total/delta_x)+1)*(int(y_total/delta_y)+1),
                         (int(x_total/delta_x)+1)*(int(y_total/delta_y)+1)))
 mod_num = int(y_total/delta_y)+1
 
 t0 = time()
-for i in range(trans_mat.shape[0]):
-    for j in range(trans_mat.shape[1]):
+for i in range(proposal_mat.shape[0]):
+    for j in range(proposal_mat.shape[1]):
+        if (i/mod_num == j/mod_num and abs(j % mod_num-i % mod_num) == 1) \
+                or (abs(j/mod_num-i/mod_num) == 1 and i % mod_num == j % mod_num):
+            proposal_mat[i, j] = 0.25
+
+for i in range(acceptance_mat.shape[0]):
+    for j in range(acceptance_mat.shape[1]):
         if (i/mod_num == j/mod_num and abs(j % mod_num-i % mod_num) == 1) \
                 or (abs(j/mod_num-i/mod_num) == 1 and i % mod_num == j % mod_num):
             old_x = x_coord(delta_x, i / mod_num)
@@ -44,13 +52,12 @@ for i in range(trans_mat.shape[0]):
             new_y = y_coord(delta_y, j % mod_num)
             old_energy = np.exp(-beta*two_dim_energy_function(old_x, old_y))
             new_energy = np.exp(-beta*two_dim_energy_function(new_x, new_y))
-            trans_mat[i, j] = np.minimum(1.0, new_energy/old_energy)*0.25
+            acceptance_mat[i, j] = np.minimum(1.0, new_energy/old_energy)
 
+trans_mat = proposal_mat.multiply(acceptance_mat)
 row_sum = trans_mat.sum(axis=1)
 for i in range(trans_mat.shape[0]):
     trans_mat[i, i] = 1.0 - row_sum[i]
-trans_mat = trans_mat.tocsr()
-
 t1 = time()
 
 evalues, evectors = linalg.eigs(trans_mat.T, 3)

@@ -4,8 +4,6 @@ initial_configuration_directory='/scratch/users/sahn1/Penta_Alanine/InitConfig'
 simulation_flag=0  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
                    # from middle of binning. 3: restarting simulation from middle of resampling.
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
-sorting_flag=1  # 0: sort walkers' weights in descending order (most probable walkers first). 1: sort walkers' weights
-                # in ascending order (rare walkers first).
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
              # determined by we_check_state_function.py.
 num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
@@ -13,9 +11,8 @@ enhanced_sampling_flag=3  # 0: off. 1: sub-binning balls by standard deviation d
                           # walkers if the walkers have some property less or greater than threshold.
                           # 3: spectral clustering.
 
-num_balls_limit=100000  # limit is set depending on the available memory. parameter needed in case the calculated
-                        # max_num_balls is greater or too much smaller than the limit.
-radius=80  # radius can be changed in the middle of the simulation.
+num_balls_limit=1000  # parameter needed in case the calculated max_num_balls is greater than the limit.
+radius=80.0  # radius can be changed in the middle of the simulation.
 num_walkers=10  # num_walkers should be fixed.
 num_cvs=6  # number of collective variables (num_cvs) should be fixed.
 lower_bound=-180.0  # lower bound value for the collective variables. set it to arbitrary value if collective variables

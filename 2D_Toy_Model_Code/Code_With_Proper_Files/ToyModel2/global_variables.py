@@ -5,7 +5,6 @@ global main_directory
 
 global simulation_flag
 global balls_flag
-global sorting_flag
 global rate_flag
 global num_states
 global enhanced_sampling_flag
@@ -40,7 +39,6 @@ global num_walkers_for_sc
 ###
 # parameters that are set by functions.py
 ###
-global max_num_balls
 global current_num_balls
 global total_num_walkers
 global num_occupied_clusters

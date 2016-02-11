@@ -15,11 +15,11 @@ def CAS_simulation(input_initial_values_file):
 
     # create python objects for walkers and balls
     if gv.enhanced_sampling_flag == 3:
-        walker_list = [None]*(gv.max_num_balls*gv.num_walkers_for_sc)
-        temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers_for_sc)
+        walker_list = [None]*(gv.num_balls_limit*gv.num_walkers_for_sc)
+        temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers_for_sc)
     else:
-        walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
-        temp_walker_list = [None]*(gv.max_num_balls*gv.num_walkers)
+        walker_list = [None]*(gv.num_balls_limit*gv.num_walkers)
+        temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers)
     vacant_walker_indices = []
     balls = np.zeros((1, gv.num_cvs+3))  # ball coordinates / ball radius / ball key / # of walkers
     ball_to_walkers = {}
@@ -27,8 +27,8 @@ def CAS_simulation(input_initial_values_file):
     ball_clusters_list = {}
 
     # create walkers and their directories
-    new_balls = functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls,
-                                        ball_to_walkers, vacant_walker_indices)
+    new_balls = functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers,
+                                     vacant_walker_indices)
     balls = new_balls
 
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
@@ -40,7 +40,7 @@ def CAS_simulation(input_initial_values_file):
             ball_clusters_list = {}
             gv.current_num_balls = 0
 
-        if gv.simulation_flag == 1 and step_num == gv.initial_step_num:
+        if gv.simulation_flag != 0 and step_num == gv.initial_step_num:
             pass
         else:
             gv.first_walker = 0
@@ -52,10 +52,12 @@ def CAS_simulation(input_initial_values_file):
         f.write(' first_' + str(gv.last_walker) + '_last')
         f.close()
 
-        # first, run simulation with bash script
+        # first, run simulation or clean up with bash script
         t0 = time()
         if (gv.simulation_flag == 2 or gv.simulation_flag == 3) and step_num == gv.initial_step_num:
             pass
+        elif gv.simulation_flag == 1 and step_num == gv.initial_step_num:
+            os.system('./clean_up.sh')
         else:
             os.system('./simulations.sh')
 
@@ -68,8 +70,8 @@ def CAS_simulation(input_initial_values_file):
             new_balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 3
-        if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls and \
-                        step_num != gv.initial_step_num and gv.sc_performed == 0:
+        if gv.enhanced_sampling_flag == 3 and gv.num_balls_for_sc <= gv.num_occupied_balls \
+                and step_num != gv.initial_step_num and gv.sc_performed == 0:
             functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
             # fourth, resample walkers for every ball
             if gv.sc_performed == 1:

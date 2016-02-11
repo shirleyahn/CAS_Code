@@ -32,7 +32,6 @@ def calculate_distance_from_center(center, values):
 def set_parameters():
     gv.main_directory = p.main_directory
     gv.balls_flag = p.balls_flag
-    gv.sorting_flag = p.sorting_flag
     gv.rate_flag = p.rate_flag
     gv.num_states = p.num_states
     gv.enhanced_sampling_flag = p.enhanced_sampling_flag
@@ -64,12 +63,11 @@ def set_parameters():
     for i in range(gv.num_cvs):
         grid_volume *= (gv.grid_dimensions[ii+1]-gv.grid_dimensions[ii])
         ii += 2
-    gv.max_num_balls = 0
     if ball_volume != 0.0:
-        gv.max_num_balls = int(np.floor(grid_volume/ball_volume))
-    if gv.max_num_balls > gv.num_balls_limit or gv.max_num_balls < gv.num_balls_limit*1e-2:
-        gv.max_num_balls = gv.num_balls_limit
-    print 'max # of balls (n_b) = ' + str(gv.max_num_balls)
+        max_num_balls = int(np.floor(grid_volume/ball_volume))
+    if max_num_balls < gv.num_balls_limit:
+        gv.num_balls_limit = max_num_balls
+    print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
     gv.current_num_balls = 0
     gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
     gv.num_occupied_clusters = 1
@@ -110,14 +108,14 @@ def m_simulation(walker_list):
                 if gv.pbc == 1 and new_x < gv.grid_dimensions[0]:
                     new_x = gv.grid_dimensions[1] - gv.step_size
                 elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
-                    new_x = temp_x
+                    new_x = gv.grid_dimensions[0]
                 new_y = temp_y
             elif direction == 1:  # move to right
                 new_x = temp_x + gv.step_size
                 if gv.pbc == 1 and new_x > gv.grid_dimensions[1]:
                     new_x = gv.grid_dimensions[0] + gv.step_size
                 elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
-                    new_x = temp_x
+                    new_x = gv.grid_dimensions[1]
                 new_y = temp_y
             elif direction == 2:  # move to top
                 new_x = temp_x
@@ -125,14 +123,14 @@ def m_simulation(walker_list):
                 if gv.pbc == 1 and new_y > gv.grid_dimensions[3]:
                     new_y = gv.grid_dimensions[2] + gv.step_size
                 elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
-                    new_y = temp_y
+                    new_y = gv.grid_dimensions[3]
             else:  # move to bottom
                 new_x = temp_x
                 new_y = temp_y - gv.step_size
                 if gv.pbc == 1 and new_y < gv.grid_dimensions[2]:
                     new_y = gv.grid_dimensions[3] - gv.step_size
                 elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
-                    new_y = temp_y
+                    new_y = gv.grid_dimensions[2]
             old_energy = ef.energy_function(temp_x, temp_y)
             new_energy = ef.energy_function(new_x, new_y)
             if new_energy - old_energy <= 0.0:  # accept move
@@ -155,10 +153,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)
     flux = np.zeros((gv.num_states, gv.num_states))
-    if gv.sorting_flag == 1:
-        walker_indices = np.argsort(initial_weights_array)  # sort walkers in ascending order based on their weights
-    else:
-        walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
+    flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
+    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     start = 0  # indicates whether we are dealing with the very first walker or not
 
@@ -176,6 +172,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 state = walker_list[i].state
             if walker_list[i].state != -1 and state != -1:
                 flux[walker_list[i].state, state] += walker_list[i].weight
+                flux_num_walkers[walker_list[i].state, state] += 1
         else:
             state = -1
 
@@ -214,8 +211,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                         distance = distance_from_center
                         ball_key = j
 
-            # walker is inside some ball
-            if inside != 0:
+            # walker is inside some ball or is not but needs to be binned to the nearest ball
+            if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
                 balls[ball_key][gv.num_cvs+2] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)].append(i)
@@ -226,7 +223,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                                                     initial_step_num, weight, state)
 
             # or walker does not belong in any ball -> create a new ball
-            else:
+            elif inside == 0 and gv.current_num_balls < gv.num_balls_limit:
                 current_ball_center = [coordinate for coordinate in new_coordinates]
                 center_r_key_num = copy.deepcopy(current_ball_center)
                 center_r_key_num.append(gv.radius)
@@ -244,6 +241,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
     np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
     if gv.rate_flag == 1:
         np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
+        np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers)
     return balls
 
 
@@ -251,10 +249,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)
     flux = np.zeros((gv.num_states, gv.num_states))
-    if gv.sorting_flag == 1:
-        walker_indices = np.argsort(initial_weights_array)  # sort walkers in ascending order based on their weights
-    else:
-        walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
+    flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
+    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     if gv.static_threshold_flag == 0:
         new_threshold_values = gv.threshold_values
@@ -278,6 +274,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                 state = walker_list[i].state
             if walker_list[i].state != -1 and state != -1:
                 flux[walker_list[i].state, state] += walker_list[i].weight
+                flux_num_walkers[walker_list[i].state, state] += 1
         else:
             state = -1
 
@@ -421,7 +418,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                             distance = distance_from_center
                             ball_key = j
 
-                if inside != 0:
+                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
                     balls[ball_key][gv.num_cvs+2] += 1
                     current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)].append(i)
@@ -430,7 +427,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                     temp_walker_list[i].current_distance_from_center = \
                         calculate_distance_from_center(current_ball_center, new_coordinates)
 
-                else:
+                elif inside == 0 and gv.current_num_balls < gv.num_balls_limit:
                     current_ball_center = [coordinate for coordinate in new_coordinates]
                     center_r_key_num = copy.deepcopy(current_ball_center)
                     center_r_key_num.append(gv.radius)
@@ -448,6 +445,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
     np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
     if gv.rate_flag == 1:
         np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
+        np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers)
     # update threshold values if they are better
     if gv.static_threshold_flag == 0:
         threshold_replace_value = 0
@@ -644,7 +642,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     num_clusters = len(array_of_clusters)
     '''
 
-    matrix = np.hstack((balls, normalized_second_evector))
+    matrix = normalized_second_evector  #np.hstack((balls, normalized_second_evector))
     clustering_matrix = matrix
     cont = True
     outlier_labels = np.ones(len(matrix)) * -1
