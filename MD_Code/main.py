@@ -15,11 +15,11 @@ def CAS_simulation(input_initial_values_file):
 
     # create python objects for walkers and balls
     if gv.enhanced_sampling_flag == 3:
-        walker_list = [None]*(gv.num_balls_limit*gv.num_walkers_for_sc)
-        temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers_for_sc)
+        walker_list = [None]*(gv.num_balls_limit*gv.num_walkers_for_sc*2)
+        temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers_for_sc*2)
     else:
-        walker_list = [None]*(gv.num_balls_limit*gv.num_walkers)
-        temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers)
+        walker_list = [None]*(gv.num_balls_limit*gv.num_walkers*2)
+        temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers*2)
     vacant_walker_indices = []
     balls = np.zeros((1, gv.num_cvs+3))  # ball coordinates / ball radius / ball key / # of walkers
     ball_to_walkers = {}
@@ -56,8 +56,8 @@ def CAS_simulation(input_initial_values_file):
         t0 = time()
         if (gv.simulation_flag == 2 or gv.simulation_flag == 3) and step_num == gv.initial_step_num:
             pass
-        elif gv.simulation_flag == 1 and step_num == gv.initial_step_num:
-            os.system('./clean_up.sh')
+        #elif gv.simulation_flag == 1 and step_num == gv.initial_step_num:
+            #os.system('./clean_up.sh')
         else:
             os.system('./simulations.sh')
 

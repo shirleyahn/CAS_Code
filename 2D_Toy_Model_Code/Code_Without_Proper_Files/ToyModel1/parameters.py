@@ -1,4 +1,4 @@
-main_directory='/scratch/users/sahn1/WE_2D_Toy_Model'
+main_directory='/scratch/users/sahn1/2D_Toy_Model'
 
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is

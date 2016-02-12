@@ -1,4 +1,4 @@
-main_directory='/scratch/users/sahn1/WE_2D_Toy_Model'
+main_directory='/scratch/users/sahn1/2D_Toy_Model'
 
 simulation_flag=0  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
                    # from middle of binning. 3: restarting simulation from middle of resampling.

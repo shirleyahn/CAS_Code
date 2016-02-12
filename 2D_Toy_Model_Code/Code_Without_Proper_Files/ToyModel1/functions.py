@@ -64,7 +64,7 @@ def set_parameters():
         grid_volume *= (gv.grid_dimensions[ii+1]-gv.grid_dimensions[ii])
         ii += 2
     if ball_volume != 0.0:
-        max_num_balls = int(np.floor(grid_volume/ball_volume))
+        max_num_balls = int(np.floor(grid_volume/ball_volume))*2
     if max_num_balls < gv.num_balls_limit:
         gv.num_balls_limit = max_num_balls
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
@@ -241,7 +241,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
     np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
     if gv.rate_flag == 1:
         np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
-        np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers)
+        np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers, fmt=' %d')
     return balls
 
 
@@ -766,7 +766,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     num_occupied_clusters = 0
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers_for_sc, int)
+    occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers_for_sc*2, int)
     excess_index = gv.total_num_walkers
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
@@ -887,7 +887,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
     gv.num_occupied_clusters = 1
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    occupied_indices = np.zeros(gv.max_num_balls*gv.num_walkers, int)
+    occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
     excess_index = gv.total_num_walkers
     for current_ball in range(balls.shape[0]):
         if int(balls[current_ball][gv.num_cvs+2]) > 0:
