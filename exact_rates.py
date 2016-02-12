@@ -68,8 +68,13 @@ for k in range(100):
     print eigen
 '''
 
+rates = np.zeros(evalues.shape[0])
+for i in range(evalues.shape[0]):
+    if evalues[i] != 0.0:
+        rates[i] = (-np.log(evalues[i], dtype='float64')/delta_t)*0.5
+
 np.savetxt('evalues.txt', evalues, fmt=' %1.10e')
 np.savetxt('evectors.txt', evectors, fmt=' %1.10e')
-np.savetxt('rates.txt', -np.log(evalues)/delta_t, fmt=' %1.10e')
+np.savetxt('rates.txt', rates, fmt=' %1.10e')
 t2 = time()
 print t2-t1, t1-t0
