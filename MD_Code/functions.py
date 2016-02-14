@@ -1248,6 +1248,27 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         num_walkers_bin = [len(initial_indices)]
                         std = 0.0
 
+            elif gv.enhanced_sampling_flag != 1 and gv.rate_flag == 1:
+                num_bins = gv.num_states
+                true_num_bins = 0
+                bins = []
+                num_walkers_bin = []
+                for i in range(gv.num_states):
+                    num_walkers = 0
+                    for j in initial_indices:
+                        state = temp_walker_list[j].state
+                        if state == i:
+                            num_walkers += 1
+                    if num_walkers != 0:
+                        true_num_bins += 1
+                        bins.append(i)
+                        num_walkers_bin.append(num_walkers)
+                if true_num_bins <= 1:
+                    num_bins = 1
+                    true_num_bins = 1
+                    bins = [0]
+                    num_walkers_bin = [len(initial_indices)]
+
             target_num_walkers = int(np.floor(float(gv.num_walkers)/true_num_bins))
             remainder = gv.num_walkers-target_num_walkers*true_num_bins
             # reset ball_to_walkers
@@ -1264,7 +1285,8 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                 weights_bin = [float] * num_walkers_bin[b]
                 indices_bin = [int] * num_walkers_bin[b]
 
-                if gv.enhanced_sampling_flag != 1 or (gv.enhanced_sampling_flag == 1 and std == 0.0):
+                if (gv.enhanced_sampling_flag != 1 and num_bins == 1) or \
+                        (gv.enhanced_sampling_flag == 1 and std == 0.0):
                     weights_bin = initial_weights
                     indices_bin = initial_indices
 
@@ -1287,6 +1309,15 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                                 weights_bin[k] = temp_walker_list[j].weight
                                 indices_bin[k] = temp_walker_list[j].global_index
                                 k += 1
+
+                elif gv.enhanced_sampling_flag != 1 and num_bins != 1:
+                    k = 0
+                    for j in initial_indices:
+                        state = temp_walker_list[j].state
+                        if bin_index == state:
+                            weights_bin[k] = temp_walker_list[j].weight
+                            indices_bin[k] = temp_walker_list[j].global_index
+                            k += 1
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
