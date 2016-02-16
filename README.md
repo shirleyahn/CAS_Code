@@ -1,8 +1,8 @@
 The regular weighted ensemble simulation Python code was originally developed by H. Lee, Stanford. The bash script for 
 multiple simultaneous simulations was originally developed by S. Ahn, Stanford. The resampling method implemented in the 
 code is from E. Darve, Stanford and J. Izaguirre, University of Notre Dame. The Concurrent Adaptive Sampling (CAS) 
-Python code was developed on top of the regular weighted ensemble code by S. Ahn, Stanford. Improvements and additions 
-have been made by J. Birgmeier, Stanford.
+algorithm Python code was developed on top of the regular weighted ensemble code by S. Ahn, Stanford. Outlier detection
+in spectral clustering has been implemented by J. Birgmeier, Stanford.
 
 Please see the TODO sections in main.py, execute.sh, simulations.sh to get started (e.g. edit main directories, 
 etc.). Then edit the initial_values.txt and parameters.py for your simulation.
@@ -15,6 +15,6 @@ then my initial_values.txt would look like the following:
 3.0
 4.0
 
-execute.sh is the script to submit to your cluster to run the CAS simulation.
+execute.sh is the script to submit to your cluster to run the CAS algorithm.
 
 Please report any bugs and questions/comments to sahn1@stanford.edu.
