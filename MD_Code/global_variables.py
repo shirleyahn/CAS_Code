@@ -29,6 +29,8 @@ global static_threshold_flag
 global threshold_values
 global properties_to_keep_track
 
+global num_occupied_big_clusters
+global num_occupied_small_clusters
 global num_balls_for_sc
 global num_clusters
 global num_walkers_for_sc
@@ -38,6 +40,4 @@ global num_walkers_for_sc
 ###
 global current_num_balls
 global total_num_walkers
-global num_occupied_big_clusters
-global num_occupied_small_clusters
 global sc_performed

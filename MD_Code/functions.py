@@ -55,6 +55,8 @@ def set_parameters():
         gv.threshold_values = p.threshold_values
         gv.properties_to_keep_track = p.properties_to_keep_track
     elif gv.enhanced_sampling_flag == 2:
+        gv.num_occupied_big_clusters = p.num_occupied_big_clusters
+        gv.num_occupied_small_clusters = p.num_occupied_small_clusters
         gv.num_balls_for_sc = p.num_balls_for_sc
         gv.num_clusters = p.num_clusters
         gv.num_walkers_for_sc = p.num_walkers_for_sc
@@ -66,9 +68,11 @@ def set_parameters():
         gv.num_balls_limit = max_num_balls
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
     gv.current_num_balls = 0
-    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
-    gv.num_occupied_big_clusters = 1
-    gv.num_occupied_small_clusters = gv.num_occupied_balls
+    if gv.enhanced_sampling_flag == 2:
+        gv.total_num_walkers = gv.num_occupied_small_clusters*gv.num_walkers \
+                               + gv.num_occupied_big_clusters*gv.num_walkers_for_sc
+    else:
+        gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
     gv.sc_performed = 0
 
 
@@ -1089,8 +1093,6 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
     gv.sc_performed = 1
-    gv.num_occupied_big_clusters = 1
-    gv.num_occupied_small_clusters = gv.num_occupied_balls
     num_occupied_big_clusters = 0
     num_occupied_small_clusters = 0
     num_occupied_balls = 0
@@ -1246,8 +1248,6 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
 
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices):
     gv.sc_performed = 0
-    gv.num_occupied_big_clusters = 1
-    gv.num_occupied_small_clusters = gv.num_occupied_balls
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
@@ -1447,5 +1447,8 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
 
     # verify that total weight of all balls is 1.0
     f = open('total_weight.txt', 'a')
-    f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' +
-            str(gv.num_occupied_big_clusters) + ' ' + str(gv.num_occupied_small_clusters) + '\n')
+    if gv.enhanced_sampling_flag == 2:
+        f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' '
+                + str(gv.num_occupied_big_clusters) + ' ' + str(gv.num_occupied_small_clusters) + '\n')
+    else:
+        f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + '\n')

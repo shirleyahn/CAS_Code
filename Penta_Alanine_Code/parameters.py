@@ -40,6 +40,8 @@ properties_to_keep_track=[0]  # properties of the walker that are compared again
                               # to kept track of, then type them sequentially.
 
 ### for the next three lines, if enhanced_sampling flag == 2 ###
+num_occupied_big_clusters=0  # num_occupied_big_clusters could be changed when restarting a simulation.
+num_occupied_small_clusters=0  # num_occupied_small_clusters could be changed when restarting a simulation.
 num_balls_for_sc=500  # minimum number of balls present to perform spectral clustering for that step
 num_clusters=5  # number of clusters for k-means part of spectral clustering
 num_walkers_for_sc=500  # number of walkers for each cluster, usually set equal to the avg number of walkers per
