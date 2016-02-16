@@ -47,12 +47,12 @@ def set_parameters():
     gv.step_size = p.step_size
     gv.beta = p.beta
     gv.pbc = p.pbc
-    if gv.enhanced_sampling_flag == 2:
+    if gv.enhanced_sampling_flag == 1:
         gv.less_or_greater_flag = p.less_or_greater_flag
         gv.static_threshold_flag = p.static_threshold_flag
         gv.threshold_values = p.threshold_values
         gv.properties_to_keep_track = p.properties_to_keep_track
-    elif gv.enhanced_sampling_flag == 3:
+    elif gv.enhanced_sampling_flag == 2:
         gv.num_balls_for_sc = p.num_balls_for_sc
         gv.num_clusters = p.num_clusters
         gv.num_walkers_for_sc = p.num_walkers_for_sc
@@ -70,11 +70,12 @@ def set_parameters():
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
     gv.current_num_balls = 0
     gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
-    gv.num_occupied_clusters = 1
+    gv.num_occupied_big_clusters = 1
+    gv.num_occupied_small_clusters = gv.num_occupied_balls
     gv.sc_performed = 0
 
 
-def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices):
+def initialize(input_initial_values_file, walker_list):
     for i in range(len(walker_list)):
         walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, 0.0, [-1000.0] * gv.num_cvs,
                                        [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0, -1)
@@ -514,7 +515,7 @@ def maxDelta1(ball_coords):
     column = ball_coords.shape[1]-1
     num_clusters = int(np.max(ball_coords[:, column])+1)
     max_delta1 = 0
-    for i in xrange(0,num_clusters):
+    for i in xrange(0, num_clusters):
         i = float(i)
         c1 = ball_coords[ball_coords[:, column] == i, :-1]
         d1 = delta1(c1)
@@ -546,7 +547,7 @@ def create_outlier_labels(outlier_labels, new_outlier_label, matrix):
                 outlier_labels[i] = new_outlier_label
             i += 1
         return outlier_labels, inliers
-    except ValueError: # singular cov matrix
+    except ValueError:  # singular cov matrix
         return outlier_labels, [True] * len(matrix)
 
 
@@ -655,7 +656,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
             except ClusterError:
                 num_clusters -= 1
 
-        if num_clusters <= 2:
+        if num_clusters <= 1:
             gv.sc_performed = 0
             break
         else:
@@ -672,29 +673,29 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 sample_silhouette_values = [-1] * num_clusters
 
             cont = False
-            if silhouette_avg > 0.8 and num_clusters >= 3:
-                outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters - 1, clustering_matrix)
+            if silhouette_avg > 0.8 and num_clusters >= 2:
+                outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters, clustering_matrix)
+                num_clusters += 1
+                labels = merge_with_outliers(outlier_labels, labels)
+                '''
                 if len(clustering_matrix[inliers]) == len(clustering_matrix):
                     # couldn't remove any outliers; singular cov matrix (?)
-                    gv.sc_performed = 0
                     cont = False
                     with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                         print >>outlier_f, "Couldn't remove any outliers; just continuing"
                 else:
-                    gv.sc_performed = 0
                     cont = True
                     num_clusters -= 1
                     clustering_matrix = clustering_matrix[inliers]
                     with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                         print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
-
+                '''
             if not cont:
                 with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
                     labeled_matrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
                     labeled_matrix[:, 0:matrix.shape[1]] = matrix
                     labeled_matrix[:, matrix.shape[1]] = labels
                     print >>dunn_index_f, dunn(labeled_matrix)
-
                     print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
                     for i in xrange(int(max(labels))+1):
                         print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
@@ -731,7 +732,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                     ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
         '''
 
-        for i in range(num_clusters):
+        for i in range(num_clusters-1):
             first = 0
             for j in range(balls.shape[0]):
                 if labels[j] == i and first == 0:
@@ -757,21 +758,43 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                     f.write('\n')
                     ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                     balls[j][gv.num_cvs+2] -= 1
+
+        cluster_num = num_clusters-1
+        for j in range(balls.shape[0]):
+            if labels[j] == num_clusters-1:
+                ball_center = balls[j, 0:gv.num_cvs].tolist()
+                ball_cluster = copy.deepcopy(ball_center)
+                ball_cluster.append(cluster_num)
+                ball_cluster.append(abs(final_evectors[j, 0]))
+                ball_cluster.append(final_evectors[j, 1])
+                ball_cluster.append(final_evectors[j, 2])
+                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                f.write('\n')
+                ball_clusters_list[tuple(ball_center)].append(tuple(ball_center))
+                balls[j][gv.num_cvs + 2] -= 1
+                cluster_num += 1
+
         f.close()
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list, vacant_walker_indices):
     gv.sc_performed = 1
-    gv.num_occupied_clusters = 1
-    num_occupied_clusters = 0
+    gv.num_occupied_big_clusters = 1
+    gv.num_occupied_small_clusters = gv.num_occupied_balls
+    num_occupied_big_clusters = 0
+    num_occupied_small_clusters = 0
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers_for_sc*2, int)
     excess_index = gv.total_num_walkers
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
-            num_occupied_clusters += 1
-            target_num_walkers = gv.num_walkers_for_sc
+            if len(ball_clusters_list[current_cluster]) > 1:
+                num_occupied_big_clusters += 1
+                target_num_walkers = gv.num_walkers_for_sc
+            else:
+                num_occupied_small_clusters += 1
+                target_num_walkers = gv.num_walkers
 
             new_weights = []
             new_indices = []
@@ -854,11 +877,12 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                     ball_center = walker_list[new_index].current_ball_center
                     ball_to_walkers[tuple(ball_center)].append(new_index)
 
-    if excess_index - num_occupied_clusters*gv.num_walkers_for_sc != len(vacant_walker_indices):
+    total_num_walkers = num_occupied_big_clusters*gv.num_walkers_for_sc + num_occupied_small_clusters*gv.num_walkers
+    if excess_index - total_num_walkers != len(vacant_walker_indices):
         print 'Something wrong with resampling'
 
-    if num_occupied_clusters*gv.num_walkers_for_sc >= gv.total_num_walkers:
-        for i in range(num_occupied_clusters*gv.num_walkers_for_sc, excess_index):
+    if total_num_walkers >= gv.total_num_walkers:
+        for i in range(total_num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
@@ -867,10 +891,10 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
-        for i in range(num_occupied_clusters*gv.num_walkers_for_sc, gv.total_num_walkers):
+        for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
                 new_index = vacant_walker_indices.pop()
-                while new_index >= num_occupied_clusters*gv.num_walkers_for_sc:
+                while new_index >= total_num_walkers:
                     new_index = vacant_walker_indices.pop()
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
@@ -878,13 +902,15 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     while len(vacant_walker_indices) > 0:
         vacant_walker_indices.pop()
     gv.num_occupied_balls = num_occupied_balls
-    gv.total_num_walkers = num_occupied_clusters*gv.num_walkers_for_sc
-    gv.num_occupied_clusters = num_occupied_clusters
+    gv.total_num_walkers = total_num_walkers
+    gv.num_occupied_big_clusters = num_occupied_big_clusters
+    gv.num_occupied_small_clusters = num_occupied_small_clusters
 
 
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices):
     gv.sc_performed = 0
-    gv.num_occupied_clusters = 1
+    gv.num_occupied_big_clusters = 1
+    gv.num_occupied_small_clusters = gv.num_occupied_balls
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
@@ -906,40 +932,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
             bins = [0]
             num_walkers_bin = [len(initial_indices)]
 
-            if gv.enhanced_sampling_flag == 1:
-                distance_from_center_list = [temp_walker_list[i].current_distance_from_center for i in
-                                             ball_to_walkers[tuple(current_ball_center)]]
-                std = np.sqrt(np.var(distance_from_center_list))
-                if std != 0.0:
-                    num_bins = int(np.ceil(gv.radius/std))+2
-                    true_num_bins = 0
-                    bins = []
-                    num_walkers_bin = []
-                    for nb in range(num_bins):
-                        num_walkers = 0
-                        for ii in initial_indices:
-                            distance = temp_walker_list[ii].current_distance_from_center
-                            if nb == 0:
-                                if distance <= std:
-                                    num_walkers += 1
-                            elif nb == num_bins-1:
-                                if nb*std < distance:
-                                    num_walkers += 1
-                            else:
-                                if nb*std < distance <= (nb+1)*std:
-                                    num_walkers += 1
-                        if num_walkers != 0:
-                            true_num_bins += 1
-                            bins.append(nb)
-                            num_walkers_bin.append(num_walkers)
-                    if true_num_bins <= 1:
-                        num_bins = 1
-                        true_num_bins = 1
-                        bins = [0]
-                        num_walkers_bin = [len(initial_indices)]
-                        std = 0.
-
-            elif gv.enhanced_sampling_flag != 1 and gv.rate_flag == 1:
+            if gv.rate_flag == 1:
                 num_bins = gv.num_states
                 true_num_bins = 0
                 bins = []
@@ -976,32 +969,10 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                 weights_bin = [float] * num_walkers_bin[b]
                 indices_bin = [int] * num_walkers_bin[b]
 
-                if (gv.enhanced_sampling_flag != 1 and num_bins == 1) or \
-                        (gv.enhanced_sampling_flag == 1 and std == 0.0):
+                if num_bins == 1:
                     weights_bin = initial_weights
                     indices_bin = initial_indices
-
-                elif gv.enhanced_sampling_flag == 1 and std != 0.0:
-                    k = 0
-                    for j in initial_indices:
-                        distance = temp_walker_list[j].current_distance_from_center
-                        if bin_index == 0:
-                            if distance <= std:
-                                weights_bin[k] = temp_walker_list[j].weight
-                                indices_bin[k] = temp_walker_list[j].global_index
-                                k += 1
-                        elif bin_index == num_bins - 1:
-                            if bin_index * std < distance:
-                                weights_bin[k] = temp_walker_list[j].weight
-                                indices_bin[k] = temp_walker_list[j].global_index
-                                k += 1
-                        else:
-                            if bin_index * std < distance <= (bin_index + 1) * std:
-                                weights_bin[k] = temp_walker_list[j].weight
-                                indices_bin[k] = temp_walker_list[j].global_index
-                                k += 1
-
-                elif gv.enhanced_sampling_flag != 1 and num_bins != 1:
+                else:
                     k = 0
                     for j in initial_indices:
                         state = temp_walker_list[j].state
@@ -1043,6 +1014,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         weights[x] = xy_weight
                         if y not in new_indices:
                             vacant_walker_indices.append(y)
+
                 if b == 0:  # reset balls
                     balls[current_ball][gv.num_cvs+2] = 0
                 for ni, global_index in enumerate(new_indices):
@@ -1062,11 +1034,12 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
                         ball_to_walkers[tuple(current_ball_center)].append(new_index)
                     balls[current_ball][gv.num_cvs+2] += 1
 
-    if excess_index-num_occupied_balls*gv.num_walkers != len(vacant_walker_indices):
+    total_num_walkers = num_occupied_balls*gv.num_walkers
+    if excess_index-total_num_walkers != len(vacant_walker_indices):
         print 'Something wrong with resampling'
 
-    if num_occupied_balls*gv.num_walkers >= gv.total_num_walkers:
-        for i in range(num_occupied_balls*gv.num_walkers, excess_index):
+    if total_num_walkers >= gv.total_num_walkers:
+        for i in range(total_num_walkers, excess_index):
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
@@ -1075,10 +1048,10 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers, vacant_wal
             new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
-        for i in range(num_occupied_balls*gv.num_walkers, gv.total_num_walkers):
+        for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
                 new_index = vacant_walker_indices.pop()
-                while new_index >= num_occupied_balls*gv.num_walkers:
+                while new_index >= total_num_walkers:
                     new_index = vacant_walker_indices.pop()
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
@@ -1111,4 +1084,4 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
     # verify that total weight of all balls is 1.0
     f = open('total_weight.txt', 'a')
     f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' +
-            str(gv.num_occupied_clusters) + '\n')
+            str(gv.num_occupied_big_clusters) + ' ' + str(gv.num_occupied_small_clusters) + '\n')

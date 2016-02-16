@@ -4,9 +4,8 @@ balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
              # determined by we_check_state_function.py.
 num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
-enhanced_sampling_flag=2  # 0: off. 1: sub-binning balls by standard deviation distance from center of ball. 2: binning
-                          # walkers if the walkers have some property less or greater than threshold.
-                          # 3: spectral clustering.
+enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
+                          # 2: spectral clustering.
 
 num_balls_limit=1000  # parameter needed in case the calculated max_num_balls is greater than the limit.
 radius=0.1  # radius can be changed in the middle of the simulation.

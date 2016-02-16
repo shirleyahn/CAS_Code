@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --time=48:00:00
-#SBATCH --partition=mc
+#SBATCH --partition=owners
 #SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16

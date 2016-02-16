@@ -61,7 +61,7 @@ wait
 
 # post-process data after simulations are done. this needs to be modified depending on how the output files are named
 # and what collective variables are being collected from the simulations.
-for i in `seq $first_walker $last_walker`;
+for i in `seq 0 $last_walker`;
 do
     cd walker$i
     echo "post-processing walker$i"
@@ -85,14 +85,11 @@ do
     rm -rf mdout.mdp
     mv run.gro minim.gro
     mv run.tpr minim.tpr
-    echo 0 | ${GROMACS}/trjconv -s minim.tpr -f run.xtc -b 10.0 -o run.xtc
-    ${GROMACS}/g_angle -f run.xtc -n ../../dihedrals.ndx -ov -all -type dihedral
-    awk -v f=1 -v t=2 'END {for(i=1;i<=NF;i++)if(i>=f&&i<=t)continue;else printf("%s%s",$i,(i!=NF)?OFS:ORS)}' angaver.xvg > coordinates.out
-    echo 24 27 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg >> coordinates.out
-    awk '{printf $0" ";next;}' coordinates.out > new_coordinates.out
-    mv new_coordinates.out coordinates.out
-    rm -rf ang*
+    echo 0 | ${GROMACS}/trjconv -s minim.tpr -f run.xtc -b 100.0 -o run.xtc
+    echo 25 28 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
+    awk 'END {print $2*10}' mindist.xvg > coordinates.out
+    #awk '{printf $0" ";next;}' coordinates.out > new_coordinates.out
+    #mv new_coordinates.out coordinates.out
     rm -rf mindist*
     if [ -f "traj.xtc" ];  # concatenating trajectories after the first step
     then

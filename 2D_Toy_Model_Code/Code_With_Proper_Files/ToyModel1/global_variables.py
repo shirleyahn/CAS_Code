@@ -3,7 +3,6 @@
 ###
 global main_directory
 
-global simulation_flag
 global balls_flag
 global rate_flag
 global num_states
@@ -16,11 +15,8 @@ global num_cvs
 global grid_dimensions
 global angle_cvs
 
-global initial_step_num
 global max_num_steps
 global num_occupied_balls
-global first_walker
-global last_walker
 
 global m_steps_per_step
 global step_size
@@ -41,5 +37,6 @@ global num_walkers_for_sc
 ###
 global current_num_balls
 global total_num_walkers
-global num_occupied_clusters
+global num_occupied_big_clusters
+global num_occupied_small_clusters
 global sc_performed
