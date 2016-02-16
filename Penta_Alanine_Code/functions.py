@@ -1051,7 +1051,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 ball_cluster.append(final_evectors[j, 2])
                 f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                 f.write('\n')
-                ball_clusters_list[tuple(ball_center)].append(tuple(ball_center))
+                ball_clusters_list[tuple(ball_center)] = [tuple(ball_center)]
                 balls[j][gv.num_cvs + 2] -= 1
                 cluster_num += 1
 
