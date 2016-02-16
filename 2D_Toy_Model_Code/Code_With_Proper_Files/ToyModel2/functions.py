@@ -734,6 +734,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
     clustering_matrix = matrix
     cont = True
     outlier_labels = np.ones(len(matrix)) * -1
+    outliers_exist = 0
     while cont:
         while True:
             try:
@@ -761,6 +762,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
 
             cont = False
             if silhouette_avg > 0.8 and num_clusters >= 2:
+                outliers_exist = 1
                 outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters, clustering_matrix)
                 num_clusters += 1
                 labels = merge_with_outliers(outlier_labels, labels)
@@ -819,48 +821,75 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                     ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
         '''
 
-        for i in range(num_clusters-1):
-            first = 0
+        if outliers_exist == 1:
+            for i in range(num_clusters-1):
+                first = 0
+                for j in range(balls.shape[0]):
+                    if labels[j] == i and first == 0:
+                        first += 1
+                        ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
+                        ball_cluster = copy.deepcopy(ref_ball_center)
+                        ball_cluster.append(i)
+                        ball_cluster.append(abs(final_evectors[j, 0]))
+                        ball_cluster.append(final_evectors[j, 1])
+                        ball_cluster.append(final_evectors[j, 2])
+                        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                        f.write('\n')
+                        ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                        balls[j][gv.num_cvs+2] -= 1
+                    elif labels[j] == i and first != 0:
+                        ball_center = balls[j, 0:gv.num_cvs].tolist()
+                        ball_cluster = copy.deepcopy(ball_center)
+                        ball_cluster.append(i)
+                        ball_cluster.append(abs(final_evectors[j, 0]))
+                        ball_cluster.append(final_evectors[j, 1])
+                        ball_cluster.append(final_evectors[j, 2])
+                        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                        f.write('\n')
+                        ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+                        balls[j][gv.num_cvs+2] -= 1
+
+            cluster_num = num_clusters-1
             for j in range(balls.shape[0]):
-                if labels[j] == i and first == 0:
-                    first += 1
-                    ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
-                    ball_cluster = copy.deepcopy(ref_ball_center)
-                    ball_cluster.append(i)
-                    ball_cluster.append(abs(final_evectors[j, 0]))
-                    ball_cluster.append(final_evectors[j, 1])
-                    ball_cluster.append(final_evectors[j, 2])
-                    f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                    f.write('\n')
-                    ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
-                    balls[j][gv.num_cvs+2] -= 1
-                elif labels[j] == i and first != 0:
+                if labels[j] == num_clusters-1:
                     ball_center = balls[j, 0:gv.num_cvs].tolist()
                     ball_cluster = copy.deepcopy(ball_center)
-                    ball_cluster.append(i)
+                    ball_cluster.append(cluster_num)
                     ball_cluster.append(abs(final_evectors[j, 0]))
                     ball_cluster.append(final_evectors[j, 1])
                     ball_cluster.append(final_evectors[j, 2])
                     f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                     f.write('\n')
-                    ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
-                    balls[j][gv.num_cvs+2] -= 1
-
-        cluster_num = num_clusters-1
-        for j in range(balls.shape[0]):
-            if labels[j] == num_clusters-1:
-                ball_center = balls[j, 0:gv.num_cvs].tolist()
-                ball_cluster = copy.deepcopy(ball_center)
-                ball_cluster.append(cluster_num)
-                ball_cluster.append(abs(final_evectors[j, 0]))
-                ball_cluster.append(final_evectors[j, 1])
-                ball_cluster.append(final_evectors[j, 2])
-                f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
-                f.write('\n')
-                ball_clusters_list[tuple(ball_center)] = [tuple(ball_center)]
-                balls[j][gv.num_cvs + 2] -= 1
-                cluster_num += 1
-
+                    ball_clusters_list[tuple(ball_center)] = [tuple(ball_center)]
+                    balls[j][gv.num_cvs + 2] -= 1
+                    cluster_num += 1
+        else:
+            for i in range(num_clusters):
+                first = 0
+                for j in range(balls.shape[0]):
+                    if labels[j] == i and first == 0:
+                        first += 1
+                        ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
+                        ball_cluster = copy.deepcopy(ref_ball_center)
+                        ball_cluster.append(i)
+                        ball_cluster.append(abs(final_evectors[j, 0]))
+                        ball_cluster.append(final_evectors[j, 1])
+                        ball_cluster.append(final_evectors[j, 2])
+                        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                        f.write('\n')
+                        ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
+                        balls[j][gv.num_cvs+2] -= 1
+                    elif labels[j] == i and first != 0:
+                        ball_center = balls[j, 0:gv.num_cvs].tolist()
+                        ball_cluster = copy.deepcopy(ball_center)
+                        ball_cluster.append(i)
+                        ball_cluster.append(abs(final_evectors[j, 0]))
+                        ball_cluster.append(final_evectors[j, 1])
+                        ball_cluster.append(final_evectors[j, 2])
+                        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
+                        f.write('\n')
+                        ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
+                        balls[j][gv.num_cvs+2] -= 1
         f.close()
 
 
