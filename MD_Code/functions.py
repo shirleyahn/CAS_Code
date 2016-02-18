@@ -68,7 +68,7 @@ def set_parameters():
         gv.num_balls_limit = max_num_balls
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
     gv.current_num_balls = 0
-    if gv.enhanced_sampling_flag == 2:
+    if gv.enhanced_sampling_flag == 2 and gv.simulation_flag != 0:
         gv.total_num_walkers = gv.num_occupied_small_clusters*gv.num_walkers \
                                + gv.num_occupied_big_clusters*gv.num_walkers_for_sc
     else:
