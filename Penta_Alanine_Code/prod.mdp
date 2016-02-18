@@ -3,7 +3,7 @@ constraints        = hbonds
 integrator         = sd
 
 dt                 = 0.002    ; ps !
-nsteps             = 5000
+nsteps             = 25000
 ns_type            = grid
 nstlist            = 10
 
@@ -20,13 +20,13 @@ epsilon_rf         = 0
 comm_mode          = Angular
 
 nstcomm            = 1000
-nstxout            = 5000
-nstfout            = 5000
-nstvout            = 5000
-nstxtcout          = 5000
-nstlog             = 5000
-nstenergy          = 5000
-nstcalcenergy      = 5000
+nstxout            = 25000
+nstfout            = 25000
+nstvout            = 25000
+nstxtcout          = 25000
+nstlog             = 25000
+nstenergy          = 25000
+nstcalcenergy      = 25000
 
 
 tcoupl             = no
