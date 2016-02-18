@@ -556,15 +556,16 @@ def merge_with_outliers(outlier_labels, labels):
     assert len(labels) == len(outlier_labels), '%d, %d, %s, %s' % (len(labels), len(outlier_labels), str(labels), str(outlier_labels))
     rv = []
     i = 0
-    j = 0
+    #j = 0
     while True:
         while i < len(outlier_labels) and outlier_labels[i] != -1:
             rv.append(outlier_labels[i])
             i += 1
-        while i < len(outlier_labels) and j < len(labels) and outlier_labels[i] == -1:
-            rv.append(labels[j])
+        while i < len(outlier_labels) and i < len(labels) and outlier_labels[i] == -1:
+        #while i < len(outlier_labels) and j < len(labels) and outlier_labels[i] == -1:
+            rv.append(labels[i])  #rv.append(labels[j])
             i += 1
-            j += 1
+            #j += 1
         if i == len(outlier_labels):
             break
     return np.array(rv)
@@ -1112,5 +1113,7 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
     if gv.enhanced_sampling_flag == 2:
         f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' '
                 + str(gv.num_occupied_big_clusters) + ' ' + str(gv.num_occupied_small_clusters) + '\n')
+        gv.num_occupied_big_clusters = 0
+        gv.num_occupied_small_clusters = 0
     else:
         f.write(str(step_num + 1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + '\n')
