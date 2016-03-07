@@ -1128,6 +1128,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             initial_weights_array = np.array(initial_weights)
             walker_indices = np.argsort(-initial_weights_array)
             temp_initial_indices = initial_indices
+            # sorted indices based on descending order of weights
             initial_indices = [temp_initial_indices[i] for i in walker_indices]
 
             num_bins = 1
@@ -1164,7 +1165,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 new_indices = []
                 new_num_walkers = 0
                 # add the remaining walkers to the very last bin if there are any
-                if remainder != 0 and b == (true_num_bins-1):
+                if remainder != 0 and b == (true_num_bins - 1):
                     target_num_walkers += remainder
 
                 weights_bin = [float] * num_walkers_bin[b]
@@ -1183,21 +1184,21 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                             k += 1
 
                 total_weight = np.sum(weights_bin)
-                target_weight = total_weight/target_num_walkers
+                target_weight = total_weight / target_num_walkers
 
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
                     if x_weight >= target_weight or len(indices_bin) == 0:
-                        r = max(1, int(np.floor(x_weight/target_weight)))
-                        r = min(r, target_num_walkers-new_num_walkers)
+                        r = max(1, int(np.floor(x_weight / target_weight)))
+                        r = min(r, target_num_walkers - new_num_walkers)
                         new_num_walkers += r
                         for item in np.repeat(x, r):
                             new_indices.append(item)
                             new_weights.append(target_weight)
-                        if new_num_walkers < target_num_walkers and x_weight-r*target_weight > 0.0:
+                        if new_num_walkers < target_num_walkers and x_weight - r * target_weight > 0.0:
                             indices_bin.append(x)
-                            weights[x] = x_weight-r*target_weight
+                            weights[x] = x_weight - r * target_weight
                         if len(indices_bin) > 0:
                             x = indices_bin.pop()
                         else:
@@ -1205,10 +1206,10 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                     else:
                         y = indices_bin.pop()
                         y_weight = weights[y]
-                        xy_weight = x_weight+y_weight
+                        xy_weight = x_weight + y_weight
                         p = np.random.random()
                         # swap x and y
-                        if p < y_weight/xy_weight:
+                        if p < y_weight / xy_weight:
                             temp = x
                             x = y
                             y = temp
