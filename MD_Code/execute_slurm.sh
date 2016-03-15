@@ -4,10 +4,10 @@
 #SBATCH --partition=owners
 #SBATCH --qos=normal
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --job-name=2D_Toy_Model
-#SBATCH --output=2D_Toy_Model.out
-#SBATCH --error=2D_Toy_Model.err
+#SBATCH --ntasks-per-node=16
+#SBATCH --job-name=6_80_10ps
+#SBATCH --output=6_80_10ps.out
+#SBATCH --error=6_80_10ps.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sahn1@stanford.edu
 
@@ -16,9 +16,9 @@
 ### (e.g. PBS) and other molecular dynamics simulation programs (e.g. LAMMPS).
 ### ----------------------------------------------------------------------------------------------------------
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/2D_Toy_Model  # TODO: set main directory for CAS simulation
+export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine  # TODO: set main directory for CAS simulation
 num_nodes=1  # TODO: set number of nodes requested
-num_cpu=1  # TODO: set number of cores per node
+num_cpu=16  # TODO: set number of cores per node
 
 echo The master node of this job is `hostname`
 echo The working directory is `echo $MAIN_DIRECTORY`
