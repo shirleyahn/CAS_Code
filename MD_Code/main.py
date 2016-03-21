@@ -54,10 +54,10 @@ def CAS_simulation(input_initial_values_file):
 
         # first, run simulation or clean up with bash script
         t0 = time()
-        if (gv.simulation_flag == 2 or gv.simulation_flag == 3) and step_num == gv.initial_step_num:
+        if (gv.simulation_flag == 3 or gv.simulation_flag == 4) and step_num == gv.initial_step_num:
             pass
-        #elif gv.simulation_flag == 1 and step_num == gv.initial_step_num:
-            #os.system('./clean_up.sh')
+        elif gv.simulation_flag == 2 and step_num == gv.initial_step_num:
+            os.system('./clean_up.sh')
         else:
             os.system('./simulations.sh')
 

@@ -72,6 +72,8 @@ def set_parameters():
                             gv.num_occupied_small_clusters+gv.num_occupied_big_clusters != 0:
         gv.total_num_walkers = gv.num_occupied_small_clusters*gv.num_walkers \
                                + gv.num_occupied_big_clusters*gv.num_walkers_for_sc
+        gv.num_occupied_small_clusters = 0
+        gv.num_occupied_big_clusters = 0
     else:
         gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
     gv.sc_performed = 0
@@ -104,7 +106,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             shutil.copytree(gv.initial_configuration_directory, walker_directory)
 
-    elif gv.simulation_flag == 1:  # restarting simulation in the middle of simulation
+    elif gv.simulation_flag == 1 or gv.simulation_flag == 2:  # restarting simulation in the middle of simulation
         for i in range(gv.total_num_walkers):
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
@@ -142,7 +144,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 gv.current_num_balls = balls.shape[0]
 
-    elif gv.simulation_flag == 2:  # restarting simulation in the middle of binning
+    elif gv.simulation_flag == 3:  # restarting simulation in the middle of binning
         for i in range(gv.total_num_walkers):
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
@@ -184,7 +186,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 gv.current_num_balls = balls.shape[0]
 
-    elif gv.simulation_flag == 3:  # restarting simulation in the middle of resampling
+    elif gv.simulation_flag == 4:  # restarting simulation in the middle of resampling
         total_weight = 0.0
         previous_ball_to_walkers = {}
         os.chdir(gv.main_directory + '/CAS')
@@ -1497,16 +1499,18 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
     for current_ball in range(balls.shape[0]):
         ball_center = balls[current_ball][0:gv.num_cvs].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
-        total_weight += np.sum(weights)
-        ball_center_weights = copy.deepcopy(ball_center)
-        ball_center_weights.append(np.sum(weights))
-        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
-        f.write('\n')
-        # reset walkers and number of walkers that belong in each ball
-        balls[current_ball][gv.num_cvs+2] = 0
-        ball_to_walkers[tuple(ball_center)] = []
-        key_to_ball[tuple(ball_center)] = []
-        ball_clusters_list[tuple(ball_center)] = []
+        if np.sum(weights) > 0.0:
+            total_weight += np.sum(weights)
+            ball_center_weights = copy.deepcopy(ball_center)
+            ball_center_weights.append(np.sum(weights))
+            f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
+            f.write('\n')
+
+            # reset walkers and number of walkers that belong in each ball
+            balls[current_ball][gv.num_cvs+2] = 0
+            ball_to_walkers[tuple(ball_center)] = []
+            key_to_ball[tuple(ball_center)] = []
+            ball_clusters_list[tuple(ball_center)] = []
     f.close()
 
     # verify that total weight of all balls is 1.0

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#PBS -N A5
-#PBS -e A5.err
-#PBS -o A5.out
+#PBS -N pi_hbonds
+#PBS -e pi_hbonds.err
+#PBS -o pi_hbonds.out
 #PBS -m aeb
 #PBS -M sahn1@stanford.edu
 #PBS -l nodes=10:ppn=24
@@ -15,7 +15,7 @@
 ### (e.g. SLURM) and other molecular dynamics simulation programs (e.g. LAMMPS).
 ### --------------------------------------------------------------------------------------------------------
 
-export MAIN_DIRECTORY=/home/sahn1/Penta_Alanine  # TODO
+export MAIN_DIRECTORY=/home/sahn1/Triazine  # TODO
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
 export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
 

@@ -1,19 +1,14 @@
 #!/bin/bash
 
-###
-# TODO: set main directory, walker directory, and molecular dynamics simulation program directory
-# and number of nodes requested, number of cores per node, number of gpu's requested.
-# num_sim_walkers should be equal to num_nodes * num_cpu, since one walker will run with one node.
-###
+export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine  # TODO
+export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  # TODO
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine
-export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS
-export GROMACS=/home/sahn1/gromacs/4.6.4/bin
-
-num_nodes=1
-num_cpu=16
+num_nodes=1  # TODO
+num_cpu=16  # TODO
 #num_gpu=4
-num_sim_walkers=16
+num_sim_walkers=$((num_nodes*num_cpu))
 
 # get sequence of walker indices from sh_input.txt
 cd $MAIN_DIRECTORY
@@ -30,7 +25,7 @@ do
 	if [ $counter -lt $num_sim_walkers ];
 	then
 		cd walker$i/
-                let cpu_pin=($i%$num_cpu) #pin=$(($i/$num_nodes))
+                let cpu_pin=($i%$num_cpu)
                 #let gpu_pin=($i%$num_gpu)
                 # write hostfile for i-th job to use
                 let lstart=($counter-1)*${num_nodes}+2

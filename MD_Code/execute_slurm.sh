@@ -5,9 +5,10 @@
 #SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
-#SBATCH --job-name=6_80_10ps
-#SBATCH --output=6_80_10ps.out
-#SBATCH --error=6_80_10ps.err
+#SBATCH --gres=gpu:8
+#SBATCH --job-name=pi_hbonds
+#SBATCH --output=pi_hbonds.out
+#SBATCH --error=pi_hbonds.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sahn1@stanford.edu
 
@@ -16,7 +17,9 @@
 ### (e.g. PBS) and other molecular dynamics simulation programs (e.g. LAMMPS).
 ### ----------------------------------------------------------------------------------------------------------
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine  # TODO: set main directory for CAS simulation
+export MAIN_DIRECTORY=/scratch/users/sahn1/Triazine  # TODO
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
 num_nodes=1  # TODO: set number of nodes requested
 num_cpu=16  # TODO: set number of cores per node
 

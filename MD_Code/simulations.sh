@@ -1,19 +1,14 @@
 #!/bin/bash
 
-###
-# TODO: set main directory, walker directory, and molecular dynamics simulation program directory
-# and number of nodes requested, number of cores per node, number of gpu's requested.
-# num_sim_walkers should be equal to num_nodes * num_cpu, since one walker will run with one node.
-###
+export MAIN_DIRECTORY=/scratch/users/sahn1/Triazine  # TODO
+export WALKER_DIRECTORY=/scratch/users/sahn1/Triazine/CAS  # TODO
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Triazine
-export WALKER_DIRECTORY=/scratch/users/sahn1/Triazine/CAS
-export GROMACS=/home/sahn1/gromacs/4.6.4/bin
-
-num_nodes=1
-num_cpu=16
-num_gpu=8
-num_sim_walkers=16
+num_nodes=1  # TODO
+num_cpu=16  # TODO
+num_gpu=8  # TODO
+num_sim_walkers=$((num_nodes*num_cpu))
 
 # get sequence of walker indices from sh_input.txt
 cd $MAIN_DIRECTORY
@@ -27,10 +22,10 @@ counter=0
 pin=0
 for i in `seq $first_walker $last_walker`;
 do
-	if [ $counter -lt $num_sim_walkers ];
-	then
-		cd walker$i/
-                let cpu_pin=($i%$num_cpu) #pin=$(($i/$num_nodes))
+    if [ $counter -lt $num_sim_walkers ];
+    then
+        cd walker$i/
+                let cpu_pin=($i%$num_cpu)
                 let gpu_pin=($i%$num_gpu)
                 # write hostfile for i-th job to use
                 let lstart=($counter-1)*${num_nodes}+2
@@ -50,12 +45,12 @@ do
                 echo "running walker$i"
                 cd ..
                 let counter=counter+1
-	fi
-  	if [ $counter == $num_sim_walkers ];  # limit to num_sim_walkers concurrent walkers
-  	then
-      		let counter=0 # reset counter
-      		wait
-  	fi
+    fi
+    if [ $counter == $num_sim_walkers ];  # limit to num_sim_walkers concurrent walkers
+    then
+            let counter=0 # reset counter
+            wait
+    fi
 done
 wait
 
@@ -86,11 +81,69 @@ do
     mv run.gro minim.gro
     mv run.tpr minim.tpr
     echo 0 | ${GROMACS}/trjconv -s minim.tpr -f run.xtc -b 100.0 -o run.xtc
-    echo 25 28 | ${GROMACS}/g_mindist -s minim.tpr -f run.xtc -n ../../index.ndx
-    awk 'END {print $2*10}' mindist.xvg > coordinates.out
+    echo 24 27 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    num_pi_bonds=0
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 24 28 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 24 29 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 25 27 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 25 28 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 25 29 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 26 27 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 26 28 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 26 29 | ${GROMACS}/g_dist -s minim.tpr -f run.xtc -n ../../index.ndx
+    distance=$(awk 'END {print $2*10}' dist.xvg | bc -l)
+    if (( $( bc <<< "$distance < 4.2") ))
+    then
+        let num_pi_bonds=num_pi_bonds+1
+    fi
+    echo 30 31 | ${GROMACS}/g_hbond -s minim.tpr -f run.xtc -n ../../index.ndx
+    num_hbonds=$(awk 'END {print $2}' hbnum.xvg)
+    total_num_bonds=$((num_pi_bonds+num_hbonds))
+    echo "$total_num_bonds" > coordinates.out
     #awk '{printf $0" ";next;}' coordinates.out > new_coordinates.out
     #mv new_coordinates.out coordinates.out
-    rm -rf mindist*
+    rm -rf dist*
+    rm -rf hbnum*
     if [ -f "traj.xtc" ];  # concatenating trajectories after the first step
     then
              ${GROMACS}/trjcat -f traj.xtc run.xtc -o out.xtc -cat

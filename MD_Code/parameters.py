@@ -1,21 +1,23 @@
 main_directory='/scratch/users/sahn1/Triazine'
 initial_configuration_directory='/scratch/users/sahn1/Triazine/InitConfig'
 
-simulation_flag=0  # 0: new simulation. 1: restarting simulation from middle of simulation. 2: restarting simulation
-                   # from middle of binning. 3: restarting simulation from middle of resampling.
+simulation_flag=0  # 0: new simulation. 1: restarting simulation that didn't run all walkers.
+                   # 2: restarting simulation that didn't finish post-processing.
+                   # 3: restarting simulation that didn't finish binning.
+                   # 4: restarting simulation that didn't finish resampling.
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
-rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
+rate_flag=0  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
              # determined by check_state_function.py.
-num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
+num_states=1  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
 enhanced_sampling_flag=1  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
                           # 2: spectral clustering.
 
 num_balls_limit=500  # parameter needed in case the calculated max_num_balls is greater than the limit.
-radius=1.0  # radius can be changed in the middle of the simulation.
+radius=1  # radius can be changed in the middle of the simulation.
 num_walkers=10  # num_walkers should be fixed.
 num_cvs=1  # number of collective variables (num_cvs) should be fixed.
-lower_bound=0.0  # lower bound value for the collective variables.
-upper_bound=20.0  # upper bound value for the collective variables.
+lower_bound=0  # lower bound value for the collective variables.
+upper_bound=20  # upper bound value for the collective variables.
 angle_cvs=[0]  # 0: if the cv is not an angle. 1: if the cv is an angle.
 
 initial_step_num=0  # initial_step_num should be changed from 0 when restarting a simulation.
@@ -25,13 +27,13 @@ first_walker=0  # only needed if simulation_flag is not equal to 0, otherwise pu
 last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
 
 ### for the next four lines, if enhanced_sampling_flag = 1 ###
-less_or_greater_flag=1  # 0: criteria for binning walkers is if the walkers have some property LESS than the threshold.
+less_or_greater_flag=0  # 0: criteria for binning walkers is if the walkers have some property LESS than the threshold.
                         # 1: criteria for binning walkers is if the walkers have some property GREATER than the
                         # threshold.
-static_threshold_flag=0  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
+static_threshold_flag=1  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
                          # current value is set as the threshold for the next step. 1: on, initial threshold is kept
                          # throughout the simulation.
-threshold_values=[20.0]  # if some properties of the walker have values less or greater than the threshold values,
+threshold_values=[1]  # if some properties of the walker have values less or greater than the threshold values,
                          # then it is binned to the nearest existing ball.
 properties_to_keep_track=[0]  # properties of the walker that are compared against the threshold values. this can be
                               # weight and/or some cv(s). if one of them is weight, then type -1. otherwise type the
