@@ -117,9 +117,9 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             f = open('trajectory.txt', 'r')
             lines = f.readlines()[-2:]
             previous_line = lines[0].strip().split()
-            previous_coordinates = [float(i) for i in previous_line]
+            previous_coordinates = [float(entry) for entry in previous_line]
             current_line = lines[1].strip().split()
-            current_coordinates = [float(i) for i in current_line]
+            current_coordinates = [float(entry) for entry in current_line]
             walker_list[i].previous_coordinates = previous_coordinates
             walker_list[i].current_coordinates = current_coordinates
             f.close()
