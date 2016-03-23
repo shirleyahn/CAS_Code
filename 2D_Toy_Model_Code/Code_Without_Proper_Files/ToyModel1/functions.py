@@ -6,6 +6,7 @@ from scipy.cluster.vq import kmeans2, ClusterError
 import walker
 import global_variables as gv
 import check_state_function
+import check_pathway_function
 import energy_function as ef
 import parameters as p
 from sklearn.metrics import silhouette_score, silhouette_samples
@@ -34,6 +35,7 @@ def set_parameters():
     gv.balls_flag = p.balls_flag
     gv.rate_flag = p.rate_flag
     gv.num_states = p.num_states
+    gv.num_pathways = p.num_pathways
     gv.enhanced_sampling_flag = p.enhanced_sampling_flag
     gv.num_balls_limit = p.num_balls_limit
     gv.radius = p.radius
@@ -78,7 +80,7 @@ def set_parameters():
 def initialize(input_initial_values_file, walker_list):
     for i in range(len(walker_list)):
         walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, 0.0, [-1000.0] * gv.num_cvs,
-                                       [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0, -1)
+                                       [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0, -1, -1)
 
     initial_weight = 1.0/gv.total_num_walkers
     f = open(input_initial_values_file, 'r')
@@ -88,10 +90,12 @@ def initialize(input_initial_values_file, walker_list):
             initial_values[i] = float(f.readline())
         if gv.rate_flag == 1:
             initial_state = check_state_function.check_state_function(initial_values)
+            initial_pathway = check_pathway_function.check_pathway_function(initial_values)
         for i in range(n * gv.num_walkers, (n + 1) * gv.num_walkers):
             walker_list[i].set(initial_values, initial_weight)
             if gv.rate_flag == 1:
                 walker_list[i].state = initial_state
+                walker_list[i].pathway = initial_pathway
     f.close()
 
     os.system('mkdir CAS')
@@ -109,14 +113,14 @@ def m_simulation(walker_list):
                 if gv.pbc == 1 and new_x < gv.grid_dimensions[0]:
                     new_x = gv.grid_dimensions[1] - gv.step_size
                 elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
-                    new_x = gv.grid_dimensions[0]
+                    new_x = temp_x
                 new_y = temp_y
             elif direction == 1:  # move to right
                 new_x = temp_x + gv.step_size
                 if gv.pbc == 1 and new_x > gv.grid_dimensions[1]:
                     new_x = gv.grid_dimensions[0] + gv.step_size
                 elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
-                    new_x = gv.grid_dimensions[1]
+                    new_x = temp_x
                 new_y = temp_y
             elif direction == 2:  # move to top
                 new_x = temp_x
@@ -124,14 +128,14 @@ def m_simulation(walker_list):
                 if gv.pbc == 1 and new_y > gv.grid_dimensions[3]:
                     new_y = gv.grid_dimensions[2] + gv.step_size
                 elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
-                    new_y = gv.grid_dimensions[3]
+                    new_y = temp_y
             else:  # move to bottom
                 new_x = temp_x
                 new_y = temp_y - gv.step_size
                 if gv.pbc == 1 and new_y < gv.grid_dimensions[2]:
                     new_y = gv.grid_dimensions[3] - gv.step_size
                 elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
-                    new_y = gv.grid_dimensions[2]
+                    new_y = temp_y
             old_energy = ef.energy_function(temp_x, temp_y)
             new_energy = ef.energy_function(new_x, new_y)
             if new_energy - old_energy <= 0.0:  # accept move
@@ -153,8 +157,8 @@ def m_simulation(walker_list):
 def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)
-    flux = np.zeros((gv.num_states, gv.num_states))
-    flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
+    flux = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
+    flux_num_walkers = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
     walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     start = 0  # indicates whether we are dealing with the very first walker or not
@@ -169,13 +173,24 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
 
         if gv.rate_flag == 1:
             state = check_state_function.check_state_function(new_coordinates)
-            if walker_list[i].state != -1 and state == -1:
-                state = walker_list[i].state
-            if walker_list[i].state != -1 and state != -1:
-                flux[walker_list[i].state, state] += walker_list[i].weight
-                flux_num_walkers[walker_list[i].state, state] += 1
+            pathway = check_pathway_function.check_pathway_function(new_coordinates)
+            if gv.num_pathways == 0:
+                if walker_list[i].state != -1 and state == -1:
+                    state = walker_list[i].state
+                if walker_list[i].state != -1 and state != -1:
+                    flux[walker_list[i].state, state] += walker_list[i].weight
+                    flux_num_walkers[walker_list[i].state, state] += 1
+            else:
+                if walker_list[i].state != -1 and state == -1:
+                    state = walker_list[i].state
+                if walker_list[i].state != -1 and state != -1:
+                    before = walker_list[i].state*gv.num_states+walker_list[i].pathway
+                    after = state*gv.num_states+pathway
+                    flux[before, after] += walker_list[i].weight
+                    flux_num_walkers[before, after] += 1
         else:
             state = -1
+            pathway = -1
 
         inside = 0  # indicates whether we are dealing with the very first walker or not
         # if we're dealing with the very first walker, create the very first ball for the walker
@@ -192,7 +207,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
             temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                 previous_ball_center, current_ball_center, gv.current_num_balls,
-                                                previous_distance_from_center, 0.0, initial_step_num, weight, state)
+                                                previous_distance_from_center, 0.0, initial_step_num, weight, state,
+                                                pathway)
             gv.current_num_balls += 1
 
         distance = 0.0
@@ -221,7 +237,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                     previous_ball_center, current_ball_center, ball_key,
                                                     previous_distance_from_center, distance_from_center,
-                                                    initial_step_num, weight, state)
+                                                    initial_step_num, weight, state, pathway)
 
             # or walker does not belong in any ball -> create a new ball
             elif inside == 0 and gv.current_num_balls < gv.num_balls_limit:
@@ -235,7 +251,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 key_to_ball[tuple(current_ball_center)] = gv.current_num_balls
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                     previous_ball_center, current_ball_center, gv.current_num_balls,
-                                                    previous_distance_from_center, 0.0, initial_step_num, weight, state)
+                                                    previous_distance_from_center, 0.0, initial_step_num, weight, state,
+                                                    pathway)
                 gv.current_num_balls += 1
 
     os.chdir(gv.main_directory + '/CAS')
@@ -249,8 +266,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
 def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)
-    flux = np.zeros((gv.num_states, gv.num_states))
-    flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
+    flux = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
+    flux_num_walkers = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
     walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
     if gv.static_threshold_flag == 0:
@@ -271,18 +288,29 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
 
         if gv.rate_flag == 1:
             state = check_state_function.check_state_function(new_coordinates)
-            if walker_list[i].state != -1 and state == -1:
-                state = walker_list[i].state
-            if walker_list[i].state != -1 and state != -1:
-                flux[walker_list[i].state, state] += walker_list[i].weight
-                flux_num_walkers[walker_list[i].state, state] += 1
+            pathway = check_pathway_function.check_pathway_function(new_coordinates)
+            if gv.num_pathways == 0:
+                if walker_list[i].state != -1 and state == -1:
+                    state = walker_list[i].state
+                if walker_list[i].state != -1 and state != -1:
+                    flux[walker_list[i].state, state] += walker_list[i].weight
+                    flux_num_walkers[walker_list[i].state, state] += 1
+            else:
+                if walker_list[i].state != -1 and state == -1:
+                    state = walker_list[i].state
+                if walker_list[i].state != -1 and state != -1:
+                    before = walker_list[i].state*gv.num_states+walker_list[i].pathway
+                    after = state*gv.num_states+pathway
+                    flux[before, after] += walker_list[i].weight
+                    flux_num_walkers[before, after] += 1
         else:
             state = -1
+            pathway = -1
 
         temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                             previous_ball_center, previous_ball_center, gv.current_num_balls,
                                             previous_distance_from_center, previous_distance_from_center,
-                                            initial_step_num, weight, state)
+                                            initial_step_num, weight, state, pathway)
 
         if gv.static_threshold_flag == 0:
             properties_to_keep_track = []
@@ -1144,16 +1172,18 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
     for current_ball in range(balls.shape[0]):
         ball_center = balls[current_ball][0:gv.num_cvs].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
-        total_weight += np.sum(weights)
-        ball_center_weights = copy.deepcopy(ball_center)
-        ball_center_weights.append(np.sum(weights))
-        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
-        f.write('\n')
-        # reset walkers and number of walkers that belong in each ball
-        balls[current_ball][gv.num_cvs+2] = 0
-        ball_to_walkers[tuple(ball_center)] = []
-        key_to_ball[tuple(ball_center)] = []
-        ball_clusters_list[tuple(ball_center)] = []
+        if np.sum(weights) > 0.0:
+            total_weight += np.sum(weights)
+            ball_center_weights = copy.deepcopy(ball_center)
+            ball_center_weights.append(np.sum(weights))
+            f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
+            f.write('\n')
+
+            # reset walkers and number of walkers that belong in each ball
+            balls[current_ball][gv.num_cvs+2] = 0
+            ball_to_walkers[tuple(ball_center)] = []
+            key_to_ball[tuple(ball_center)] = []
+            ball_clusters_list[tuple(ball_center)] = []
     f.close()
 
     # verify that total weight of all balls is 1.0

@@ -1,7 +1,7 @@
 class Walker:
     def __init__(self, previous_coordinates, current_coordinates, global_index, radius, previous_ball_center,
                  current_ball_center, ball_key, previous_distance_from_center, current_distance_from_center,
-                 initial_step_num=0, weight=0.0, state=-1):
+                 initial_step_num=0, weight=0.0, state=-1, pathway=-1):
         self.previous_coordinates = previous_coordinates
         self.current_coordinates = current_coordinates
         self.global_index = int(global_index)  # global_index indicates the corresponding trajectory file number
@@ -14,6 +14,7 @@ class Walker:
         self.initial_step_num = int(initial_step_num)  # initial_time_step indicates when the walker was born
         self.weight = float(weight)
         self.state = int(state)
+        self.pathway = int(pathway)
 
     def set(self, current_coordinates, weight=0.0):
         self.current_coordinates = current_coordinates
@@ -32,3 +33,4 @@ class Walker:
         self.initial_step_num = some_walker.initial_step_num
         self.weight = some_walker.weight
         self.state = some_walker.state
+        self.pathway = some_walker.pathway

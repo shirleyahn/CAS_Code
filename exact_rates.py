@@ -18,6 +18,7 @@ def x_coord(x_step, x_index):
 def y_coord(y_step, y_index):
     return y_step*y_index+y_down
 
+
 beta = 10.0
 delta_x = 0.2
 delta_y = 0.2

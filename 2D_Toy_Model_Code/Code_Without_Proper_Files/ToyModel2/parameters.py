@@ -3,7 +3,8 @@ main_directory='/scratch/users/sahn1/2D_Toy_Model'
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
              # determined by check_state_function.py.
-num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 1.
+num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 0.
+num_pathways=2  # number of distinct pathways to keep track of. only needed if rate_flag = 1, otherwise 0.
 enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
                           # 2: spectral clustering.
 

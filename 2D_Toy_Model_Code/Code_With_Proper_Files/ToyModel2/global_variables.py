@@ -6,6 +6,7 @@ global main_directory
 global balls_flag
 global rate_flag
 global num_states
+global num_pathways
 global enhanced_sampling_flag
 
 global num_balls_limit
