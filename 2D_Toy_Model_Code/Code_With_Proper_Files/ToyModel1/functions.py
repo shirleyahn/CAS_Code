@@ -198,7 +198,9 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             else:
                 if walker_list[i].state != -1 and state == -1:
                     state = walker_list[i].state
-                if walker_list[i].state != -1 and state != -1:
+                if walker_list[i].pathway != -1 and pathway == -1:
+                    pathway = walker_list[i].pathway
+                if walker_list[i].state != -1 and state != -1 and walker_list[i].pathway != -1 and pathway != -1:
                     before = walker_list[i].state*gv.num_states+walker_list[i].pathway
                     after = state*gv.num_states+pathway
                     flux[before, after] += walker_list[i].weight
@@ -330,7 +332,9 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
             else:
                 if walker_list[i].state != -1 and state == -1:
                     state = walker_list[i].state
-                if walker_list[i].state != -1 and state != -1:
+                if walker_list[i].pathway != -1 and pathway == -1:
+                    pathway = walker_list[i].pathway
+                if walker_list[i].state != -1 and state != -1 and walker_list[i].pathway != -1 and pathway != -1:
                     before = walker_list[i].state*gv.num_states+walker_list[i].pathway
                     after = state*gv.num_states+pathway
                     flux[before, after] += walker_list[i].weight
