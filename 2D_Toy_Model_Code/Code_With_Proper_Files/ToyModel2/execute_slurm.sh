@@ -28,7 +28,7 @@ cd $MAIN_DIRECTORY
 scontrol show hostname $SLURM_JOB_NODELIST > initial_nodefilelist.txt
 rm -rf nodefilelist.txt
 for i in `seq 1 $num_nodes`;
-do 
+do
     for j in `seq 1 $num_cpu`;
     do
         awk NR==$i initial_nodefilelist.txt >> nodefilelist.txt
