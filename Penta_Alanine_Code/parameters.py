@@ -1,10 +1,10 @@
 main_directory='/scratch/users/sahn1/Penta_Alanine'
 initial_configuration_directory='/scratch/users/sahn1/Penta_Alanine/InitConfig'
 
-simulation_flag = 0  # 0: new simulation. 1: restarting simulation that didn't run all walkers.
-                     # 2: restarting simulation that didn't finish post-processing.
-                     # 3: restarting simulation that didn't finish binning.
-                     # 4: restarting simulation that didn't finish resampling.
+simulation_flag=0  # 0: new simulation. 1: restarting simulation that didn't run all walkers.
+                   # 2: restarting simulation that didn't finish post-processing.
+                   # 3: restarting simulation that didn't finish binning.
+                   # 4: restarting simulation that didn't finish resampling.
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states  will be calculated. the walker's state is
              # determined by check_state_function.py.
