@@ -23,8 +23,8 @@ angle_cvs=[0]  # 0: if the cv is not an angle. 1: if the cv is an angle.
 initial_step_num=0  # initial_step_num should be changed from 0 when restarting a simulation.
 max_num_steps=50  # maximum number of steps for the simulation.
 num_occupied_balls=1  # num_occupied_balls should be changed when restarting a simulation.
-first_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
-last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise put 0.
+first_walker=0  # only needed if simulation_flag is not equal to 0, otherwise 0.
+last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise 0.
 
 ### for the next four lines, if enhanced_sampling_flag = 1 ###
 less_or_greater_flag=0  # 0: criteria for binning walkers is if the walkers have some property LESS than the threshold.

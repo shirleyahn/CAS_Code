@@ -271,7 +271,23 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         for i in range(previous_balls_weights.shape[0]):
             if previous_balls_weights[i][-1] > 0.0:
                 previous_ball_center = previous_balls_weights[i][0:gv.num_cvs].tolist()
-                reference_walker = previous_ball_to_walkers[tuple(previous_ball_center)][0]
+                if tuple(previous_ball_center) in previous_ball_to_walkers:
+                    reference_walker = previous_ball_to_walkers[tuple(previous_ball_center)][0]
+                else:
+                    distance = 0.0
+                    reference_ball_center = previous_ball_center
+                    first = 0
+                    for ball_center in previous_ball_to_walkers:
+                        distance_from_center = calculate_distance_from_center(ball_center, previous_ball_center)
+                        if first == 0:
+                            distance = distance_from_center
+                            reference_ball_center = ball_center
+                            first += 1
+                        else:
+                            if distance_from_center < distance:
+                                distance = distance_from_center
+                                reference_ball_center = ball_center
+                    reference_walker = previous_ball_to_walkers[reference_ball_center][0]
                 reference_walker_directory = gv.main_directory + '/CAS/walker' + str(reference_walker)
                 if len(vacant_walker_indices) > 0:
                     walker_index = vacant_walker_indices.pop(0)
