@@ -507,8 +507,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers, fmt=' %d')
 
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
-    for i in range(gv.total_num_walkers):
-        previous_coordinates = temp_walker_list[i].previous_coordinates
+    for ii in range(gv.total_num_walkers):
+        previous_coordinates = temp_walker_list[ii].previous_coordinates
         previous_distance = 0.0
         previous_ball_key = 0
         for j in range(balls.shape[0]):
@@ -521,19 +521,19 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                 if previous_distance_from_center < previous_distance:
                     previous_distance = previous_distance_from_center
                     previous_ball_key = j
-        transition_matrix[previous_ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
+        transition_matrix[previous_ball_key][temp_walker_list[ii].ball_key] += temp_walker_list[ii].weight
 
     # transition matrix should fulfill detailed balance if simulation is run under Hamiltonian dynamics in the
     # canonical ensemble. equation is from Prinz, et al JCP (2011).
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
-    for i in range(new_transition_matrix.shape[0]):
+    for ii in range(new_transition_matrix.shape[0]):
         for j in range(new_transition_matrix.shape[1]):
-            new_transition_matrix[i][j] = transition_matrix[i][j] + transition_matrix[j][i]
+            new_transition_matrix[ii][j] = transition_matrix[ii][j] + transition_matrix[j][ii]
 
     row_sum = np.sum(new_transition_matrix, axis=1)
-    for i in range(new_transition_matrix.shape[0]):
-        if row_sum[i] != 0.0:
-            new_transition_matrix[i, :] /= row_sum[i]
+    for ii in range(new_transition_matrix.shape[0]):
+        if row_sum[ii] != 0.0:
+            new_transition_matrix[ii, :] /= row_sum[ii]
     np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
@@ -841,8 +841,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
             gv.threshold_values = new_threshold_values
 
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
-    for i in range(gv.total_num_walkers):
-        previous_coordinates = temp_walker_list[i].previous_coordinates
+    for ii in range(gv.total_num_walkers):
+        previous_coordinates = temp_walker_list[ii].previous_coordinates
         previous_distance = 0.0
         previous_ball_key = 0
         for j in range(balls.shape[0]):
@@ -855,19 +855,19 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                 if previous_distance_from_center < previous_distance:
                     previous_distance = previous_distance_from_center
                     previous_ball_key = j
-        transition_matrix[previous_ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
+        transition_matrix[previous_ball_key][temp_walker_list[ii].ball_key] += temp_walker_list[ii].weight
 
     # transition matrix should fulfill detailed balance if simulation is run under Hamiltonian dynamics in the
     # canonical ensemble. equation is from Prinz, et al JCP (2011).
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
-    for i in range(new_transition_matrix.shape[0]):
+    for ii in range(new_transition_matrix.shape[0]):
         for j in range(new_transition_matrix.shape[1]):
-            new_transition_matrix[i][j] = transition_matrix[i][j] + transition_matrix[j][i]
+            new_transition_matrix[ii][j] = transition_matrix[ii][j] + transition_matrix[j][ii]
 
     row_sum = np.sum(new_transition_matrix, axis=1)
-    for i in range(new_transition_matrix.shape[0]):
-        if row_sum[i] != 0.0:
-            new_transition_matrix[i, :] /= row_sum[i]
+    for ii in range(new_transition_matrix.shape[0]):
+        if row_sum[ii] != 0.0:
+            new_transition_matrix[ii, :] /= row_sum[ii]
     np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
