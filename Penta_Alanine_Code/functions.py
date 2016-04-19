@@ -733,11 +733,9 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                 f.close()
                 balls[gv.current_num_balls][gv.num_cvs+2] += 1
                 ball_to_walkers[tuple(current_ball_center)].append(i)
-
             gv.current_num_balls += 1
 
         start = 0
-
         for i in walker_indices_list:
             state = temp_walker_list[i].state
             new_coordinates = temp_walker_list[i].current_coordinates
@@ -782,7 +780,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                     current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)].append(i)
                     temp_walker_list[i].current_ball_center = current_ball_center
-                    temp_walker_list[i].ball_key = gv.current_num_balls
+                    temp_walker_list[i].ball_key = ball_key
                     temp_walker_list[i].current_distance_from_center = \
                         calculate_distance_from_center(current_ball_center, new_coordinates)
 
