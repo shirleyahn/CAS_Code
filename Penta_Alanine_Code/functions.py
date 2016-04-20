@@ -61,13 +61,19 @@ def set_parameters():
         gv.num_clusters = p.num_clusters
         gv.num_walkers_for_sc = p.num_walkers_for_sc
 
+    # calculate macrostate volume
     ball_volume = (np.pi ** (gv.num_cvs / 2) * gv.radius ** gv.num_cvs) / special.gamma((gv.num_cvs / 2) + 1)
+    # calculate number of macrostates that would fill up the entire collective variable space
     if ball_volume != 0.0:
         max_num_balls = int(np.floor((gv.upper_bound - gv.lower_bound) ** gv.num_cvs / ball_volume))*2
+    # if the calculated number of macrostates is less than the set limit for total number of macrostates,
+    # then use the calculated value as the limit for total number of macrostates
     if max_num_balls < gv.num_balls_limit:
         gv.num_balls_limit = max_num_balls
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
     gv.current_num_balls = 0
+    # when restarting a simulation, the total number of walkers depends on whether it stopped right after
+    # spectral clustering or not
     if gv.enhanced_sampling_flag == 2 and gv.simulation_flag != 0 and \
                             gv.num_occupied_small_clusters+gv.num_occupied_big_clusters != 0:
         gv.total_num_walkers = gv.num_occupied_small_clusters*gv.num_walkers \
@@ -80,33 +86,41 @@ def set_parameters():
 
 
 def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers, vacant_walker_indices):
+    # first populate walker_list with walker objects. initial values are random.
     for i in range(len(walker_list)):
-        walker_list[i] = walker.Walker([-1000.0] * gv.num_cvs, [-1000.0] * gv.num_cvs, i, 0.0, [-1000.0] * gv.num_cvs,
-                                       [-1000.0] * gv.num_cvs, 0, 0.0, 0.0, 0, 0.0, -1)
+        walker_list[i] = walker.Walker([-1000.0]*gv.num_cvs, [-1000.0]*gv.num_cvs, i, 0.0, [-1000.0]*gv.num_cvs,
+                                       [-1000.0]*gv.num_cvs, 0, 0.0, 0.0, 0, 0.0, -1)
 
-    if gv.simulation_flag == 0:  # new simulation
+    # new simulation
+    if gv.simulation_flag == 0:
+        # all walkers have equally divided weights
         initial_weight = 1.0/gv.total_num_walkers
         f = open(input_initial_values_file, 'r')
+        # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
         for n in range(gv.num_occupied_balls):
             initial_values = [None] * gv.num_cvs
+            # read initial values from file
             for i in range(gv.num_cvs):
                 initial_values[i] = float(f.readline())
+            # if rates/fluxes are calculated, obtain initial state
             if gv.rate_flag == 1:
                 initial_state = check_state_function.check_state_function(initial_values)
-                print initial_state
-            for i in range(n * gv.num_walkers, (n + 1) * gv.num_walkers):
+            for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
                 walker_list[i].set(initial_values, initial_weight)
                 if gv.rate_flag == 1:
                     walker_list[i].state = initial_state
         f.close()
 
+        # make walker directories
         os.system('mkdir CAS')
         os.chdir(gv.main_directory + '/CAS')
         for i in range(gv.total_num_walkers):
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             shutil.copytree(gv.initial_configuration_directory, walker_directory)
 
-    elif gv.simulation_flag == 1 or gv.simulation_flag == 2:  # restarting simulation in the middle of simulation
+    # restarting simulation in the middle of simulation
+    elif gv.simulation_flag == 1 or gv.simulation_flag == 2:
+        # loop through all walkers and obtain their weights, coordinates, ball coordinates, state, etc.
         for i in range(gv.total_num_walkers):
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
@@ -133,18 +147,19 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].current_ball_center = current_ball_center
             walker_list[i].radius = float(current_line[gv.num_cvs])
             f.close()
-            walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
-                                                                                          previous_ball_center)
-            walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates,
-                                                                                         current_ball_center)
+            walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates, previous_ball_center)
+            walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates, current_ball_center)
             if gv.rate_flag == 1:
                 walker_list[i].state = int(current_line[-1])
+            # in case created balls are kept throughout simulation
             if gv.balls_flag == 1:
                 os.chdir(gv.main_directory + '/CAS')
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 gv.current_num_balls = balls.shape[0]
 
-    elif gv.simulation_flag == 3:  # restarting simulation in the middle of binning
+    # restarting simulation in the middle of binning
+    elif gv.simulation_flag == 3:
+        # loop through all walkers and obtain their weights, coordinates, ball coordinates, state, etc.
         for i in range(gv.total_num_walkers):
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
@@ -161,8 +176,8 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].previous_coordinates = previous_coordinates
             walker_list[i].current_coordinates = current_coordinates
             f.close()
-            num_lines = sum(1 for line in open('ball_trajectory.txt'))
             # if walker is already binned to a ball, delete the binning and have binning start from scratch
+            num_lines = sum(1 for line in open('ball_trajectory.txt'))
             if num_lines > gv.initial_step_num:
                 os.system('sed -i \'$d\' ball_trajectory.txt')
             f = open('ball_trajectory.txt', 'r')
@@ -175,28 +190,34 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].current_ball_center = current_ball_center
             walker_list[i].radius = float(current_line[gv.num_cvs])
             f.close()
-            walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates,
-                                                                                          previous_ball_center)
-            walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates,
-                                                                                         current_ball_center)
+            walker_list[i].previous_distance_from_center = calculate_distance_from_center(previous_coordinates, previous_ball_center)
+            walker_list[i].current_distance_from_center = calculate_distance_from_center(current_coordinates, current_ball_center)
             if gv.rate_flag == 1:
                 walker_list[i].state = int(current_line[-1])
+            # in case created balls are kept throughout simulation
             if gv.balls_flag == 1:
                 os.chdir(gv.main_directory + '/CAS')
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 gv.current_num_balls = balls.shape[0]
 
-    elif gv.simulation_flag == 4:  # restarting simulation in the middle of resampling
+    # restarting simulation in the middle of resampling
+    # this is more tricky than the previous cases, since some walker directories are entirely gone or partially gone
+    # and so we have to get the remaining walkers and make new walkers that will carry the remaining weights
+    # that have disappeared from this process. the simulation will restart from the binning stage and minor differences
+    # caused from this temporary fix will disappear after running a few subsequent steps of the simulation.
+    elif gv.simulation_flag == 4:
         total_weight = 0.0
         total_num_walkers = 0
         occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
+        # first, obtain previous macrostates' weights to keep track of which weights are missing and keep track of
+        # walkers to the previous macrostates.
         previous_ball_to_walkers = {}
         os.chdir(gv.main_directory + '/CAS')
         previous_balls_weights = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
 
+        # second, loop through all of the remaining walkers and check to see if all of the files exist or not.
         for i in range(gv.last_walker+1):
             walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-            # if all of the files exist in the walker folder, it is a complete walker
             if os.path.isfile(walker_directory + '/weight_trajectory.txt') and \
                     os.path.isfile(walker_directory + '/ball_trajectory.txt') and \
                     os.path.isfile(walker_directory + '/trajectory.txt') and \
@@ -207,11 +228,12 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 f = open('weight_trajectory.txt', 'r')
                 weight = float(f.readlines()[-1].strip())
                 f.close()
-
                 ball_trajectory = np.loadtxt('ball_trajectory.txt')
                 previous_ball = ball_trajectory[-2].tolist()
                 previous_ball_key = previous_ball[gv.num_cvs+1]
                 previous_ball_center = previous_ball[0:gv.num_cvs]
+                # if there's still weight left over in the macrostate of interest,
+                # obtain the walker's weights, coordinates, ball coordinates, state, etc.
                 if previous_balls_weights[previous_ball_key][-1]-weight >= 0.0:
                     walker_list[i].weight = weight
                     total_weight += weight
@@ -232,7 +254,6 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                     walker_list[i].radius = current_ball_radius
                     walker_list[i].previous_ball_center = previous_ball_center
                     walker_list[i].current_ball_center = current_ball_center
-
                     trajectory = np.loadtxt('trajectory.txt')
                     previous_coordinates = trajectory[-2].tolist()
                     current_coordinates = trajectory[-1].tolist()
@@ -248,31 +269,33 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                     current_distance_from_center = calculate_distance_from_center(current_coordinates, current_ball_center)
                     walker_list[i].previous_distance_from_center = previous_distance_from_center
                     walker_list[i].current_distance_from_center = current_distance_from_center
-
                     temp_walker_list[i] = walker.Walker(previous_coordinates, current_coordinates, i,
                                                         current_ball_radius, previous_ball_center, current_ball_center,
                                                         current_ball_key, previous_distance_from_center,
                                                         current_distance_from_center, 0, weight, current_state)
                     total_num_walkers += 1
                     occupied_indices[i] = 1
+                # if not, then delete the walker and potentially use the walker for other remaining weights.
                 else:
                     os.chdir(gv.main_directory + '/CAS')
                     os.system('rm -rf walker' + str(i))
                     vacant_walker_indices.append(i)
-            # otherwise, it is an incomplete walker that needs missing files
+            # otherwise, then delete the incomplete walker and potentially use the walker for other remaining weights.
             else:
                 if os.path.isdir(walker_directory):
                     os.chdir(gv.main_directory + '/CAS')
                     os.system('rm -rf walker' + str(i))
                 vacant_walker_indices.append(i)
 
-        # create new walkers for the remaining weights
+        # third, create new walkers for the remaining weights by looping through the remaining weights.
         excess_index = gv.last_walker+1
         for i in range(previous_balls_weights.shape[0]):
             if previous_balls_weights[i][-1] > 0.0:
                 previous_ball_center = previous_balls_weights[i][0:gv.num_cvs].tolist()
+                # if a reference walker exists, copy that walker and put the remaining weight.
                 if tuple(previous_ball_center) in previous_ball_to_walkers:
                     reference_walker = previous_ball_to_walkers[tuple(previous_ball_center)][0]
+                # if not, then use the walker that's closest to the macrostate of interest as the reference walker.
                 else:
                     distance = 0.0
                     reference_ball_center = previous_ball_center
@@ -296,17 +319,14 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                     excess_index += 1
                 walker_directory = gv.main_directory + '/CAS/walker' + str(walker_index)
                 shutil.copytree(reference_walker_directory, walker_directory)
-
                 weight = previous_balls_weights[i][-1]
                 previous_balls_weights[i][-1] -= weight
-
                 os.chdir(walker_directory)
                 f = open('weight_trajectory.txt', 'w')
                 f.write(str(weight) + '\n')
                 walker_list[walker_index].weight = weight
                 total_weight += weight
                 f.close()
-
                 ball_trajectory = np.loadtxt('ball_trajectory.txt')
                 current_ball_center = ball_trajectory[-1][0:gv.num_cvs].tolist()
                 walker_list[walker_index].previous_ball_center = previous_ball_center
@@ -328,7 +348,6 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 current_distance_from_center = calculate_distance_from_center(current_coordinates, current_ball_center)
                 walker_list[walker_index].previous_distance_from_center = previous_distance_from_center
                 walker_list[walker_index].current_distance_from_center = current_distance_from_center
-
                 temp_walker_list[walker_index] = walker.Walker(previous_coordinates, current_coordinates, walker_index,
                                                                current_ball_radius, previous_ball_center,
                                                                current_ball_center, current_ball_key,
@@ -337,6 +356,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 total_num_walkers += 1
                 occupied_indices[walker_index] = 1
 
+        # finally, re-index the walkers so that the walkers have indices in order from 0 to total_num_walkers-1
         gv.total_num_walkers = excess_index-1
         if total_num_walkers >= gv.total_num_walkers:
             for i in range(total_num_walkers, excess_index):
@@ -364,11 +384,13 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                     # rename the directory with name 'i' to 'new_index'
                     os.chdir(gv.main_directory + '/CAS')
                     os.system('mv walker' + str(i) + ' walker' + str(new_index))
+        # reset the number of balls since the simulation will restart from the binning step
         gv.total_num_walkers = total_num_walkers
         gv.num_occupied_balls = 0
         gv.current_num_balls = 0
         gv.first_walker = 0
         gv.last_walker = total_num_walkers-1
+        # in case created balls are kept throughout simulation
         if gv.balls_flag == 1:
             os.chdir(gv.main_directory + '/CAS')
             balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
@@ -378,19 +400,19 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
 
 def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    initial_weights_array = np.array(initial_weights)
+    initial_weights_array = np.array(initial_weights)  # convert from list to array
+    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
     flux = np.zeros((gv.num_states, gv.num_states))
     flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
-    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
-
     start = 0  # indicates whether we are dealing with the very first walker or not
 
+    # loop through all of the walkers in descending order based on their weights
     for i in walker_indices:
-        # first, go to walker directory i
+        # first, go to walker directory i.
         walker_directory = gv.main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
 
-        # then, obtain new coordinates' values
+        # second, obtain new coordinates' values.
         if os.path.exists(walker_directory + '/coordinates.out'):
             coordinates = np.loadtxt('coordinates.out')
             if gv.num_cvs > 1:
@@ -400,23 +422,26 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
             rm_command = 'rm -rf *.out'
             os.system(rm_command)
 
-            # also, write the new coordinates' values  on the trajectory file
+            # also, record the new coordinates' values on the trajectory file
             f = open('trajectory.txt', 'a')
             f.write(' '.join(str(coordinate) for coordinate in new_coordinates))
             f.write('\n')
             f.close()
+        # if new coordinates' values have been already recorded, then read the last line of the trajectory file.
         else:
             f = open('trajectory.txt', 'r')
             new_coordinates = f.readlines()[-1].strip().split()
             new_coordinates = [float(coordinate) for coordinate in new_coordinates]
             f.close()
 
+        # third, obtain previous information from walker_list[i].
         previous_coordinates = walker_list[i].current_coordinates
         previous_ball_center = walker_list[i].current_ball_center
         previous_distance_from_center = walker_list[i].current_distance_from_center
         initial_step_num = walker_list[i].initial_step_num
         weight = walker_list[i].weight
 
+        # calculate rates/fluxes if needed.
         if gv.rate_flag == 1:
             state = check_state_function.check_state_function(new_coordinates)
             if walker_list[i].state != -1 and state == -1:
@@ -427,8 +452,9 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         else:
             state = -1
 
-        inside = 0  # indicates whether we are dealing with the very first walker or not
-        # if we're dealing with the very first walker, create the very first ball for the walker
+        inside = 0  # indicates whether walker is inside an exisiting macrostate or not, i.e., binned to a macrostate
+        # fourth, bin walker to a macrostate.
+        # if we're dealing with the very first walker, create the very first ball for the walker.
         if (gv.balls_flag == 0 and start == 0) or (gv.balls_flag == 1 and start == 0 and step_num == 0):
             start += 1
             inside += 1
@@ -447,7 +473,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
 
         distance = 0.0
         ball_key = 0
-        # otherwise, loop through all of the balls and find the ball that has a center nearest the walker
+        # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
         if inside == 0:
             for j in range(balls.shape[0]):
                 current_ball_center = balls[j][0:gv.num_cvs].tolist()
@@ -462,7 +488,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                         distance = distance_from_center
                         ball_key = j
 
-            # walker is inside some ball or is not but needs to be binned to the nearest ball
+            # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
+            # due to reaching the maximum number of macrostates limit.
             if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
                 balls[ball_key][gv.num_cvs+2] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
@@ -473,7 +500,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                                                     previous_distance_from_center, distance_from_center,
                                                     initial_step_num, weight, state)
 
-            # or walker does not belong in any ball -> create a new ball
+            # case 2: walker is not inside any macrostate and the maximum number of macrostates limit
+            # has not been reached, so create a new macrostate centered around the walker.
             elif inside == 0 and gv.current_num_balls < gv.num_balls_limit:
                 current_ball_center = [coordinate for coordinate in new_coordinates]
                 center_r_key_num = copy.deepcopy(current_ball_center)
@@ -488,7 +516,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
                                                     previous_distance_from_center, 0.0, initial_step_num, weight, state)
                 gv.current_num_balls += 1
 
-        # finally, write the new ball on the trajectory file
+        # fifth, record the new macrostate on the ball trajectory file.
         current_ball_center = temp_walker_list[i].current_ball_center
         ball_key = temp_walker_list[i].ball_key
         center_r_key_state = copy.deepcopy(current_ball_center)
@@ -500,12 +528,16 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
         f.write('\n')
         f.close()
 
+    # finally, output the entire macrostate list for this particular step to a text file.
     os.chdir(gv.main_directory + '/CAS')
     np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
+    # output the total flux for this particular step to a text file, if needed.
     if gv.rate_flag == 1:
         np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
         np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers, fmt=' %d')
 
+    # output the transition matrix and its evalues and evectors for this particular step
+    # using the current macrostates as reference macrostates.
     transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for ii in range(gv.total_num_walkers):
         previous_coordinates = temp_walker_list[ii].previous_coordinates
@@ -549,25 +581,28 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key
 
 def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers, key_to_ball):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    initial_weights_array = np.array(initial_weights)
+    initial_weights_array = np.array(initial_weights)  # convert from list to array
+    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
     flux = np.zeros((gv.num_states, gv.num_states))
     flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
-    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
 
+    # if threshold values change throughout the simulation, the following variables are needed.
     if gv.static_threshold_flag == 0:
         new_threshold_values = gv.threshold_values
         ref_walker_binning_value = 0
         ref_walker_properties_value = 0.0
         ref_walker_index = 0
+    # otherwise, only the variable that represents the list of reference walkers is needed.
     else:
         ref_walker_indices = []
 
+    # loop through all of the walkers in descending order based on their weights.
     for i in walker_indices:
-        # first, go to walker directory i
+        # first, go to walker directory i.
         walker_directory = gv.main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
 
-        # then, obtain new coordinates' values
+        # second, obtain new coordinates' values.
         if os.path.exists(walker_directory + '/coordinates.out'):
             coordinates = np.loadtxt('coordinates.out')
             if gv.num_cvs > 1:
@@ -576,18 +611,21 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                 new_coordinates = [float(coordinates)]
             rm_command = 'rm -rf *.out'
             os.system(rm_command)
+        # if new coordinates' values have been already recorded, then read the last line of the trajectory file.
         else:
             f = open('trajectory.txt', 'r')
             new_coordinates = f.readlines()[-1].strip().split()
             new_coordinates = [float(coordinate) for coordinate in new_coordinates]
             f.close()
 
+        # third, obtain previous information from walker_list[i].
         previous_coordinates = walker_list[i].current_coordinates
         previous_ball_center = walker_list[i].current_ball_center
         previous_distance_from_center = walker_list[i].current_distance_from_center
         initial_step_num = walker_list[i].initial_step_num
         weight = walker_list[i].weight
 
+        # calculate rates/fluxes if needed.
         if gv.rate_flag == 1:
             state = check_state_function.check_state_function(new_coordinates)
             if walker_list[i].state != -1 and state == -1:

@@ -27,24 +27,23 @@ first_walker=0  # only needed if simulation_flag is not equal to 0, otherwise 0.
 last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise 0.
 
 ### for the next four lines, if enhanced_sampling_flag = 1 ###
-less_or_greater_flag=1  # 0: criteria for binning walkers is if the walkers have some property LESS than the threshold.
-                        # 1: criteria for binning walkers is if the walkers have some property GREATER than the
-                        # threshold.
+less_or_greater_flag=1  # 0: criteria for binning walkers if the walkers have some property LESS than the threshold.
+                        # 1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
 static_threshold_flag=0  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
-                         # current value is set as the threshold for the next step. 1: on, initial threshold is kept
+                         # value is set to be the threshold for the next step. 1: on, initial threshold is kept
                          # throughout the simulation.
 threshold_values=[20.0]  # if some properties of the walker have values less or greater than the threshold values,
-                         # then it is binned to the nearest existing ball.
-properties_to_keep_track=[0]  # properties of the walker that are compared against the threshold values. this can be
-                              # weight and/or some cv(s). if one of them is weight, then type -1. otherwise type the
-                              # indices of the collective variable, e.g. if there are 3 cvs and you would like to keep
-                              # track of the last one, type 2 (index starts from 0). if there are more than one property
-                              # to kept track of, then type them sequentially.
+                         # then it is binned to the one designated "leftover" macrostate.
+properties_to_keep_track=[0]  # properties of the walker that are compared against threshold values. this can be weight
+                              # and/or some cv(s). if one of them is weight, then type -1. otherwise type the
+                              # indices of the collective variables, e.g. if there are 3 cvs and you would like to keep
+                              # track of the last one, then type 2 (index starts from 0). if there is more than one
+                              # property to keep track of, then type them sequentially.
 
 ### for the next three lines, if enhanced_sampling flag == 2 ###
 num_occupied_big_clusters=0  # num_occupied_big_clusters could be changed when restarting a simulation.
 num_occupied_small_clusters=0  # num_occupied_small_clusters could be changed when restarting a simulation.
-num_balls_for_sc=500  # minimum number of balls present to perform spectral clustering for that step
-num_clusters=5  # number of clusters for k-means part of spectral clustering
+num_balls_for_sc=500  # minimum number of balls present to perform spectral clustering for that step.
+num_clusters=5  # number of clusters for k-means part of spectral clustering.
 num_walkers_for_sc=500  # number of walkers for each cluster, usually set equal to the avg number of walkers per
-                        # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers
+                        # macrostate, which is (num_balls_for_sc/num_clusters)*num_walkers.
