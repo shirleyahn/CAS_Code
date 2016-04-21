@@ -30,8 +30,8 @@ last_walker=0  # only needed if simulation_flag is not equal to 0, otherwise 0.
 less_or_greater_flag=0  # 0: criteria for binning walkers if the walkers have some property LESS than the threshold.
                         # 1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
 static_threshold_flag=1  # 0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1)
-                         # value is set to be the threshold for the next step. 1: on, initial threshold is kept
-                         # throughout the simulation.
+                         # value is set to be the threshold for the next step and all walkers are replaced with the
+                         # "reference walker." 1: on, initial threshold is kept throughout the simulation.
 threshold_values=[1]  # if some properties of the walker have values less or greater than the threshold values,
                       # then it is binned to the one designated "leftover" macrostate.
 properties_to_keep_track=[0]  # properties of the walker that are compared against threshold values. this can be weight
