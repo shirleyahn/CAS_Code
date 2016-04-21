@@ -34,11 +34,10 @@ def CAS_simulation(input_initial_values_file):
     balls = new_balls
 
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
-        # reset ball objects so that balls are newly created at every step.
+        # reset macrostate objects so that macrostates are newly created at every step.
         if gv.balls_flag == 0 and step_num != gv.initial_step_num:
             balls = np.zeros((1, gv.num_cvs+3))
             ball_to_walkers = {}
-            key_to_ball = {}
             ball_clusters_list = {}
             gv.current_num_balls = 0
 
@@ -47,7 +46,7 @@ def CAS_simulation(input_initial_values_file):
         else:
             gv.first_walker = 0
             gv.last_walker = gv.total_num_walkers-1
-        print 'running   ' + str(step_num+1) + '-th step'
+        print 'running ' + str(step_num+1) + '-th step'
         os.chdir(gv.main_directory)
         f = open('bash_script_input_file.txt', 'w')
         f.write(str(gv.first_walker))
