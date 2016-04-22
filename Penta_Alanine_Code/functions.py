@@ -539,11 +539,11 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
 
     # finally, output the entire macrostate list for this particular step to a text file.
     os.chdir(gv.main_directory + '/CAS')
-    np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
+    np.savetxt('balls_' + str(step_num+1) + '.txt', balls, fmt=' %+1.5f')
     # output the total flux for this particular step to a text file, if needed.
     if gv.rate_flag == 1:
-        np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
-        np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers, fmt=' %d')
+        np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
+        np.savetxt('flux_num_walkers_' + str(step_num+1) + '.txt', flux_num_walkers, fmt=' %d')
 
     if gv.balls_flag == 1:
         # output the transition matrix for this particular step.
@@ -563,7 +563,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         previous_distance = previous_distance_from_center
                         previous_ball_key = j
             transition_matrix[previous_ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
-        np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', transition_matrix, fmt=' %1.10e')
+        np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.10e')
 
     return balls
 
@@ -906,7 +906,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                         previous_distance = previous_distance_from_center
                         previous_ball_key = j
             transition_matrix[previous_ball_key][temp_walker_list[i].ball_key] += temp_walker_list[i].weight
-        np.savetxt('transition_matrix_' + str(step_num + 1) + '.txt', transition_matrix, fmt=' %1.10e')
+        np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.10e')
 
     return balls
 
@@ -1585,7 +1585,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                 os.chdir(gv.main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
-    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
+    gv.total_num_walkers = total_num_walkers
     gv.num_occupied_balls = num_occupied_balls
 
 
