@@ -229,10 +229,17 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 f = open('weight_trajectory.txt', 'r')
                 weight = float(f.readlines()[-1].strip())
                 f.close()
-                ball_trajectory = np.loadtxt('ball_trajectory.txt')
-                previous_ball = ball_trajectory[-2].tolist()
-                previous_ball_key = previous_ball[gv.num_cvs+1]
-                previous_ball_center = previous_ball[0:gv.num_cvs]
+                f = open('ball_trajectory.txt', 'r')
+                lines = f.readlines()[-2:]
+                previous_line = lines[0].strip().split()
+                previous_ball_center = [float(entry) for entry in previous_line[0:gv.num_cvs]]
+                previous_ball_key = int(previous_line[gv.num_cvs+1])
+                current_line = lines[1].strip().split()
+                current_ball_center = [float(entry) for entry in current_line[0:gv.num_cvs]]
+                current_ball_radius = float(current_line[gv.num_cvs])
+                current_ball_key = int(current_line[gv.num_cvs+1])
+                current_state = int(current_line[gv.num_cvs+2])
+                f.close()
                 # if there's still weight left over in the macrostate of interest,
                 # obtain the walker's weights, coordinates, ball coordinates, state, etc.
                 if previous_balls_weights[previous_ball_key][-1]-weight >= 0.0:
@@ -243,10 +250,6 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                         previous_ball_to_walkers[tuple(previous_ball_center)].append(i)
                     else:
                         previous_ball_to_walkers[tuple(previous_ball_center)] = [i]
-                    current_ball = ball_trajectory[-1].tolist()
-                    current_ball_radius = current_ball[gv.num_cvs]
-                    current_ball_key = current_ball[gv.num_cvs+1]
-                    current_ball_center = current_ball[0:gv.num_cvs]
                     if tuple(current_ball_center) in ball_to_walkers:
                         ball_to_walkers[tuple(current_ball_center)].append(i)
                     else:
@@ -255,15 +258,15 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                     walker_list[i].radius = current_ball_radius
                     walker_list[i].previous_ball_center = previous_ball_center
                     walker_list[i].current_ball_center = current_ball_center
-                    trajectory = np.loadtxt('trajectory.txt')
-                    previous_coordinates = trajectory[-2].tolist()
-                    current_coordinates = trajectory[-1].tolist()
+                    f = open('trajectory.txt', 'r')
+                    lines = f.readlines()[-2:]
+                    previous_line = lines[0].strip().split()
+                    previous_coordinates = [float(entry) for entry in previous_line]
+                    current_line = lines[1].strip().split()
+                    current_coordinates = [float(entry) for entry in current_line]
+                    f.close()
                     walker_list[i].previous_coordinates = previous_coordinates
                     walker_list[i].current_coordinates = current_coordinates
-                    if gv.rate_flag == 1:
-                        current_state = int(current_ball[-1])
-                    else:
-                        current_state = -1
                     walker_list[i].state = current_state
                     walker_list[i].ball_key = current_ball_key
                     previous_distance_from_center = calculate_distance_from_center(previous_coordinates, previous_ball_center)
@@ -328,20 +331,27 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 walker_list[walker_index].weight = weight
                 total_weight += weight
                 f.close()
-                ball_trajectory = np.loadtxt('ball_trajectory.txt')
-                current_ball_center = ball_trajectory[-1][0:gv.num_cvs].tolist()
+                f = open('ball_trajectory.txt', 'r')
+                lines = f.readlines()[-1:]
+                current_line = lines[0].strip().split()
+                current_ball_center = [float(entry) for entry in current_line[0:gv.num_cvs]]
+                current_ball_radius = float(current_line[gv.num_cvs])
+                current_ball_key = int(current_line[gv.num_cvs+1])
+                current_state = int(current_line[gv.num_cvs+2])
+                f.close()
                 walker_list[walker_index].previous_ball_center = previous_ball_center
                 walker_list[walker_index].current_ball_center = current_ball_center
                 ball_to_walkers[tuple(current_ball_center)].append(walker_index)
                 os.system('sed -i \'$d\' ball_trajectory.txt')
-                trajectory = np.loadtxt('trajectory.txt')
-                previous_coordinates = trajectory[-2].tolist()
-                current_coordinates = trajectory[-1].tolist()
+                f = open('trajectory.txt', 'r')
+                lines = f.readlines()[-2:]
+                previous_line = lines[0].strip().split()
+                previous_coordinates = [float(entry) for entry in previous_line]
+                current_line = lines[1].strip().split()
+                current_coordinates = [float(entry) for entry in current_line]
+                f.close()
                 walker_list[walker_index].previous_coordinates = previous_coordinates
                 walker_list[walker_index].current_coordinates = current_coordinates
-                current_state = ball_trajectory[-1][-1]
-                current_ball_key = ball_trajectory[-1][gv.num_cvs+1]
-                current_ball_radius = ball_trajectory[-1][gv.num_cvs]
                 walker_list[walker_index].state = current_state
                 walker_list[walker_index].ball_key = current_ball_key
                 walker_list[walker_index].radius = current_ball_radius
