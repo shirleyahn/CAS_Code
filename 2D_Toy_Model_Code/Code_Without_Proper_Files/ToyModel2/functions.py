@@ -107,6 +107,8 @@ def initialize(input_initial_values_file, walker_list):
                 walker_list[i].pathway = initial_pathway
     f.close()
 
+    os.system('mkdir CAS')
+
 
 def m_simulation(walker_list):
     for i in range(gv.total_num_walkers):
@@ -1199,7 +1201,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
 
-    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
+    gv.total_num_walkers = total_num_walkers
     gv.num_occupied_balls = num_occupied_balls
 
 

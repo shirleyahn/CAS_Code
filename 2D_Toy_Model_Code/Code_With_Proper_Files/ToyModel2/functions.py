@@ -1350,7 +1350,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                 os.chdir(gv.main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
-    gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
+    gv.total_num_walkers = total_num_walkers
     gv.num_occupied_balls = num_occupied_balls
 
 
