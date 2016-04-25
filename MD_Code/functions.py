@@ -1215,7 +1215,10 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     num_occupied_small_clusters = 0
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers_for_sc*2, int)
+    if gv.num_walkers_for_sc > gv.num_walkers:
+        occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers_for_sc*2, int)
+    else:
+        occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
     excess_index = gv.total_num_walkers
     vacant_walker_indices = []
     # loop through each cluster and perform resampling within each cluster
@@ -1415,7 +1418,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
     gv.sc_performed = 0
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    if gv.num_walkers_for_sc > gv.num_walkers:
+    if gv.enhanced_sampling_flag == 2 and gv.num_walkers_for_sc > gv.num_walkers:
         occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers_for_sc*2, int)
     else:
         occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)

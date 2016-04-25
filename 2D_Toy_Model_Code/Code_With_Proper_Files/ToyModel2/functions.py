@@ -1180,7 +1180,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
     gv.sc_performed = 0
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    if gv.num_walkers_for_sc > gv.num_walkers:
+    if gv.enhanced_sampling_flag == 2 and gv.num_walkers_for_sc > gv.num_walkers:
         occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers_for_sc*2, int)
     else:
         occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
