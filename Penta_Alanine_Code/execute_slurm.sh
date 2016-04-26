@@ -17,18 +17,18 @@
 ### (e.g. PBS) and other molecular dynamics simulation programs (e.g. LAMMPS).
 ### ----------------------------------------------------------------------------------------------------------
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine # TODO
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
-export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
 num_nodes=1  # TODO: set number of nodes requested
 num_cpu=16  # TODO: set number of cores per node
 
 echo The master node of this job is `hostname`
-echo The working directory is `echo $MAIN_DIRECTORY`
 echo This job runs on the following nodes:
 echo `scontrol show hostname $SLURM_JOB_NODELIST`
 
-cd $MAIN_DIRECTORY
+echo "Starting at `date`"
+echo "Running on hosts: $SLURM_NODELIST"
+echo "Running on $SLURM_NNODES nodes."
+echo "Running on $SLURM_NPROCS processors."
+echo "Current working directory is `pwd`"
 
 scontrol show hostname $SLURM_JOB_NODELIST > initial_nodefilelist.txt
 rm -rf nodefilelist.txt

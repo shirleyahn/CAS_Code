@@ -1,8 +1,6 @@
 #!/bin/bash
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine  # TODO
 export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  # TODO
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
 export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
 
 num_nodes=1  # TODO
@@ -11,7 +9,6 @@ num_cpu=16  # TODO
 num_sim_walkers=$((num_nodes*num_cpu))
 
 # get sequence of walker indices from sh_input.txt
-cd $MAIN_DIRECTORY
 output=$(cat bash_script_input_file.txt)
 first_walker=$(echo $output | awk '{$NF=""}1')
 last_walker=$(echo $output | cut -d'_' -f 2)
@@ -40,9 +37,9 @@ do
 
                 ${GROMACS}/grompp -f ../../prod.mdp -p ../../topol.top -c minim.gro -o run.tpr -maxwarn 1
 
-                ${GROMACS}/mdrun -ntmpi 1 -ntomp 1 -pin on -pinstride 1 -pinoffset $cpu_pin -v -deffnm run
+                ${GROMACS}/mdrun -ntmpi 1 -ntomp 1 -pin on -pinstride 1 -pinoffset $cpu_pin -deffnm run
                 `" &
-                #${GROMACS}/mdrun -gpu_id $gpu_pin -ntmpi 1 -ntomp 1 -pin on -pinstride 1 -pinoffset $cpu_pin -v -deffnm run
+                #${GROMACS}/mdrun -gpu_id $gpu_pin -ntmpi 1 -ntomp 1 -pin on -pinstride 1 -pinoffset $cpu_pin -deffnm run
                 echo "running walker$i"
                 cd ..
                 let counter=counter+1
@@ -73,7 +70,7 @@ do
 
         ${GROMACS}/grompp -f ../../prod.mdp -p ../../topol.top -c minim.gro -o run.tpr -maxwarn 1
 
-        ${GROMACS}/mdrun -v -deffnm run
+        ${GROMACS}/mdrun -deffnm run
         `" &
     done
     wait
