@@ -1,7 +1,8 @@
 #!/bin/bash
 
-export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  # TODO
-export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
+export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  #TODO
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  #TODO
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin  #TODO
 
 num_nodes=1  # TODO
 num_cpu=16  # TODO
@@ -22,12 +23,11 @@ do
 	if [ $counter -lt $num_sim_walkers ];
 	then
 		cd walker$i/
-                let cpu_pin=($i%$num_cpu)
-                #let gpu_pin=($i%$num_gpu)
+                let cpu_pin=${i}%${num_cpu}
+                #let gpu_pin=${i}%${num_gpu}
                 # write hostfile for i-th job to use
-                let lstart=($counter-1)*${num_nodes}+2
-                let lend=${lstart}+${num_nodes}-1
-                sed -n ${lstart},${lend}'p' < ../../nodefilelist.txt > nodefile$counter
+                let lstart=${counter}+1
+                sed -n ${lstart},${lstart}'p' < ../../nodefilelist.txt > nodefile$counter
                 ssh $(cat nodefile$counter) bash -c "`
                 cd ${WALKER_DIRECTORY}
 
