@@ -156,6 +156,10 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 os.chdir(gv.main_directory + '/CAS')
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 gv.current_num_balls = balls.shape[0]
+                for j in range(balls.shape[0]):
+                    current_ball_center = balls[j][0:gv.num_cvs].tolist()
+                    ball_to_walkers[tuple(current_ball_center)] = []
+                    balls[j][gv.num_cvs+2] = 0
 
     # restarting simulation in the middle of binning
     elif gv.simulation_flag == 3:
@@ -199,6 +203,10 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 os.chdir(gv.main_directory + '/CAS')
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 gv.current_num_balls = balls.shape[0]
+                for j in range(balls.shape[0]):
+                    current_ball_center = balls[j][0:gv.num_cvs].tolist()
+                    ball_to_walkers[tuple(current_ball_center)] = []
+                    balls[j][gv.num_cvs + 2] = 0
 
     # restarting simulation in the middle of resampling
     # this is more tricky than the previous cases, since some walker directories are entirely gone or partially gone
@@ -406,6 +414,11 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             os.chdir(gv.main_directory + '/CAS')
             balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
             gv.current_num_balls = balls.shape[0]
+            for j in range(balls.shape[0]):
+                current_ball_center = balls[j][0:gv.num_cvs].tolist()
+                ball_to_walkers[tuple(current_ball_center)] = []
+                balls[j][gv.num_cvs + 2] = 0
+
     return balls
 
 
