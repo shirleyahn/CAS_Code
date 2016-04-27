@@ -548,7 +548,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
             new_coordinates = temp_walker_list[i].current_coordinates
             inside = 0  # indicates whether walker is inside an exisiting macrostate or not, i.e., binned to a macrostate
             # if we're dealing with the very first walker, create the very first ball for the walker.
-            if start == 0 and gv.balls_flag == 0:
+            if start == 0:
                 start += 1
                 inside += 1
                 current_ball_center = new_coordinates
@@ -584,13 +584,13 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                             ball_key = j
 
                 # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-                # due to reaching the maximum number of macrostates limit and/or balls_flag = 1.
-                if inside != 0 or (inside == 0 and (gv.current_num_balls == gv.num_balls_limit or gv.balls_flag == 1)):
+                # due to reaching the maximum number of macrostates limit.
+                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
                     balls[ball_key][gv.num_cvs+2] += 1
                     current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)].append(i)
                     temp_walker_list[i].current_ball_center = current_ball_center
-                    temp_walker_list[i].ball_key = gv.current_num_balls
+                    temp_walker_list[i].ball_key = ball_key
                     temp_walker_list[i].current_distance_from_center = \
                         calculate_distance_from_center(current_ball_center, new_coordinates)
 
