@@ -122,14 +122,14 @@ def m_simulation(walker_list):
                 if gv.pbc == 1 and new_x < gv.grid_dimensions[0]:
                     new_x = gv.grid_dimensions[1] - gv.step_size
                 elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
-                    new_x = temp_x
+                    new_x = gv.grid_dimensions[0]
                 new_y = temp_y
             elif direction == 1:  # move to right
                 new_x = temp_x + gv.step_size
                 if gv.pbc == 1 and new_x > gv.grid_dimensions[1]:
                     new_x = gv.grid_dimensions[0] + gv.step_size
                 elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
-                    new_x = temp_x
+                    new_x = gv.grid_dimensions[1]
                 new_y = temp_y
             elif direction == 2:  # move to top
                 new_x = temp_x
@@ -137,14 +137,14 @@ def m_simulation(walker_list):
                 if gv.pbc == 1 and new_y > gv.grid_dimensions[3]:
                     new_y = gv.grid_dimensions[2] + gv.step_size
                 elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
-                    new_y = temp_y
+                    new_y = gv.grid_dimensions[3]
             else:  # move to bottom
                 new_x = temp_x
                 new_y = temp_y - gv.step_size
                 if gv.pbc == 1 and new_y < gv.grid_dimensions[2]:
                     new_y = gv.grid_dimensions[3] - gv.step_size
                 elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
-                    new_y = temp_y
+                    new_y = gv.grid_dimensions[2]
             old_energy = ef.energy_function(temp_x, temp_y)
             new_energy = ef.energy_function(new_x, new_y)
             if new_energy - old_energy <= 0.0:  # accept move
