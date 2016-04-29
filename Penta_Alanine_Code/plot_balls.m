@@ -1,6 +1,5 @@
 %% Penta Alanine Spectral Clustering
-load('ball_clustering_15.txt')
-ball_clustering = ball_clustering_15;
+ball_clustering = load('ball_clustering_15.txt');
 m = size(ball_clustering, 1);
 a = zeros(m, 1);
 figure; hold on
@@ -24,8 +23,7 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Penta Alanine (first)
-load('total_weight_on_each_ball_65.txt')
-total_weight = total_weight_on_each_ball_65;
+total_weight = load('total_weight_on_each_ball_65.txt');
 m = size(total_weight, 1);
 a = zeros(m, 1);
 figure; hold on
@@ -49,8 +47,7 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Penta Alanine (second)
-load('total_weight_on_each_ball_65.txt')
-total_weight = total_weight_on_each_ball_65;
+total_weight = load('total_weight_on_each_ball_65.txt');
 m = size(total_weight, 1);
 a = zeros(m, 1);
 figure; hold on
@@ -74,8 +71,7 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Penta Alanine (third)
-load('total_weight_on_each_ball_65.txt')
-total_weight = total_weight_on_each_ball_65;
+total_weight = load('total_weight_on_each_ball_65.txt');
 m = size(total_weight, 1);
 a = zeros(m, 1);
 figure; hold on

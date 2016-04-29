@@ -1,6 +1,5 @@
 %% Spectral Clustering
-load('ball_clustering_8.txt')
-ball_clustering = ball_clustering_8;
+ball_clustering = load('ball_clustering_8.txt');
 m = size(ball_clustering, 1);
 a = zeros(m, 2);
 figure; hold on
@@ -26,8 +25,7 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Regular Plot
-load('total_weight_on_each_ball_768.txt')
-total_weight = total_weight_on_each_ball_768;
+total_weight = load('total_weight_on_each_ball_768.txt');
 m = size(total_weight, 1);
 a = zeros(m, 1);
 figure; hold on
