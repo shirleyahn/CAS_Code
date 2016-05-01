@@ -1116,6 +1116,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 sample_silhouette_values = [-1] * num_clusters
 
             cont = False
+            """
             if silhouette_avg > 0.8 and num_clusters >= 2:
                 outliers_exist = 1
                 outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters, clustering_matrix)
@@ -1134,6 +1135,7 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                     with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                         print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
                 '''
+            """
             # dunn index is calculated for the entire clustering result.
             if not cont:
                 with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
