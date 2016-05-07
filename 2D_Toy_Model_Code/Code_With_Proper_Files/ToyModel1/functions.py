@@ -991,12 +991,12 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     # loop through each cluster and perform resampling within each cluster
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
-            if len(ball_clusters_list[current_cluster]) > 1:  # more than one macrostate -> big cluster
-                num_occupied_big_clusters += 1
-                initial_target_num_walkers = gv.num_walkers_for_sc
-            else:  # just one macrostate -> small cluster
-                num_occupied_small_clusters += 1
-                initial_target_num_walkers = gv.num_walkers
+            #if len(ball_clusters_list[current_cluster]) > 1:  # more than one macrostate -> big cluster
+            num_occupied_big_clusters += 1
+            initial_target_num_walkers = gv.num_walkers_for_sc
+            #else:  # just one macrostate -> small cluster
+                #num_occupied_small_clusters += 1
+                #initial_target_num_walkers = gv.num_walkers
 
             initial_weights = []
             initial_indices = []
