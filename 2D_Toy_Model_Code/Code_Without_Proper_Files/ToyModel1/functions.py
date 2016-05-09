@@ -1022,7 +1022,8 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                             new_index = excess_index
                             excess_index += 1
                         occupied_indices[new_index] = 1
-                        walker_list[new_index].copy_walker(walker_list[global_index])
+                        walker_list[new_index].copy_walker(temp_walker_list[global_index])
+                        walker_list[new_index].weight = new_weights[index_num]
                         ball_key = walker_list[new_index].ball_key
                         if balls[ball_key][gv.num_cvs+2] == 0:
                             num_occupied_balls += 1

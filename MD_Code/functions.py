@@ -1374,7 +1374,8 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                             new_index = excess_index
                             excess_index += 1
                         occupied_indices[new_index] = 1
-                        walker_list[new_index].copy_walker(walker_list[global_index])
+                        walker_list[new_index].copy_walker(temp_walker_list[global_index])
+                        walker_list[new_index].weight = new_weights[index_num]
                         ball_key = walker_list[new_index].ball_key
                         if balls[ball_key][gv.num_cvs+2] == 0:
                             num_occupied_balls += 1
@@ -1388,7 +1389,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         # write new weights on the trajectory file
                         os.system('sed -i \'$ d\' weight_trajectory.txt')
                         f = open('weight_trajectory.txt', 'a')
-                        f.write('% 1.20e' % walker_list[new_index].weight + '\n')
+                        f.write('% 1.20e' % new_weights[index_num] + '\n')
                         f.close()
 
     total_num_walkers = num_occupied_big_clusters*gv.num_walkers_for_sc + num_occupied_small_clusters*gv.num_walkers
@@ -1561,7 +1562,8 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                             new_index = excess_index
                             excess_index += 1
                         occupied_indices[new_index] = 1
-                        walker_list[new_index].copy_walker(walker_list[global_index])
+                        walker_list[new_index].copy_walker(temp_walker_list[global_index])
+                        walker_list[new_index].weight = new_weights[index_num]
                         ball_to_walkers[tuple(current_ball_center)].append(new_index)
                         old_directory = gv.main_directory + '/CAS/walker' + str(global_index)
                         new_directory = gv.main_directory + '/CAS/walker' + str(new_index)
@@ -1570,7 +1572,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                         # write new weights on the trajectory file
                         os.system('sed -i \'$ d\' weight_trajectory.txt')
                         f = open('weight_trajectory.txt', 'a')
-                        f.write('% 1.20e' % walker_list[new_index].weight + '\n')
+                        f.write('% 1.20e' % new_weights[index_num] + '\n')
                         f.close()
                     balls[current_ball][gv.num_cvs+2] += 1
 
