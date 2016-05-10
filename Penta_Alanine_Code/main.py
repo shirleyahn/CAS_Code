@@ -30,8 +30,7 @@ def CAS_simulation(input_initial_values_file):
     ball_clusters_list = {}
 
     # create walkers and their directories.
-    new_balls = functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers)
-    balls = new_balls
+    balls = functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls, ball_to_walkers)
 
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
         # reset macrostate objects so that macrostates are newly created at every step.

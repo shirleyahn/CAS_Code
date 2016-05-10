@@ -418,7 +418,6 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 current_ball_center = balls[j][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)] = []
                 balls[j][gv.num_cvs + 2] = 0
-
     return balls
 
 
