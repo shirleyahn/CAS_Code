@@ -1058,6 +1058,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     gv.num_occupied_balls = num_occupied_balls
     gv.num_occupied_big_clusters = num_occupied_big_clusters
     gv.num_occupied_small_clusters = num_occupied_small_clusters
+    return balls
 
 
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
@@ -1212,6 +1213,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
 
     gv.total_num_walkers = total_num_walkers
     gv.num_occupied_balls = num_occupied_balls
+    return balls
 
 
 def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_list):
@@ -1243,3 +1245,4 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
         gv.num_occupied_small_clusters = 0
     else:
         f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + '\n')
+    return balls

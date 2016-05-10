@@ -65,25 +65,24 @@ def CAS_simulation(input_initial_values_file):
         # second, create macrostates and assign or bin walkers to macrostates.
         t1 = time()
         if gv.enhanced_sampling_flag == 1:
-            new_balls = functions.threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
+            balls = functions.threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
         else:
-            new_balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
+            balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 2.
         if gv.enhanced_sampling_flag == 2 and gv.num_balls_for_sc <= gv.num_occupied_balls \
                 and step_num != gv.initial_step_num and gv.sc_performed == 0:
-            functions.spectral_clustering(step_num, temp_walker_list, new_balls,  ball_clusters_list)
+            functions.spectral_clustering(step_num, temp_walker_list, balls,  ball_clusters_list)
             # fourth, resample walkers for every macrostate.
             if gv.sc_performed == 1:
-                functions.resampling_for_sc(walker_list, temp_walker_list, new_balls, ball_to_walkers, ball_clusters_list)
+                balls = functions.resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list)
             else:
-                functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
+                balls = functions.resampling(walker_list, temp_walker_list, balls, ball_to_walkers)
         else:
-            functions.resampling(walker_list, temp_walker_list, new_balls, ball_to_walkers)
+            balls = functions.resampling(walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # finally, output the results as text files.
-        functions.print_status(step_num, walker_list, new_balls, ball_to_walkers, ball_clusters_list)
-        balls = new_balls
+        balls = functions.print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_list)
         t2 = time()
 
         os.chdir(gv.main_directory+'/CAS')
