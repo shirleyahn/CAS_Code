@@ -168,7 +168,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     initial_weights_array = np.array(initial_weights)  # convert from list to array
     walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
     flux = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
-    flux_num_walkers = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
+    #flux_num_walkers = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
     start = 0  # indicates whether we are dealing with the very first walker or not
 
     # loop through all of the walkers in descending order based on their weights
@@ -190,7 +190,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     state = walker_list[i].state
                 if walker_list[i].state != -1 and state != -1:
                     flux[walker_list[i].state, state] += walker_list[i].weight
-                    flux_num_walkers[walker_list[i].state, state] += 1
+                    #flux_num_walkers[walker_list[i].state, state] += 1
             else:
                 if walker_list[i].state != -1 and state == -1:
                     state = walker_list[i].state
@@ -200,7 +200,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     before = walker_list[i].state*gv.num_states+walker_list[i].pathway
                     after = state*gv.num_states+pathway
                     flux[before, after] += walker_list[i].weight
-                    flux_num_walkers[before, after] += 1
+                    #flux_num_walkers[before, after] += 1
         else:
             state = -1
             pathway = -1
@@ -270,12 +270,13 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 gv.current_num_balls += 1
 
     # finally, output the entire macrostate list for this particular step to a text file.
-    os.chdir(gv.main_directory + '/CAS')
-    np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
+    #os.chdir(gv.main_directory + '/CAS')
+    #np.savetxt('balls_' + str(step_num + 1) + '.txt', balls, fmt=' %+1.5f')
     # output the total flux for this particular step to a text file, if needed.
     if gv.rate_flag == 1:
+        os.chdir(gv.main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num + 1) + '.txt', flux, fmt=' %1.5e')
-        np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers, fmt=' %d')
+        #np.savetxt('flux_num_walkers_' + str(step_num + 1) + '.txt', flux_num_walkers, fmt=' %d')
 
     if gv.balls_flag == 1:
         # output the transition matrix for this particular step.

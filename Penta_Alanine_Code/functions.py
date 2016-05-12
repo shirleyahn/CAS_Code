@@ -426,7 +426,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     initial_weights_array = np.array(initial_weights)  # convert from list to array
     walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
     flux = np.zeros((gv.num_states, gv.num_states))
-    flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
+    #flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
     start = 0  # indicates whether we are dealing with the very first walker or not
 
     # loop through all of the walkers in descending order based on their weights
@@ -471,7 +471,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 state = walker_list[i].state
             if walker_list[i].state != -1 and state != -1:
                 flux[walker_list[i].state, state] += walker_list[i].weight
-                flux_num_walkers[walker_list[i].state, state] += 1
+                #flux_num_walkers[walker_list[i].state, state] += 1
         else:
             state = -1
 
@@ -555,7 +555,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     # output the total flux for this particular step to a text file, if needed.
     if gv.rate_flag == 1:
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
-        np.savetxt('flux_num_walkers_' + str(step_num+1) + '.txt', flux_num_walkers, fmt=' %d')
+        #np.savetxt('flux_num_walkers_' + str(step_num+1) + '.txt', flux_num_walkers, fmt=' %d')
 
     if gv.balls_flag == 1:
         # output the transition matrix for this particular step.
@@ -585,7 +585,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
     initial_weights_array = np.array(initial_weights)  # convert from list to array
     walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
     flux = np.zeros((gv.num_states, gv.num_states))
-    flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
+    #flux_num_walkers = np.zeros((gv.num_states, gv.num_states))
 
     # if threshold values change throughout the simulation, the following objects are needed.
     if gv.static_threshold_flag == 0:
@@ -633,7 +633,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                 state = walker_list[i].state
             if walker_list[i].state != -1 and state != -1:
                 flux[walker_list[i].state, state] += walker_list[i].weight
-                flux_num_walkers[walker_list[i].state, state] += 1
+                #flux_num_walkers[walker_list[i].state, state] += 1
         else:
             state = -1
 
@@ -881,7 +881,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
     # output the total flux for this particular step to a text file, if needed.
     if gv.rate_flag == 1:
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
-        np.savetxt('flux_num_walkers_' + str(step_num+1) + '.txt', flux_num_walkers)
+        #np.savetxt('flux_num_walkers_' + str(step_num+1) + '.txt', flux_num_walkers)
     # update threshold values if they are better
     if gv.static_threshold_flag == 0:
         threshold_replace_value = 0
