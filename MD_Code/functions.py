@@ -1115,7 +1115,6 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                 sample_silhouette_values = [-1] * num_clusters
 
             cont = False
-            """
             if silhouette_avg > 0.8 and num_clusters >= 2:
                 outliers_exist = 1
                 outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters, clustering_matrix)
@@ -1134,7 +1133,6 @@ def spectral_clustering(step_num, temp_walker_list, balls, ball_clusters_list):
                     with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                         print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
                 '''
-            """
             # dunn index is calculated for the entire clustering result.
             if not cont:
                 with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
@@ -1238,12 +1236,12 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     # loop through each cluster and perform resampling within each cluster
     for current_cluster in ball_clusters_list:
         if len(ball_clusters_list[current_cluster]) > 0:
-            #if len(ball_clusters_list[current_cluster]) > 1:  # more than one macrostate -> big cluster
-            num_occupied_big_clusters += 1
-            initial_target_num_walkers = gv.num_walkers_for_sc
-            #else:  # just one macrostate -> small cluster
-                #num_occupied_small_clusters += 1
-                #initial_target_num_walkers = gv.num_walkers
+            if len(ball_clusters_list[current_cluster]) > 1:  # more than one macrostate -> big cluster
+                num_occupied_big_clusters += 1
+                initial_target_num_walkers = gv.num_walkers_for_sc
+            else:  # just one macrostate -> small cluster
+                num_occupied_small_clusters += 1
+                initial_target_num_walkers = gv.num_walkers
 
             initial_weights = []
             initial_indices = []
