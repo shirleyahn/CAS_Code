@@ -1022,7 +1022,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                for i in range(gv.num_states):
+                for i in range(-1, gv.num_states):
                     num_walkers = 0
                     for j in initial_indices:
                         state = temp_walker_list[j].state
@@ -1032,10 +1032,6 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         num_states += 1
                         states.append(i)
                         num_walkers_for_each_state.append(num_walkers)
-                if num_states == 0:
-                    num_states = 1
-                    states = [0]
-                    num_walkers_for_each_state = [len(initial_indices)]
 
             target_num_walkers = int(np.floor(float(initial_target_num_walkers)/num_states))
             remainder = initial_target_num_walkers-target_num_walkers*num_states
@@ -1220,7 +1216,7 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                for i in range(gv.num_states):
+                for i in range(-1, gv.num_states):
                     num_walkers = 0
                     for j in initial_indices:
                         state = temp_walker_list[j].state
@@ -1230,10 +1226,6 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
                         num_states += 1
                         states.append(i)
                         num_walkers_for_each_state.append(num_walkers)
-                if num_states == 0:
-                    num_states = 1
-                    states = [0]
-                    num_walkers_for_each_state = [len(initial_indices)]
 
             target_num_walkers = int(np.floor(float(gv.num_walkers)/num_states))
             remainder = gv.num_walkers-target_num_walkers*num_states

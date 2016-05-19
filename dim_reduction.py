@@ -24,16 +24,16 @@ def compute_angular_distances(matrix):
     return similarities
 
 
-def principal_component_analysis(file_name):
+def principal_component_analysis(file_name, dimension):
     balls = np.loadtxt(file_name)
-    matrix = balls[:, 0:6]
+    matrix = balls[:, 0:dimension]
     pca = PCA(n_components=2)
     transformed_matrix = pca.fit_transform(matrix)
-    ball_coords = np.zeros((balls.shape[0], 9))
+    ball_coords = np.zeros((balls.shape[0], dimension+3))
     for j in xrange(balls.shape[0]):
-        ball_coords[j, 0:6] = balls[j, 0:6].tolist()
-        ball_coords[j, 6:8] = transformed_matrix[j]
-        ball_coords[j, 8] = balls[j, 6].tolist()
+        ball_coords[j, 0:dimension] = balls[j, 0:dimension].tolist()
+        ball_coords[j, dimension:dimension+2] = transformed_matrix[j]
+        ball_coords[j, dimension+2] = balls[j, dimension].tolist()
         print ' '.join([str(x) for x in ball_coords[j, :]])
 
 
@@ -58,17 +58,17 @@ def multidimensioanl_scaling(file_name, dimension):
         print ' '.join([str(x) for x in ball_coords[j, :]])
 
 
-def isomap(file_name):
+def isomap(file_name, dimension):
     balls = np.loadtxt(file_name)
-    matrix = balls[:, 0:6]
+    matrix = balls[:, 0:dimension]
     imap = Isomap(n_neighbors=10, n_components=2, eigen_solver='auto', tol=0, max_iter=None, path_method='auto',
                   neighbors_algorithm='auto')
     transformed_matrix = imap.fit_transform(matrix)
-    ball_coords = np.zeros((balls.shape[0], 9))
+    ball_coords = np.zeros((balls.shape[0], dimension+3))
     for j in xrange(balls.shape[0]):
-        ball_coords[j, 0:6] = balls[j, 0:6].tolist()
-        ball_coords[j, 6:8] = transformed_matrix[j]
-        ball_coords[j, 8] = balls[j, 6].tolist()
+        ball_coords[j, 0:dimension] = balls[j, 0:dimension].tolist()
+        ball_coords[j, dimension:dimension+2] = transformed_matrix[j]
+        ball_coords[j, dimension+2] = balls[j, dimension].tolist()
         print ' '.join([str(x) for x in ball_coords[j, :]])
 
 
@@ -78,6 +78,6 @@ if __name__ == "__main__":
         sys.exit(1)
     file_name = sys.argv[1]
     dimension = int(sys.argv[2])
-    #principal_component_analysis(file_name)
+    #principal_component_analysis(file_name, dimension)
     multidimensioanl_scaling(file_name, dimension)
-    #isomap(file_name)
+    #isomap(file_name, dimension)
