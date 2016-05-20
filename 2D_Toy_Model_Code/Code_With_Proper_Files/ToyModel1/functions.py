@@ -1063,6 +1063,13 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
+                if target_weight < 1.0e-300:
+                    for k in indices_bin:
+                        vacant_walker_indices.append(k)
+                        # remove walker k directory
+                        os.chdir(gv.main_directory + '/CAS')
+                        os.system('rm -rf walker' + str(k))
+                    break
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
@@ -1257,6 +1264,13 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
+                if target_weight < 1.0e-300:
+                    for k in indices_bin:
+                        vacant_walker_indices.append(k)
+                        # remove walker k directory
+                        os.chdir(gv.main_directory + '/CAS')
+                        os.system('rm -rf walker' + str(k))
+                    break
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
