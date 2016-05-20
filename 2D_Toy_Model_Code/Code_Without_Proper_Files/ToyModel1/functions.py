@@ -68,7 +68,7 @@ def set_parameters():
         ii += 2
     # calculate number of macrostates that would fill up the entire collective variable space
     if ball_volume != 0.0:
-        max_num_balls = int(np.floor(grid_volume/ball_volume))*2
+        max_num_balls = int(np.floor(grid_volume/ball_volume))*1000
     # if the calculated number of macrostates is less than the set limit for total number of macrostates,
     # then use the calculated value as the limit for total number of macrostates
     if max_num_balls < gv.num_balls_limit:
@@ -121,30 +121,30 @@ def m_simulation(walker_list):
                 new_x = temp_x - gv.step_size
                 if gv.pbc == 1 and new_x < gv.grid_dimensions[0]:
                     new_x = gv.grid_dimensions[1] - gv.step_size
-                elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
-                    new_x = gv.grid_dimensions[0]
+                #elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
+                    #new_x = gv.grid_dimensions[0]
                 new_y = temp_y
             elif direction == 1:  # move to right
                 new_x = temp_x + gv.step_size
                 if gv.pbc == 1 and new_x > gv.grid_dimensions[1]:
                     new_x = gv.grid_dimensions[0] + gv.step_size
-                elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
-                    new_x = gv.grid_dimensions[1]
+                #elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
+                    #new_x = gv.grid_dimensions[1]
                 new_y = temp_y
             elif direction == 2:  # move to top
                 new_x = temp_x
                 new_y = temp_y + gv.step_size
                 if gv.pbc == 1 and new_y > gv.grid_dimensions[3]:
                     new_y = gv.grid_dimensions[2] + gv.step_size
-                elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
-                    new_y = gv.grid_dimensions[3]
+                #elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
+                    #new_y = gv.grid_dimensions[3]
             else:  # move to bottom
                 new_x = temp_x
                 new_y = temp_y - gv.step_size
                 if gv.pbc == 1 and new_y < gv.grid_dimensions[2]:
                     new_y = gv.grid_dimensions[3] - gv.step_size
-                elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
-                    new_y = gv.grid_dimensions[2]
+                #elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
+                    #new_y = gv.grid_dimensions[2]
             old_energy = ef.energy_function(temp_x, temp_y)
             new_energy = ef.energy_function(new_x, new_y)
             if new_energy - old_energy <= 0.0:  # accept move
@@ -242,8 +242,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         ball_key = j
 
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-            # due to reaching the maximum number of macrostates limit.
-            if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
+            # due to reaching the maximum number of macrostates limit or weight is too small.
+            if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit) or weight < 1.0e-100:
                 balls[ball_key][gv.num_cvs+2] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)].append(i)
@@ -509,8 +509,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                             ball_key = j
 
                 # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-                # due to reaching the maximum number of macrostates limit.
-                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
+                # due to reaching the maximum number of macrostates limit or weight is too small.
+                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit) or weight < 1.0e-100:
                     balls[ball_key][gv.num_cvs+2] += 1
                     current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)].append(i)

@@ -258,8 +258,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         ball_key = j
 
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-            # due to reaching the maximum number of macrostates limit.
-            if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
+            # due to reaching the maximum number of macrostates limit or weight is too small.
+            if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit) or weight < 1.0e-100:
                 balls[ball_key][gv.num_cvs+2] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)].append(i)
@@ -584,8 +584,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, ball_to_wa
                             ball_key = j
 
                 # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-                # due to reaching the maximum number of macrostates limit.
-                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
+                # due to reaching the maximum number of macrostates limit or weight is too small.
+                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit) or weight < 1.0e-100:
                     balls[ball_key][gv.num_cvs+2] += 1
                     current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)].append(i)
