@@ -54,8 +54,15 @@ def CAS_simulation(input_initial_values_file):
             balls = functions.binning(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # third, perform spectral clustering if enhanced_sampling_flag = 2.
-        if gv.enhanced_sampling_flag == 2 and gv.num_balls_for_sc <= gv.num_occupied_balls and gv.sc_performed == 0:
-            functions.spectral_clustering(step_num, temp_walker_list, balls,  ball_clusters_list)
+        if gv.enhanced_sampling_flag == 2 and gv.num_balls_for_sc <= gv.num_occupied_balls and gv.sc_performed == 0 \
+                and gv.sc_start == -1:
+            # start fixing macrostates from this point on until we finish calculating the transition matrix
+            gv.balls_flag = 1
+            gv.sc_start = step_num
+        if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 0 and gv.sc_start != -1:
+            functions.calculate_trans_mat_for_sc(step_num, temp_walker_list, balls)
+        if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1:
+            functions.spectral_clustering(step_num, balls,  ball_clusters_list)
             # fourth, resample walkers for every macrostate.
             if gv.sc_performed == 1:
                 balls = functions.resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list)

@@ -32,6 +32,7 @@ global properties_to_keep_track
 global num_balls_for_sc
 global num_clusters
 global num_walkers_for_sc
+global num_steps_for_sc
 
 ###
 # parameters that are set by functions.py
@@ -41,3 +42,5 @@ global total_num_walkers
 global num_occupied_big_clusters
 global num_occupied_small_clusters
 global sc_performed
+global sc_start
+global trans_mat_for_sc

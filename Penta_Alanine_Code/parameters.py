@@ -46,3 +46,4 @@ num_occupied_small_clusters=0  # num_occupied_small_clusters could be changed wh
 num_balls_for_sc=500  # minimum number of balls present to perform spectral clustering for that step.
 num_clusters=5  # number of clusters for k-means part of spectral clustering.
 num_walkers_for_sc=500  # number of walkers for each cluster.
+num_steps_for_sc=10  # number of steps of calculating transition matrix before spectral clustering.
