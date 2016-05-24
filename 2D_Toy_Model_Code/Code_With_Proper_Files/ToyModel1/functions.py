@@ -282,7 +282,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
 
         # fourth, record the new macrostate on the ball trajectory file.
         current_ball_center = temp_walker_list[i].current_ball_center
-        ball_key = temp_walker_list[i].ball_key
+        ball_key = temp_walker_list[i].current_ball_key
         center_r_key_state = copy.deepcopy(current_ball_center)
         center_r_key_state.append(gv.radius)
         center_r_key_state.append(ball_key)
