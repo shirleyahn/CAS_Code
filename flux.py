@@ -2,7 +2,9 @@ import numpy as np
 import os
 import re
 numbers = re.compile(r'(\d+)')
-def numericalSort(value):
+
+
+def numerical_sort(value):
     parts = numbers.split(value)
     parts[1::2] = map(int, parts[1::2])
     return parts
@@ -16,7 +18,7 @@ a_to_b = 0.0
 b_to_a = 0.0
 
 for subdir, dirs, files in os.walk(os.getcwd()):
-    for file in sorted(files, key=numericalSort):
+    for file in sorted(files, key=numerical_sort):
         if file[0:5] == "flux_" and int(file[5:-4]) == num_steps:
             flux_matrix = np.loadtxt(file)
             if np.sum(flux_matrix[0, :]) != 0.0:

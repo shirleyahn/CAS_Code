@@ -720,6 +720,7 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
             break
         # otherwise, silhouette scores are calculated and macrostates are labeled as outliers or not.
         else:
+            """
             unique = np.unique(labels)
             if len(unique) > 1:
                 try:
@@ -731,6 +732,7 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
             else:
                 silhouette_avg = 0
                 sample_silhouette_values = [-1] * num_clusters
+            """
 
             cont = False
             """
