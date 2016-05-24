@@ -18,20 +18,21 @@ def calculate_distance_from_center(center, values):
         if gv.angle_cvs[i] == 0:
             distance += (values[i] - center[i]) ** 2
         else:
-            if values[i] - center[i] > 180.0:
-                distance += (values[i] - center[i] - 360.0) ** 2
-            elif values[i] - center[i] < -180.0:
-                distance += (values[i] - center[i] + 360.0) ** 2
-            else:
-                distance += (values[i] - center[i]) ** 2
+            distance += min(360.0 - abs(values[i] - center[i]), abs(values[i] - center[i])) ** 2
     if abs(distance) < 1.0e-10:
         distance = 0.0
     return np.sqrt(distance)
 
 
 def closest_ball(walker_coordinates, balls_array):
-    dist_2 = np.sum((balls_array - walker_coordinates)**2, axis=1)
-    return np.argmin(dist_2)
+    distance = np.zeros((1, gv.num_cvs))
+    for i in range(gv.num_cvs):
+        if gv.angle_cvs[i] == 0:
+            distance += (balls_array[:, i] - walker_coordinates[i]) ** 2
+        else:
+            distance += np.minimum(360.0 - np.abs(balls_array[:, i] - walker_coordinates[i]), np.abs(balls_array[:, i] - walker_coordinates[i])) ** 2
+    #distance = np.sum((balls_array - walker_coordinates)**2, axis=1)
+    return np.argmin(distance)
 
 
 def set_parameters():
@@ -491,7 +492,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
             ball_to_walkers[tuple(current_ball_center)] = [i]
             temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                 previous_ball_center, current_ball_center, previous_ball_key,
-                                                gv.current_num_balls, initial_step_num, weight, state, pathway)
+                                                gv.current_num_balls, initial_step_num, weight, state)
             gv.current_num_balls += 1
 
         # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
@@ -511,7 +512,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
                 ball_to_walkers[tuple(current_ball_center)].append(i)
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                     previous_ball_center, current_ball_center, previous_ball_key,
-                                                    ball_key, initial_step_num, weight, state, pathway)
+                                                    ball_key, initial_step_num, weight, state)
 
             # case 2: walker is not inside any macrostate and the maximum number of macrostates limit
             # has not been reached, so create a new macrostate centered around the walker.
@@ -526,7 +527,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
                 ball_to_walkers[tuple(current_ball_center)] = [i]
                 temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                                     previous_ball_center, current_ball_center, previous_ball_key,
-                                                    gv.current_num_balls, initial_step_num, weight, state, pathway)
+                                                    gv.current_num_balls, initial_step_num, weight, state)
                 gv.current_num_balls += 1
 
         # fifth, record the new macrostate on the ball trajectory file.
@@ -617,7 +618,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
         temp_walker_list[i] = walker.Walker(previous_coordinates, new_coordinates, i, gv.radius,
                                             previous_ball_center, previous_ball_center, previous_ball_key,
-                                            gv.current_num_balls, initial_step_num, weight, state, pathway)
+                                            gv.current_num_balls, initial_step_num, weight, state)
 
         # if threshold values change throughout the simulation, the walker with the lowest or highest value
         # needs to be found.

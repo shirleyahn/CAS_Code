@@ -20,20 +20,21 @@ def calculate_distance_from_center(center, values):
         if gv.angle_cvs[i] == 0:
             distance += (values[i] - center[i]) ** 2
         else:
-            if values[i] - center[i] > 180.0:
-                distance += (values[i] - center[i] - 360.0) ** 2
-            elif values[i] - center[i] < -180.0:
-                distance += (values[i] - center[i] + 360.0) ** 2
-            else:
-                distance += (values[i] - center[i]) ** 2
+            distance += min(360.0 - abs(values[i] - center[i]), abs(values[i] - center[i])) ** 2
     if abs(distance) < 1.0e-10:
         distance = 0.0
     return np.sqrt(distance)
 
 
 def closest_ball(walker_coordinates, balls_array):
-    dist_2 = np.sum((balls_array - walker_coordinates)**2, axis=1)
-    return np.argmin(dist_2)
+    distance = np.zeros((1, gv.num_cvs))
+    for i in range(gv.num_cvs):
+        if gv.angle_cvs[i] == 0:
+            distance += (balls_array[:, i] - walker_coordinates[i]) ** 2
+        else:
+            distance += np.minimum(360.0 - np.abs(balls_array[:, i] - walker_coordinates[i]), np.abs(balls_array[:, i] - walker_coordinates[i])) ** 2
+    #distance = np.sum((balls_array - walker_coordinates)**2, axis=1)
+    return np.argmin(distance)
 
 
 def set_parameters():
