@@ -25,7 +25,8 @@ def calculate_distance_from_center(center, values):
 
 
 def closest_ball(walker_coordinates, balls_array):
-    distance = np.zeros((1, gv.num_cvs))
+    walker_coordinates = walker_coordinates.reshape((gv.num_cvs, 1))
+    distance = np.zeros((balls_array.shape[0],))
     for i in range(gv.num_cvs):
         if gv.angle_cvs[i] == 0:
             distance += (balls_array[:, i] - walker_coordinates[i]) ** 2
@@ -1058,9 +1059,10 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
         if num_clusters <= 1:
             gv.sc_performed = 0
             break
+        cont = False
+        """
         # otherwise, silhouette scores are calculated and macrostates are labeled as outliers or not.
         else:
-            """
             unique = np.unique(labels)
             if len(unique) > 1:
                 try:
@@ -1072,10 +1074,8 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
             else:
                 silhouette_avg = 0
                 sample_silhouette_values = [-1] * num_clusters
-            """
 
             cont = False
-            """
             if silhouette_avg > 0.8 and num_clusters >= 2:
                 outliers_exist = 1
                 outlier_labels, inliers = create_outlier_labels(outlier_labels, num_clusters, clustering_matrix)
@@ -1094,7 +1094,6 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
                     with open('outlier_removal_' + str(step_num + 1) + '.txt', 'a') as outlier_f:
                         print >>outlier_f, 'Removing %d outliers from data as cluster %d' % (len(inliers[inliers == False]), num_clusters - 1)
                 '''
-            """
             # dunn index is calculated for the entire clustering result.
             if not cont:
                 with open('dunn_index_' + str(step_num + 1) + '.txt', 'w') as dunn_index_f:
@@ -1105,6 +1104,7 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
                     print >>dunn_index_f, "The average silhouette_score is: %f" % silhouette_avg
                     for i in xrange(int(max(labels))+1):
                         print >>dunn_index_f, "The average silhouette score for cluster %d is: %f" % (i, np.mean(sample_silhouette_values[labels == i]))
+        """
 
     # finally, if clustering using k-means was successful, the results are output into text files
     # and python objects for subsequent resampling.
