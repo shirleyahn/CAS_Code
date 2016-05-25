@@ -82,7 +82,7 @@ def CAS_simulation(input_initial_values_file):
             gv.sc_start = step_num
         if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 0 and gv.sc_start != -1:
             functions.calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array)
-        if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1:
+        if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1 and gv.sc_start != -1:
             functions.spectral_clustering(step_num, balls, ball_clusters_list)
             # fourth, resample walkers for every macrostate.
             if gv.sc_performed == 1:

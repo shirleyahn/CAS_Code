@@ -25,7 +25,6 @@ def calculate_distance_from_center(center, values):
 
 
 def closest_ball(walker_coordinates, balls_array):
-    walker_coordinates = walker_coordinates.reshape((gv.num_cvs, 1))
     distance = np.zeros((balls_array.shape[0],))
     for i in range(gv.num_cvs):
         if gv.angle_cvs[i] == 0:
@@ -505,9 +504,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
                 inside += 1
 
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-            # due to reaching the maximum number of macrostates limit and/or balls_flag = 1 or weight is too small.
-            if inside != 0 or (inside == 0 and (gv.current_num_balls == gv.num_balls_limit or gv.balls_flag == 1)) or \
-                            weight < 1.0e-100:
+            # due to reaching the maximum number of macrostates limit and/or balls_flag = 1.
+            if inside != 0 or (inside == 0 and (gv.current_num_balls == gv.num_balls_limit or gv.balls_flag == 1)):
                 balls[ball_key][gv.num_cvs+2] += 1
                 current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)].append(i)
@@ -804,8 +802,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                     inside += 1
 
                 # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate
-                # due to reaching the maximum number of macrostates limit or weight is too small.
-                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit) or weight < 1.0e-100:
+                # due to reaching the maximum number of macrostates limit.
+                if inside != 0 or (inside == 0 and gv.current_num_balls == gv.num_balls_limit):
                     balls[ball_key][gv.num_cvs+2] += 1
                     current_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)].append(i)
@@ -990,7 +988,6 @@ def calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array):
         gv.trans_mat_for_sc = np.zeros((balls.shape[0], balls.shape[0]))
     if step_num == gv.sc_start + gv.num_steps_for_sc:
         gv.balls_flag = p.balls_flag  # reset balls flag to original option
-        gv.sc_start = -1  # reset starting point
         gv.sc_performed = 1  # indicate spectral clustering can be started after this step
 
     if step_num == gv.sc_start or gv.num_steps_for_sc == 0:
@@ -1185,7 +1182,7 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
-    gv.sc_performed = 0
+    gv.sc_start = -1
     num_occupied_big_clusters = 0
     num_occupied_small_clusters = 0
     num_occupied_balls = 0
@@ -1270,13 +1267,6 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
-                if target_weight < 1.0e-300:
-                    for k in indices_bin:
-                        vacant_walker_indices.append(k)
-                        # remove walker k directory
-                        os.chdir(gv.main_directory + '/CAS')
-                        os.system('rm -rf walker' + str(k))
-                    break
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
@@ -1396,6 +1386,9 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
 
 
 def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
+    if gv.sc_performed == 1:
+        gv.sc_performed = 0
+        gv.sc_start = -1
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
@@ -1467,13 +1460,6 @@ def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
-                if target_weight < 1.0e-300:
-                    for k in indices_bin:
-                        vacant_walker_indices.append(k)
-                        # remove walker k directory
-                        os.chdir(gv.main_directory + '/CAS')
-                        os.system('rm -rf walker' + str(k))
-                    break
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
