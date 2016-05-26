@@ -700,13 +700,13 @@ def spectral_clustering(step_num, balls):
     matrix = normalized_second_evector  #np.hstack((balls, normalized_second_evector))
     clustering_matrix = matrix
     cont = True
-    outlier_labels = np.ones(len(matrix)) * -1
+    #outlier_labels = np.ones(len(matrix)) * -1
     outliers_exist = 0
     while cont:
         while True:
             try:
                 centroids, labels = kmeans2(clustering_matrix, num_clusters, minit='points', iter=100, missing='raise')
-                labels = merge_with_outliers(outlier_labels, labels)
+                #labels = merge_with_outliers(outlier_labels, labels)
                 break
             except ClusterError:
                 num_clusters -= 1
