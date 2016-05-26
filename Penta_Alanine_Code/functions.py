@@ -999,7 +999,8 @@ def calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array):
             gv.trans_mat_for_sc[temp_walker_list[i].previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
 
 
-def spectral_clustering(step_num, balls, ball_clusters_list):
+def spectral_clustering(step_num, balls):
+    ball_clusters_list = {}
     # transition matrix should fulfill detailed balance if simulation is run under Hamiltonian dynamics in the
     # canonical ensemble. equation is from Prinz, et al JCP (2011).
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
@@ -1104,8 +1105,8 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
 
     # finally, if clustering using k-means was successful, the results are output into text files
     # and python objects for subsequent resampling.
+    gv.balls_flag = p.balls_flag  # reset balls flag to original option
     if gv.sc_performed == 1:
-        gv.balls_flag = p.balls_flag  # reset balls flag to original option
         gv.sc_start = -1
         f = open('ball_clustering_'+str(step_num+1)+'.txt', 'w')
         if outliers_exist == 1:
@@ -1180,6 +1181,8 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
                         ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                         balls[j][gv.num_cvs+2] -= 1
         f.close()
+
+    return ball_clusters_list
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
@@ -1570,7 +1573,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     return balls
 
 
-def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_list):
+def print_status(step_num, walker_list, balls, ball_to_walkers):
     os.chdir(gv.main_directory + '/CAS')
     total_weight = 0.0
     f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')
@@ -1587,7 +1590,6 @@ def print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_li
         # reset walkers and number of walkers that belong in each ball
         balls[current_ball][gv.num_cvs+2] = 0
         ball_to_walkers[tuple(ball_center)] = []
-        ball_clusters_list[tuple(ball_center)] = []
     f.close()
 
     # verify that total weight of all balls is 1.0

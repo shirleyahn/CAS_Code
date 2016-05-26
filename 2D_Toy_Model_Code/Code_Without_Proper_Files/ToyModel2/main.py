@@ -27,8 +27,6 @@ def CAS_simulation(input_initial_values_file):
     balls_array = np.zeros((1, gv.num_cvs))
     # maps ball coordinates to walkers
     ball_to_walkers = {}
-    # list of ball clusters (used only when gv.enhanced_sampling_flag = 2)
-    ball_clusters_list = {}
 
     # create walkers and their directories.
     functions.initialize(input_initial_values_file, walker_list)
@@ -39,7 +37,6 @@ def CAS_simulation(input_initial_values_file):
             balls = np.zeros((1, gv.num_cvs+3))
             balls_array = np.zeros((1, gv.num_cvs))
             ball_to_walkers = {}
-            ball_clusters_list = {}
             gv.current_num_balls = 0
 
         print 'running ' + str(step_num+1) + '-th step'
@@ -67,7 +64,7 @@ def CAS_simulation(input_initial_values_file):
         if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 0 and gv.sc_start != -1:
             functions.calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array)
         if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1 and gv.sc_start != -1:
-            functions.spectral_clustering(step_num, balls, ball_clusters_list)
+            ball_clusters_list = functions.spectral_clustering(step_num, balls)
             # fourth, resample walkers for every macrostate.
             if gv.sc_performed == 1:
                 balls = functions.resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers,
@@ -78,7 +75,7 @@ def CAS_simulation(input_initial_values_file):
             balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # finally, output the results as text files.
-        balls = functions.print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_list)
+        balls = functions.print_status(step_num, walker_list, balls, ball_to_walkers)
         t3 = time()
 
         os.chdir(gv.main_directory+'/CAS')
