@@ -89,9 +89,9 @@ def CAS_simulation(input_initial_values_file):
                 balls = functions.resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers,
                                                     ball_clusters_list)
             else:
-                balls = functions.resampling(walker_list, temp_walker_list, balls, ball_to_walkers)
+                balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
         else:
-            balls = functions.resampling(walker_list, temp_walker_list, balls, ball_to_walkers)
+            balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # finally, output the results as text files.
         balls = functions.print_status(step_num, walker_list, balls, ball_to_walkers, ball_clusters_list)

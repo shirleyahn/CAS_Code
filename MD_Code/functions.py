@@ -987,7 +987,6 @@ def calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array):
     if step_num == gv.sc_start:
         gv.trans_mat_for_sc = np.zeros((balls.shape[0], balls.shape[0]))
     if step_num == gv.sc_start + gv.num_steps_for_sc:
-        gv.balls_flag = p.balls_flag  # reset balls flag to original option
         gv.sc_performed = 1  # indicate spectral clustering can be started after this step
 
     if step_num == gv.sc_start or gv.num_steps_for_sc == 0:
@@ -1106,6 +1105,8 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
     # finally, if clustering using k-means was successful, the results are output into text files
     # and python objects for subsequent resampling.
     if gv.sc_performed == 1:
+        gv.balls_flag = p.balls_flag  # reset balls flag to original option
+        gv.sc_start = -1
         f = open('ball_clustering_'+str(step_num+1)+'.txt', 'w')
         if outliers_exist == 1:
             # if outliers exist, first loop through the big main clusters
@@ -1182,7 +1183,6 @@ def spectral_clustering(step_num, balls, ball_clusters_list):
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
-    gv.sc_start = -1
     num_occupied_big_clusters = 0
     num_occupied_small_clusters = 0
     num_occupied_balls = 0
@@ -1385,9 +1385,12 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
     return balls
 
 
-def resampling(walker_list, temp_walker_list, balls, ball_to_walkers):
-    if gv.sc_performed == 1:
+def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
+    if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1:
         gv.sc_performed = 0
+    elif gv.enhanced_sampling_flag == 2 and gv.sc_performed == 0 and gv.sc_start != -1 and \
+                    step_num == gv.sc_start + gv.num_steps_for_sc:
+        gv.sc_performed = 1
         gv.sc_start = -1
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
