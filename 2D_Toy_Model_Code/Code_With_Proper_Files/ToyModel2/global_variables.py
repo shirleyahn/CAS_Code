@@ -39,8 +39,7 @@ global num_steps_for_sc
 ###
 global current_num_balls
 global total_num_walkers
-global num_occupied_big_clusters
-global num_occupied_small_clusters
+global num_occupied_clusters
 global sc_performed
 global sc_start
 global trans_mat_for_sc

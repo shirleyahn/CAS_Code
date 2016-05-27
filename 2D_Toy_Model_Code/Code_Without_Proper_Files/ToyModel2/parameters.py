@@ -41,4 +41,4 @@ properties_to_keep_track=[-1]  # properties of the walker that are compared agai
 num_balls_for_sc=1000  # minimum number of balls present to perform spectral clustering for that step.
 num_clusters=5  # number of clusters for k-means part of spectral clustering.
 num_walkers_for_sc=1000  # number of walkers for each macrostate.
-num_steps_for_sc=10  # number of steps of calculating transition matrix before spectral clustering.
+num_steps_for_sc=10  # number of steps needed to calculate transition matrix for spectral clustering.
