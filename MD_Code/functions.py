@@ -3,7 +3,7 @@ import os
 import shutil
 import copy
 from scipy import special
-from scipy.cluster.vq import kmeans2, ClusterError
+from scipy.cluster.vq import kmeans2, ClusterError, whiten
 import walker
 import global_variables as gv
 import check_state_function
@@ -1036,7 +1036,7 @@ def spectral_clustering(step_num, balls):
     # third, use the normalized second evector to cluster macrostates using k-means.
     # outlier detection is also performed by calculating silhouette scores and macrostates that are labeled as outliers
     # will not be included in big clusters but rather remain as its own individual clusters or small clusters.
-    matrix = normalized_second_evector  #np.hstack((balls, normalized_second_evector))
+    matrix = whiten(normalized_second_evector)  #np.hstack((balls, normalized_second_evector))
     clustering_matrix = matrix
     cont = True
     #outlier_labels = np.ones(len(matrix)) * -1
@@ -1044,7 +1044,7 @@ def spectral_clustering(step_num, balls):
     while cont:
         while True:
             try:
-                centroids, labels = kmeans2(clustering_matrix, num_clusters, minit='points', iter=100, missing='raise')
+                centroids, labels = kmeans2(clustering_matrix, num_clusters, minit='points', iter=200, missing='raise')
                 #labels = merge_with_outliers(outlier_labels, labels)
                 break
             except ClusterError:
@@ -1105,6 +1105,7 @@ def spectral_clustering(step_num, balls):
 
     # finally, if clustering using k-means was successful, the results are output into text files
     # and python objects for subsequent resampling.
+    fail = 1
     gv.balls_flag = p.balls_flag  # reset balls flag to original option
     if gv.sc_performed == 1:
         gv.sc_start = -1
@@ -1115,6 +1116,8 @@ def spectral_clustering(step_num, balls):
                 first = 0  # used for picking out the reference macrostate that will represent the center of the cluster
                 for j in range(balls.shape[0]):
                     if labels[j] == i and first == 0:
+                        if j == balls.shape[0]-1:
+                            fail = 0
                         first += 1
                         ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ref_ball_center)
@@ -1127,6 +1130,8 @@ def spectral_clustering(step_num, balls):
                         ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
                         balls[j][gv.num_cvs+2] -= 1
                     elif labels[j] == i and first != 0:
+                        if j == balls.shape[0]-1:
+                            fail = 0
                         ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ball_center)
                         ball_cluster.append(i)
@@ -1138,26 +1143,28 @@ def spectral_clustering(step_num, balls):
                         ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                         balls[j][gv.num_cvs+2] -= 1
             # then, loop through the small, individual clusters that were labeled as outliers
-            cluster_num = num_clusters
             for j in range(balls.shape[0]):
-                if labels[j] == num_clusters:
+                if labels[j] >= num_clusters:
+                    if j == balls.shape[0]-1:
+                        fail = 0
                     ball_center = balls[j, 0:gv.num_cvs].tolist()
                     ball_cluster = copy.deepcopy(ball_center)
-                    ball_cluster.append(cluster_num)
+                    ball_cluster.append(labels[j])
                     ball_cluster.append(abs(final_evectors[j, 0]))
                     ball_cluster.append(final_evectors[j, 1])
                     ball_cluster.append(final_evectors[j, 2])
                     f.write(' '.join(map(lambda coordinate: str(coordinate), ball_cluster)))
                     f.write('\n')
                     ball_clusters_list[tuple(ball_center)] = [tuple(ball_center)]
-                    balls[j][gv.num_cvs + 2] -= 1
-                    cluster_num += 1
+                    balls[j][gv.num_cvs+2] -= 1
         # if outliers do not exist, simply loop through the big main clusters
         else:
             for i in range(num_clusters):
                 first = 0  # used for picking out the reference macrostate that will represent the center of the cluster
                 for j in range(balls.shape[0]):
                     if labels[j] == i and first == 0:
+                        if j == balls.shape[0]-1:
+                            fail = 0
                         first += 1
                         ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ref_ball_center)
@@ -1170,6 +1177,8 @@ def spectral_clustering(step_num, balls):
                         ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
                         balls[j][gv.num_cvs+2] -= 1
                     elif labels[j] == i and first != 0:
+                        if j == balls.shape[0]-1:
+                            fail = 0
                         ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ball_center)
                         ball_cluster.append(i)
@@ -1181,6 +1190,9 @@ def spectral_clustering(step_num, balls):
                         ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                         balls[j][gv.num_cvs+2] -= 1
         f.close()
+        if fail == 1:
+            gv.sc_performed = 0
+            gv.sc_start = -1
 
     return ball_clusters_list
 
@@ -1397,7 +1409,10 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         gv.sc_start = -1
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
-    occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
+    if gv.enhanced_sampling_flag == 2:
+        occupied_indices = np.zeros(gv.num_balls_for_sc*gv.num_walkers*10, int)
+    else:
+        occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
     excess_index = gv.total_num_walkers
     vacant_walker_indices = []
     # loop through each macrostate and perform resampling within each macrostate
