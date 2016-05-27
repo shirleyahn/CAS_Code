@@ -765,7 +765,7 @@ def spectral_clustering(step_num, balls):
 
     # finally, if clustering using k-means was successful, the results are output into text files
     # and python objects for subsequent resampling.
-    fail = 1
+    num_balls = 0
     gv.balls_flag = p.balls_flag  # reset balls flag to original option
     if gv.sc_performed == 1:
         gv.sc_start = -1
@@ -776,8 +776,6 @@ def spectral_clustering(step_num, balls):
                 first = 0  # used for picking out the reference macrostate that will represent the center of the cluster
                 for j in range(balls.shape[0]):
                     if labels[j] == i and first == 0:
-                        if j == balls.shape[0]-1:
-                            fail = 0
                         first += 1
                         ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ref_ball_center)
@@ -789,9 +787,8 @@ def spectral_clustering(step_num, balls):
                         f.write('\n')
                         ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
                         balls[j][gv.num_cvs+2] -= 1
+                        num_balls += 1
                     elif labels[j] == i and first != 0:
-                        if j == balls.shape[0]-1:
-                            fail = 0
                         ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ball_center)
                         ball_cluster.append(i)
@@ -802,11 +799,10 @@ def spectral_clustering(step_num, balls):
                         f.write('\n')
                         ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                         balls[j][gv.num_cvs+2] -= 1
+                        num_balls += 1
             # then, loop through the small, individual clusters that were labeled as outliers
             for j in range(balls.shape[0]):
                 if labels[j] >= num_clusters:
-                    if j == balls.shape[0]-1:
-                        fail = 0
                     ball_center = balls[j, 0:gv.num_cvs].tolist()
                     ball_cluster = copy.deepcopy(ball_center)
                     ball_cluster.append(labels[j])
@@ -817,14 +813,13 @@ def spectral_clustering(step_num, balls):
                     f.write('\n')
                     ball_clusters_list[tuple(ball_center)] = [tuple(ball_center)]
                     balls[j][gv.num_cvs+2] -= 1
+                    num_balls += 1
         # if outliers do not exist, simply loop through the big main clusters
         else:
             for i in range(num_clusters):
                 first = 0  # used for picking out the reference macrostate that will represent the center of the cluster
                 for j in range(balls.shape[0]):
                     if labels[j] == i and first == 0:
-                        if j == balls.shape[0]-1:
-                            fail = 0
                         first += 1
                         ref_ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ref_ball_center)
@@ -836,9 +831,8 @@ def spectral_clustering(step_num, balls):
                         f.write('\n')
                         ball_clusters_list[tuple(ref_ball_center)] = [tuple(ref_ball_center)]
                         balls[j][gv.num_cvs+2] -= 1
+                        num_balls += 1
                     elif labels[j] == i and first != 0:
-                        if j == balls.shape[0]-1:
-                            fail = 0
                         ball_center = balls[j, 0:gv.num_cvs].tolist()
                         ball_cluster = copy.deepcopy(ball_center)
                         ball_cluster.append(i)
@@ -849,8 +843,9 @@ def spectral_clustering(step_num, balls):
                         f.write('\n')
                         ball_clusters_list[tuple(ref_ball_center)].append(tuple(ball_center))
                         balls[j][gv.num_cvs+2] -= 1
+                        num_balls += 1
         f.close()
-        if fail == 1:
+        if num_balls != balls.shape[0]:
             gv.sc_performed = 0
             gv.sc_start = -1
 
