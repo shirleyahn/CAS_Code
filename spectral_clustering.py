@@ -67,17 +67,13 @@ def spectral_clustering(balls_file, evectors_file, num_clusters):
 
     second_evector = evectors[:, 1]
     second_evector = second_evector.reshape(second_evector.shape[0], 1)
-    log_second_evector = np.zeros((second_evector.shape[0], 1))
+    norm_second_evector = np.zeros((second_evector.shape[0], 1))
     for i in range(second_evector.shape[0]):
-        if second_evector[i] < 0.0:
-            log_second_evector[i] = -np.log(-second_evector[i])
-        elif second_evector[i] == 0.0 or second_evector[i] == 1.0:
-            log_second_evector[i] = 0.0
+        if evectors[i, 0] != 0.0:
+            norm_second_evector[i] = second_evector[i] / abs(evectors[i, 0])
         else:
-            log_second_evector[i] = np.log(second_evector[i])
-    a = balls
-    b = log_second_evector
-    matrix = np.hstack((balls, log_second_evector))
+            norm_second_evector[i] = 0.0
+    matrix = norm_second_evector
 
     while True:
         try:
@@ -86,16 +82,16 @@ def spectral_clustering(balls_file, evectors_file, num_clusters):
         except ClusterError:
             num_clusters -= 1
 
-    ball_coords = np.zeros((balls.shape[0], 10))
+    ball_coords = np.zeros((balls.shape[0], 6))
     for j in xrange(balls.shape[0]):
-        ball_coords[j,0:6] = balls[j, 0:6].tolist()
-        ball_coords[j, 6] = abs(evectors[j, 0])
-        ball_coords[j, 7] = log_second_evector[j, 0]
-        ball_coords[j, 8] = evectors[j, 2]
-        ball_coords[j, 9] = labels[j]
+        ball_coords[j, 0:2] = balls[j, 0:2].tolist()
+        ball_coords[j, 2] = labels[j]
+        ball_coords[j, 3] = abs(evectors[j, 0])
+        ball_coords[j, 4] = norm_second_evector[j, 0]
+        ball_coords[j, 5] = evectors[j, 2]
         print ' '.join([str(x) for x in ball_coords[j, :]])
-    dunnIndex = dunn(ball_coords)
-    print >>sys.stderr, "Dunn index: %f" % dunnIndex
+    #dunnIndex = dunn(ball_coords)
+    #print >>sys.stderr, "Dunn index: %f" % dunnIndex
 
 if __name__ == "__main__":
   if len(sys.argv) != 4:
