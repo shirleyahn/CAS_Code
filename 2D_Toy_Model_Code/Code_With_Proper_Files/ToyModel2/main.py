@@ -16,8 +16,8 @@ def CAS_simulation(input_initial_values_file):
     # create python objects for walkers and macrostates.
     # walker_list keeps track of previous information whereas temp_walker_list keeps track of current/new information.
     if gv.enhanced_sampling_flag == 2:
-        walker_list = [None]*(gv.num_balls_for_sc*gv.num_walkers*10)
-        temp_walker_list = [None]*(gv.num_balls_for_sc*gv.num_walkers*10)
+        walker_list = [None]*(gv.num_balls_for_sc*gv.num_walkers*100)
+        temp_walker_list = [None]*(gv.num_balls_for_sc*gv.num_walkers*100)
     else:
         walker_list = [None]*(gv.num_balls_limit*gv.num_walkers*2)
         temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers*2)
