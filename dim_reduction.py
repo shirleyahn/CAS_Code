@@ -29,14 +29,14 @@ def convert_matrix_to_angular(matrix):
 
 def convert_angles_to_cos_sin(balls):
     new_balls = np.zeros((balls.shape[0], 2*balls.shape[1]))
-    for i in range(new_balls.shape[0]):
-        for j in range(new_balls.shape[1]):
+    for i in range(balls.shape[0]):
+        for j in range(balls.shape[1]):
             new_balls[i, 2*j] = np.cos(balls[i, j]*np.pi/180)
             new_balls[i, 2*j+1] = np.sin(balls[i, j]*np.pi/180)
     return new_balls
 
 
-def principal_component_analysis(file_name, dimension):
+def principal_component_analysis(file_name, dimension, label):
     balls = np.loadtxt(file_name)
     matrix = balls[:, 0:dimension]
     pca = PCA(n_components=2)
@@ -45,11 +45,17 @@ def principal_component_analysis(file_name, dimension):
     for i in xrange(balls.shape[0]):
         ball_coords[i, 0:dimension] = balls[i, 0:dimension].tolist()
         ball_coords[i, dimension:dimension+2] = transformed_matrix[i]
-        ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        if label == 'cluster':
+            ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        elif label == 'eq':
+            ball_coords[i, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension+1]))).tolist()
+        elif label == 'committor':
+            ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
+    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
-def multidimensioanl_scaling(file_name, dimension):
+def multidimensioanl_scaling(file_name, dimension, label):
     balls = np.loadtxt(file_name)
     matrix = balls[:, 0:dimension]
     new_matrix = convert_matrix_to_angular(matrix)
@@ -66,11 +72,17 @@ def multidimensioanl_scaling(file_name, dimension):
     for i in xrange(balls.shape[0]):
         ball_coords[i, 0:dimension] = balls[i, 0:dimension].tolist()
         ball_coords[i, dimension:dimension+2] = transformed_matrix[i]
-        ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        if label == 'cluster':
+            ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        elif label == 'eq':
+            ball_coords[i, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension+1]))).tolist()
+        elif label == 'committor':
+            ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
+    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
-def isomap(file_name, dimension, num_neighbors):
+def isomap(file_name, dimension, num_neighbors, label):
     balls = np.loadtxt(file_name)
     matrix = balls[:, 0:dimension]
     convert_matrix_to_angular(matrix)
@@ -82,12 +94,17 @@ def isomap(file_name, dimension, num_neighbors):
     for i in xrange(balls.shape[0]):
         ball_coords[i, 0:dimension] = balls[i, 0:dimension].tolist()
         ball_coords[i, dimension:dimension+2] = transformed_matrix[i]
-        ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        if label == 'cluster':
+            ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        elif label == 'eq':
+            ball_coords[i, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension+1]))).tolist()
+        elif label == 'committor':
+            ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', balls[:, dimension], fmt=' %1.10e')
+    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
-def diffusion_map(file_name, dimension, epsilon):
+def diffusion_map(file_name, dimension, epsilon, label):
     # Given N data points x_n, n=1,...,N where each x_n\in R^{p},
     # the distance (similarity) between any two points is given by the formula
     # L_{i,j}=K(x_i,x_j)=exp(-||x_i-x_j||^2/(2*epsilon)) with Gaussian kernel of width epsilon
@@ -122,24 +139,30 @@ def diffusion_map(file_name, dimension, epsilon):
         ball_coords[i, 0:dimension] = balls[i, 0:dimension].tolist()
         ball_coords[i, dimension] = first_eval*first_evec[i]
         ball_coords[i, dimension+1] = second_eval*second_evec[i]
-        ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        if label == 'cluster':
+            ball_coords[i, dimension+2] = balls[i, dimension].tolist()
+        elif label == 'eq':
+            ball_coords[i, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension+1]))).tolist()
+        elif label == 'committor':
+            ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', balls[:, dimension], fmt=' %1.10e')
+    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print >>sys.stderr, "Need 4 args: file name, original dimension, # of neighbors (iso) / epsilon (diff), method (pca, mds, iso, diff)"
+    if len(sys.argv) != 6:
+        print >>sys.stderr, "Need 5 args: file name, original dimension, # of neighbors (iso) / epsilon (diff), method (pca, mds, iso, diff), label (cluster, eq, committor)"
         sys.exit(1)
     file_name = sys.argv[1]
     dimension = int(sys.argv[2])
+    label = sys.argv[5]
     if sys.argv[4] == 'pca':
-        principal_component_analysis(file_name, dimension)
+        principal_component_analysis(file_name, dimension, label)
     elif sys.argv[4] == 'mds':
-        multidimensioanl_scaling(file_name, dimension)
+        multidimensioanl_scaling(file_name, dimension, label)
     elif sys.argv[4] == 'iso':
         num_neighbors = int(sys.argv[3])
-        isomap(file_name, dimension, num_neighbors)
+        isomap(file_name, dimension, num_neighbors, label)
     elif sys.argv[4] == 'diff':
         epsilon = float(sys.argv[3])
-        diffusion_map(file_name, dimension, epsilon)
+        diffusion_map(file_name, dimension, epsilon, label)
