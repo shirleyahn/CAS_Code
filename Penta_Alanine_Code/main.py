@@ -2,7 +2,7 @@ import numpy as np
 from time import time
 import os
 import sys
-main_directory = '/scratch/users/sahn1/Triazine'  # TODO: set main directory for CAS simulation
+main_directory = '/scratch/users/sahn1/Penta_Alanine'  # TODO: set main directory for CAS simulation
 sys.path.append(main_directory)
 os.chdir(main_directory)
 import global_variables as gv

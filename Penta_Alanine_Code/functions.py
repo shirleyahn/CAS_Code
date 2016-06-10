@@ -1098,8 +1098,8 @@ def spectral_clustering(step_num, balls):
     # and python objects for subsequent resampling.
     num_balls = 0
     gv.balls_flag = p.balls_flag  # reset balls flag to original option
+    gv.sc_start = -1
     if gv.sc_performed == 1:
-        gv.sc_start = -1
         f = open('ball_clustering_'+str(step_num+1)+'.txt', 'w')
         """
         if outliers_exist == 1:
@@ -1178,7 +1178,6 @@ def spectral_clustering(step_num, balls):
         f.close()
     if num_balls != balls.shape[0]:
         gv.sc_performed = 0
-        gv.sc_start = -1
 
     return ball_clusters_list
 
@@ -1575,12 +1574,11 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
     for current_ball in range(balls.shape[0]):
         ball_center = balls[current_ball][0:gv.num_cvs].tolist()
         weights = [walker_list[i].weight for i in ball_to_walkers[tuple(ball_center)]]
-        if np.sum(weights) > 0.0:
-            total_weight += np.sum(weights)
-            ball_center_weights = copy.deepcopy(ball_center)
-            ball_center_weights.append(np.sum(weights))
-            f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
-            f.write('\n')
+        total_weight += np.sum(weights)
+        ball_center_weights = copy.deepcopy(ball_center)
+        ball_center_weights.append(np.sum(weights))
+        f.write(' '.join(map(lambda coordinate: str(coordinate), ball_center_weights)))
+        f.write('\n')
 
         # reset walkers and number of walkers that belong in each ball
         balls[current_ball][gv.num_cvs+2] = 0
