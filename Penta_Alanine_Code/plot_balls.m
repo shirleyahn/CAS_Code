@@ -1,17 +1,23 @@
+%% Dimension Reduction
+load('output.txt');
+figure; hold on
+% Create a scatterplot and return a handle to the 'hggroup' object
+scatter(output(:, 7), output(:, 8), 100, output(:, 9), 'filled'), colormap(jet), colorbar;
+
 %% Penta Alanine Spectral Clustering
-ball_clustering = load('ball_clustering_16.txt');
+ball_clustering = load('ball_clustering_38.txt');
 m = size(ball_clustering, 1);
 a = zeros(m, 3);
 figure; hold on
 for i=1:m
   a(i, 1) = ball_clustering(i, 7);
-  a(i, 2) = abs(ball_clustering(i, 8));
+  a(i, 2) = -0.0019872041*300*log(abs(ball_clustering(i, 8)));
   a(i, 3) = ball_clustering(i, 9)/abs(ball_clustering(i, 8));
-  plot(ball_clustering(i, 5), ball_clustering(i, 6),'ro', 'MarkerSize', 1.0);
+  plot(ball_clustering(i, 1), ball_clustering(i, 2),'ro', 'MarkerSize', 1.0);
 end
-s = 30.0; % Marker width in units of X
+s = 20.0; % Marker width in units of X
 % Create a scatterplot and return a handle to the 'hggroup' object
-h = scatter(ball_clustering(:, 5), ball_clustering(:, 6), 1, a(:, 1), 'Linewidth', 1.0), colormap(jet), colorbar;
+h = scatter(ball_clustering(:, 1), ball_clustering(:, 2), 1, a(:, 3)), colormap(jet), colorbar;
 axis([-180.0 180.0 -180.0 180.0]);
 xlabel('\phi (deg)');
 ylabel('\psi (deg)');
@@ -25,17 +31,21 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Penta Alanine (first)
-total_weight = load('total_weight_on_each_ball_161.txt');
+total_weight = load('total_weight_on_each_ball_39.txt');
 m = size(total_weight, 1);
-a = zeros(m, 1);
+a = zeros(m, 3);
 figure; hold on
 for i=1:m
-    a(i) = total_weight(i, 7);
-    plot(total_weight(i, 1), total_weight(i, 2), 'ro', 'MarkerSize', 1.0);
+    if total_weight(i, 7) > 0.0
+        a(i, 1) = total_weight(i, 1);
+        a(i, 2) = total_weight(i, 2);
+        a(i, 3) = total_weight(i, 7);
+        plot(total_weight(i, 1), total_weight(i, 2), 'ro', 'MarkerSize', 1.0);
+    end
 end
 s = 20.0; % Marker width in units of X
 % Create a scatterplot and return a handle to the 'hggroup' object
-h = scatter(total_weight(:, 1), total_weight(:, 2), 1, -0.0019872041*300*log(a), 'Linewidth', 10.0), colormap(jet), colorbar;
+h = scatter(a(:, 1), a(:, 2), 1, -0.0019872041*300*log(a(:, 3)), 'Linewidth', 10.0), colormap(jet), colorbar;
 axis([-180.0 180.0 -180.0 180.0]);
 xlabel('\phi (deg)');
 ylabel('\psi (deg)');
@@ -49,17 +59,21 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Penta Alanine (second)
-total_weight = load('total_weight_on_each_ball_2.txt');
+total_weight = load('total_weight_on_each_ball_39.txt');
 m = size(total_weight, 1);
-a = zeros(m, 1);
+a = zeros(m, 3);
 figure; hold on
 for i=1:m
-    a(i) = total_weight(i, 7);
-    plot(total_weight(i, 3), total_weight(i, 4), 'ro', 'MarkerSize', 1.0);
+    if total_weight(i, 7) > 0.0
+        a(i, 1) = total_weight(i, 3);
+        a(i, 2) = total_weight(i, 4);
+        a(i, 3) = total_weight(i, 7);
+        plot(total_weight(i, 3), total_weight(i, 4), 'ro', 'MarkerSize', 1.0);
+    end
 end
-s = 30.0; % Marker width in units of X
+s = 20.0; % Marker width in units of X
 % Create a scatterplot and return a handle to the 'hggroup' object
-h = scatter(total_weight(:, 3), total_weight(:, 4), 1, -0.0019872041*300*log(a), 'Linewidth', 10.0), colormap(jet), colorbar;
+h = scatter(a(:, 1), a(:, 2), 1, -0.0019872041*300*log(a(:, 3)), 'Linewidth', 10.0), colormap(jet), colorbar;
 axis([-180.0 180.0 -180.0 180.0]);
 xlabel('\phi (deg)');
 ylabel('\psi (deg)');
@@ -73,17 +87,21 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Penta Alanine (third)
-total_weight = load('total_weight_on_each_ball_2.txt');
+total_weight = load('total_weight_on_each_ball_39.txt');
 m = size(total_weight, 1);
-a = zeros(m, 1);
+a = zeros(m, 3);
 figure; hold on
 for i=1:m
-    a(i) = total_weight(i, 7);
-    plot(total_weight(i, 5), total_weight(i, 6), 'ro', 'MarkerSize', 1.0);
+    if total_weight(i, 7) > 0.0
+        a(i, 1) = total_weight(i, 5);
+        a(i, 2) = total_weight(i, 6);
+        a(i, 3) = total_weight(i, 7);
+        plot(total_weight(i, 5), total_weight(i, 6), 'ro', 'MarkerSize', 1.0);
+    end
 end
-s = 30.0; % Marker width in units of X
+s = 20.0; % Marker width in units of X
 % Create a scatterplot and return a handle to the 'hggroup' object
-h = scatter(total_weight(:, 5), total_weight(:, 6), 1, -0.0019872041*300*log(a), 'Linewidth', 10.0), colormap(jet), colorbar;
+h = scatter(a(:, 1), a(:, 2), 1, -0.0019872041*300*log(a(:, 3)), 'Linewidth', 10.0), colormap(jet), colorbar;
 axis([-180.0 180.0 -180.0 180.0]);
 xlabel('\phi (deg)');
 ylabel('\psi (deg)');

@@ -1,16 +1,17 @@
 %% Spectral Clustering
-ball_clustering = load('ball_clustering_79.txt');
+ball_clustering = load('ball_clustering_8176.txt');
 m = size(ball_clustering, 1);
-a = zeros(m, 2);
+a = zeros(m, 3);
 figure; hold on
 for i=1:m
   a(i, 1) = ball_clustering(i, 3);
-  a(i, 2) = ball_clustering(i, 5)/abs(ball_clustering(i, 4));
+  a(i, 2) = log(abs(ball_clustering(i, 4)));
+  a(i, 3) = ball_clustering(i, 5)/abs(ball_clustering(i, 4));
   plot(ball_clustering(i, 1), ball_clustering(i, 2),'ro', 'MarkerSize', 1.0);
 end
 s = 0.2; % Marker width in units of X
 % Create a scatterplot and return a handle to the 'hggroup' object
-h = scatter(ball_clustering(:, 1), ball_clustering(:, 2), 1, abs(ball_clustering(:, 4)), 'Linewidth', 1.0); colormap(jet), colorbar
+h = scatter(ball_clustering(:, 1), ball_clustering(:, 2), 1, a(:, 3), 'Linewidth', 1.0); colormap(jet), colorbar
 %axis([-1 1 -1 1]);
 %axis([-1.5 1.5 -0.5 1.25]);
 xlabel('x');
@@ -25,17 +26,21 @@ set(h, 'SizeData', markerWidth^2);
 
 
 %% Regular Plot
-total_weight_balls = load('total_weight_on_each_ball_491.txt');
-m = size(total_weight_balls, 1);
-a = zeros(m, 1);
+total_weight = load('total_weight_on_each_ball_8176.txt');
+m = size(total_weight, 1);
+a = zeros(m, 3);
 figure; hold on
 for i=1:m
-    a(i) = total_weight_balls(i, 3);
-    plot(total_weight_balls(i, 1),total_weight_balls(i, 2),'ro', 'MarkerSize', 1.0);
+    if total_weight(i, 3) > 0.0
+        a(i, 1) = total_weight(i, 1);
+        a(i, 2) = total_weight(i, 2);
+        a(i, 3) = total_weight(i, 3);
+        plot(total_weight(i, 1), total_weight(i, 2), 'ro', 'MarkerSize', 1.0);
+    end
 end
 s = 0.2; % Marker width in units of X
 % Create a scatter plot and return a handle to the 'hggroup' object
-h = scatter(total_weight_balls(:, 1), total_weight_balls(:, 2), 1, log(a), 'Linewidth', 1.0); colormap(jet), colorbar, caxis([-20 0])
+h = scatter(a(:, 1), a(:, 2), log(a(:, 3)), 'Linewidth', 1.0); colormap(jet), colorbar, caxis([-20 0])
 %axis([-1 1 -1 1]);
 %axis([-1.5 1.5 -0.5 1.25]);
 xlabel('x')
