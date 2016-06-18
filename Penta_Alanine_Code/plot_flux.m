@@ -8,7 +8,7 @@ load('flux_total_100.txt')
 load('flux_total_120.txt')
 
 figure;hold on;
-plot(flux_total_80(:,1), ones(235,1)*0.033, 'k');
+plot((1:300)*0.5, ones(300,1)*0.033, '-.k');
 plot(flux_total_40(:,1),flux_total_40(:,2),'r');
 plot(flux_total_60(:,1),flux_total_60(:,2),'y');
 plot(flux_total_60_sc(:,1),flux_total_60_sc(:,2),'g');
@@ -21,7 +21,7 @@ legend('exact','40','60','60 sc','60 sc2','80','100','120');
 
 %%
 figure;hold on;
-plot(flux_total_80(:,1), ones(235,1)*0.054, 'k');
+plot((1:300)*0.5, ones(300,1)*0.054, '-.k');
 plot(flux_total_40(:,1),flux_total_40(:,3),'r');
 plot(flux_total_60(:,1),flux_total_60(:,3),'y');
 plot(flux_total_60_sc(:,1),flux_total_60_sc(:,3),'g');
