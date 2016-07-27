@@ -60,7 +60,7 @@ def principal_component_analysis(file_name, dimension, label):
         elif label == 'committor':
             ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
+    #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 def multidimensioanl_scaling(file_name, dimension, label):
@@ -81,7 +81,7 @@ def multidimensioanl_scaling(file_name, dimension, label):
         elif label == 'committor':
             ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
+    #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 def isomap(file_name, dimension, num_neighbors, label):
@@ -102,7 +102,7 @@ def isomap(file_name, dimension, num_neighbors, label):
         elif label == 'committor':
             ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
+    #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 def spectral_embedding(file_name, dimension, num_neighbors, label):
@@ -132,7 +132,7 @@ def spectral_embedding(file_name, dimension, num_neighbors, label):
         elif label == 'committor':
             ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
+    #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 def diffusion_map(file_name, dimension, epsilon, label):
@@ -142,6 +142,7 @@ def diffusion_map(file_name, dimension, epsilon, label):
     # and a diagonal normalization matrix D with D_i=\sum_{j=1}^{N}L_{i,j}.
     # Then we solve the normalized eigenvalue problem L*v=lambda*D*v or M*v=lambda*v where M=D^{-1}L
     # and use the first few eigenvectors of M for low-dimensional representation of data.
+    # Note: set the parameter alpha = 0, reducing it to classical graph Laplacian normalization
 
     balls = np.loadtxt(file_name)
     matrix = balls[:, 0:dimension]
@@ -173,7 +174,7 @@ def diffusion_map(file_name, dimension, epsilon, label):
         elif label == 'committor':
             ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
         print ' '.join([str(x) for x in ball_coords[i, :]])
-    np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
+    #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 if __name__ == "__main__":

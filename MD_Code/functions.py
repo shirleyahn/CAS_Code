@@ -1002,7 +1002,7 @@ def spectral_clustering(step_num, balls):
     new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
     for i in range(new_transition_matrix.shape[0]):
         for j in range(new_transition_matrix.shape[1]):
-            new_transition_matrix[i][j] = (gv.trans_mat_for_sc[i][j] + gv.trans_mat_for_sc[j][i])/2.0
+            new_transition_matrix[i][j] = (gv.trans_mat_for_sc[i][j]+gv.trans_mat_for_sc[j][i])/(2.0*(step_num-gv.sc_start-gv.num_steps_for_sc+1))
 
     row_sum = np.sum(new_transition_matrix, axis=1)
     for i in range(new_transition_matrix.shape[0]):
@@ -1029,13 +1029,19 @@ def spectral_clustering(step_num, balls):
         else:
             normalized_second_evector[i] = 0.0
 
+    if np.min(normalized_second_evector) != 0.0:
+        normalized_second_evector /= np.min(normalized_second_evector)  # normalize
+
     # third, use the normalized second evector to cluster macrostates using k-means.
-    clustering_matrix = whiten(normalized_second_evector)  #np.hstack((balls, normalized_second_evector))
-    #cont = True
+    clustering_matrix = normalized_second_evector  #np.hstack((balls, normalized_second_evector))
+    if abs(evalues[0]-evalues[1]) > 1.0e-14:  # avoid having eigenvalue 1 with multiplicity more than 1
+        cont = True
+    else:
+        cont = False
+        gv.sc_performed = 0
     #outlier_labels = np.ones(len(matrix))*-1
     #outliers_exist = 0
-    #while cont:
-    while True:
+    while cont:
         try:
             centroids, labels = kmeans2(clustering_matrix, num_clusters, minit='points', iter=200, missing='raise')
             #labels = merge_with_outliers(outlier_labels, labels)
@@ -1198,13 +1204,14 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             initial_weights = []
             initial_indices = []
             for ball_center in ball_clusters_list[current_cluster]:
-                for walker_index in ball_to_walkers[ball_center]:
-                    initial_weights.append(temp_walker_list[walker_index].weight)
-                    initial_indices.append(temp_walker_list[walker_index].global_index)
-                # reset ball_to_walkers and balls
-                ball_to_walkers[ball_center] = []
-                ball_key = temp_walker_list[walker_index].current_ball_key
-                balls[ball_key][gv.num_cvs+2] = 0
+                if len(ball_to_walkers[ball_center]) > 0:
+                    for walker_index in ball_to_walkers[ball_center]:
+                        initial_weights.append(temp_walker_list[walker_index].weight)
+                        initial_indices.append(temp_walker_list[walker_index].global_index)
+                    # reset ball_to_walkers and balls
+                    ball_to_walkers[ball_center] = []
+                    ball_key = temp_walker_list[walker_index].current_ball_key
+                    balls[ball_key][gv.num_cvs+2] = 0
 
             initial_weights_array = np.array(initial_weights)  # convert from list to array
             walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
