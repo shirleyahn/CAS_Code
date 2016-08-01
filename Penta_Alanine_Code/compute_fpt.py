@@ -49,7 +49,7 @@ def compute_fpt(del_t, file_directory, file_name, num_lines):
                     max_min1_time = time
                 if time < min_min1_time: 
                     min_min1_time = time
-                output_file.write("min1 -> min2 " + str(time) + "\n")
+                output_file.write("min1 -> min2 " + str(time) + ' ' + str(i*del_t) + "\n")
             else:
                 num_min2_trans += 1
                 time = i*del_t - prev_time
@@ -58,7 +58,7 @@ def compute_fpt(del_t, file_directory, file_name, num_lines):
                     max_min2_time = time
                 if time < min_min2_time: 
                     min_min2_time = time
-                output_file.write("min2 -> min1 " + str(time) + "\n")
+                output_file.write("min2 -> min1 " + str(time) + ' ' + str(i*del_t) + "\n")
             conformation = data[i]
             prev_time = i*del_t
 
@@ -87,6 +87,7 @@ def compute_fpt(del_t, file_directory, file_name, num_lines):
         output_file.write("ratio " + str(ratio) + "\n")
     output_file.close()
     
+    """
     os.chdir("..")
     root_directory = os.getcwd()
     output_file = open('mfpt_total.txt','w')
@@ -112,23 +113,25 @@ def compute_fpt(del_t, file_directory, file_name, num_lines):
                         break
                     if line[0] == "min1":
                         time = float(line[3])
+                        current_time = float(line[4])
                         num_min1_trans += 1
                         total_min1_time += time
                         if time > max_min1_time:
                             max_min1_time = time
                         if time < min_min1_time:
                             min_min1_time = time
-                        output_file.write("min1 -> min2 " + str(time) + "\n")
+                        output_file.write("min1 -> min2 " + str(time) + ' ' + str(current_time) + "\n")
                         first_mfpt_array.append(float(time))
                     if line[0] == "min2":
                         time = float(line[3])
+                        current_time = float(line[4])
                         num_min2_trans += 1
                         total_min2_time += time
                         if time > max_min2_time:
                             max_min2_time = time
                         if time < min_min2_time:
                             min_min2_time = time
-                        output_file.write("min2 -> min1 " + str(time) + "\n")
+                        output_file.write("min2 -> min1 " + str(time) + ' ' + str(current_time) + "\n")
                         second_mfpt_array.append(float(time))
                 input_file.close()
     avg_min1_time = 0.0 
@@ -145,19 +148,18 @@ def compute_fpt(del_t, file_directory, file_name, num_lines):
         output_file.write("max min1 -> min2 " + str(max_min1_time) + "\n")
         output_file.write("avg min1 -> min2 " + str(avg_min1_time) + "\n")
         output_file.write("avg flux min1 -> min2 " + str(1.0/avg_min1_time) + "\n")
-        output_file.write("std flux min1 -> min2 " + str(1.0/stats.sem(np.asarray(first_mfpt_array))) + "\n")
+        output_file.write("std flux min1 -> min2 " + str(1.0/np.std(np.asarray(first_mfpt_array))) + "\n")
         output_file.write("# of min1 -> min2 " + str(num_min1_trans) + "\n")
     if num_min2_trans != 0:
         output_file.write("min min2 -> min1 " + str(min_min2_time) + "\n")
         output_file.write("max min2 -> min1 " + str(max_min2_time) + "\n")
         output_file.write("avg min2 -> min1 " + str(avg_min2_time) + "\n")
         output_file.write("avg flux min2 -> min1 " + str(1.0/avg_min2_time) + "\n")
-        output_file.write("std flux min1 -> min2 " + str(1.0/stats.sem(np.asarray(second_mfpt_array))) + "\n")
+        output_file.write("std flux min1 -> min2 " + str(1.0/np.std(np.asarray(second_mfpt_array))) + "\n")
         output_file.write("# of min2 -> min1 " + str(num_min2_trans) + "\n")
     if num_min1_trans != 0 and num_min2_trans != 0: 
         output_file.write("ratio " + str(ratio) + "\n")
-    output_file.close()
- 
-
+    output_file.close() 
+    """
 if __name__ == '__main__':
     compute_fpt(0.001, 'RUN00', 'traj_angles.txt', 3000001)
