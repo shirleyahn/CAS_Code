@@ -76,6 +76,8 @@ def set_parameters():
     # then use the calculated value as the limit for total number of macrostates
     if max_num_balls < gv.num_balls_limit:
         gv.num_balls_limit = max_num_balls
+    if gv.num_balls_limit == 0:
+        gv.num_balls_limit = 1
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
     gv.current_num_balls = 0
     # when restarting a simulation, the total number of walkers depends on whether it stopped right after
@@ -102,10 +104,9 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         f = open(input_initial_values_file, 'r')
         # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
         for n in range(gv.num_occupied_balls):
-            initial_values = [None]*gv.num_cvs
             # read initial values from file
-            for i in range(gv.num_cvs):
-                initial_values[i] = float(f.readline())
+            line = f.readline().strip().split()
+            initial_values = [float(entry) for entry in line]
             # if rates/fluxes are calculated, obtain initial state
             if gv.rate_flag == 1:
                 initial_state = check_state_function.check_state_function(initial_values)
@@ -118,9 +119,11 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         # make walker directories
         os.system('mkdir CAS')
         os.chdir(gv.main_directory + '/CAS')
-        for i in range(gv.total_num_walkers):
-            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-            shutil.copytree(gv.initial_configuration_directory, walker_directory)
+        for n in range(gv.num_occupied_balls):
+            for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
+                walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+                os.mkdir(walker_directory)
+                os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory))
 
     # restarting simulation in the middle of simulation
     elif gv.simulation_flag == 1 or gv.simulation_flag == 2:

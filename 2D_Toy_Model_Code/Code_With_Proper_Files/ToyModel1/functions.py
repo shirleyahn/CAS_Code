@@ -100,10 +100,9 @@ def initialize(input_initial_values_file, walker_list):
     f = open(input_initial_values_file, 'r')
     # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
     for n in range(gv.num_occupied_balls):
-        initial_values = [None]*gv.num_cvs
         # read initial values from file
-        for i in range(gv.num_cvs):
-            initial_values[i] = float(f.readline())
+        line = f.readline().strip().split()
+        initial_values = [float(entry) for entry in line]
         # if rates/fluxes are calculated, obtain initial state and pathway
         if gv.rate_flag == 1:
             initial_state = check_state_function.check_state_function(initial_values)
@@ -118,8 +117,10 @@ def initialize(input_initial_values_file, walker_list):
     # make walker directories
     os.system('mkdir CAS')
     os.chdir(gv.main_directory + '/CAS')
-    for i in range(gv.total_num_walkers):
-        os.system('mkdir walker' + str(i))
+    for n in range(gv.num_occupied_balls):
+        for i in range(n * gv.num_walkers, (n + 1) * gv.num_walkers):
+            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            os.mkdir(walker_directory)
 
 
 def m_simulation(walker_list):
