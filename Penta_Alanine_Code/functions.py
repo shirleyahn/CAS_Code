@@ -123,7 +123,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
                 walker_directory = gv.main_directory + '/CAS/walker' + str(i)
                 os.mkdir(walker_directory)
-                os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory))
+                os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory)+'/minim.gro')
 
     # restarting simulation in the middle of simulation
     elif gv.simulation_flag == 1 or gv.simulation_flag == 2:

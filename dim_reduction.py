@@ -142,9 +142,9 @@ def diffusion_map(file_name, dimension, epsilon, label):
     # and a diagonal normalization matrix D with D_i=\sum_{j=1}^{N}L_{i,j}.
     # Then we solve the normalized eigenvalue problem L*v=lambda*D*v or M*v=lambda*v where M=D^{-1}L
     # and use the first few eigenvectors of M for low-dimensional representation of data.
-    # Note: set the parameter alpha = 0, reducing it to classical graph Laplacian normalization
 
     balls = np.loadtxt(file_name)
+    balls = balls[balls[:,0].argsort()]
     matrix = balls[:, 0:dimension]
     new_matrix = convert_angles_to_cos_sin(matrix)
     kernel_matrix = np.zeros([new_matrix.shape[0], new_matrix.shape[0]])
@@ -162,24 +162,49 @@ def diffusion_map(file_name, dimension, epsilon, label):
     second_eval = evals[2]
     first_evec = evecs[:, 1]
     second_evec = evecs[:, 2]
-    ball_coords = np.zeros([balls.shape[0], dimension+3])
-    for i in range(ball_coords.shape[0]):
-        ball_coords[i, 0:dimension] = balls[i, 0:dimension].tolist()
-        ball_coords[i, dimension] = first_eval*first_evec[i]
-        ball_coords[i, dimension+1] = second_eval*second_evec[i]
-        if label == 'cluster':
-            ball_coords[i, dimension+2] = balls[i, dimension].tolist()
-        elif label == 'eq':
-            ball_coords[i, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension+1]))).tolist()
-        elif label == 'committor':
-            ball_coords[i, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension+1])).tolist()
-        print ' '.join([str(x) for x in ball_coords[i, :]])
+    if label != 'eq-after':
+        count = 0
+        for i in range(balls.shape[0]):
+            if balls[i, -1] == 0:
+                count += 1
+        ball_coords = np.zeros([count, dimension+3])
+        index = 0
+        for i in range(balls.shape[0]):
+            if balls[i, -1] == 0:
+                ball_coords[index, 0:dimension] = balls[i, 0:dimension].tolist()
+                ball_coords[index, dimension] = first_eval*first_evec[i]
+                ball_coords[index, dimension+1] = second_eval*second_evec[i]
+                if label == 'cluster':
+                    ball_coords[index, dimension+2] = balls[i, dimension+1].tolist()
+                elif label == 'eq-before':
+                    if balls[i, dimension] != 0.0:
+                        ball_coords[index, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension]))).tolist()
+                else:  # committor
+                    ball_coords[index, dimension+2] = (balls[i, dimension+2]/abs(balls[i, dimension])).tolist()
+                print ' '.join([str(x) for x in ball_coords[index, :]])
+                index += 1
+    else:
+        count = 0
+        for i in range(balls.shape[0]):
+            if balls[i, -1] == 1:
+                count += 1
+        ball_coords = np.zeros([count, dimension+3])
+        index = 0
+        for i in range(balls.shape[0]):
+            if balls[i, -1] == 1:
+                ball_coords[index, 0:dimension] = balls[i, 0:dimension].tolist()
+                ball_coords[index, dimension] = first_eval*first_evec[i]
+                ball_coords[index, dimension+1] = second_eval*second_evec[i]
+                if balls[i, dimension] != 0.0:
+                    ball_coords[index, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension]))).tolist()
+                print ' '.join([str(x) for x in ball_coords[index, :]])
+                index += 1
     #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
-        print >>sys.stderr, "Need 5 args: file name, original dimension, # of neighbors (iso, sembed) / epsilon (diff), method (pca, mds, iso, sembed, diff), label (cluster, eq, committor)"
+        print >>sys.stderr, "Need 5 args: file name, original dimension, # of neighbors (iso, sembed) / epsilon (diff), method (pca, mds, iso, sembed, diff), label (cluster, eq-before, eq-after, committor)"
         sys.exit(1)
     file_name = sys.argv[1]
     dimension = int(sys.argv[2])
