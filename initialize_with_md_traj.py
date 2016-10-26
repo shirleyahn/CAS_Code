@@ -3,7 +3,7 @@ import numpy as np
 num_cvs = 6
 radius = 100.0
 time_step = 500.0  # in ps
-traj_file = np.loadtxt('initial_values.txt')
+traj_file = np.loadtxt('traj.txt')
 
 def calculate_distance_from_center(center, values):
     distance = 0.0
@@ -84,4 +84,5 @@ final_evectors = np.real(evectors)
 np.savetxt('evalues.txt', final_evalues, fmt=' %1.10e')
 np.savetxt('evectors.txt', final_evectors, fmt=' %1.10e')
 np.savetxt('eq_weights.txt', abs(final_evectors[:, 0]), fmt=' %1.10e')
+np.savetxt('balls.txt', balls, fmt=' %1.10e')
 np.savetxt('ball_to_traj.txt', ball_to_traj, fmt=' %1.10e')
