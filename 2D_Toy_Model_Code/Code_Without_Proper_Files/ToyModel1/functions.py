@@ -282,7 +282,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
     # fifth, loop all of the walkers once more to assign them to their true nearest macrostates
     for i in walker_indices:
         new_ball_key = closest_ball(temp_walker_list[i].current_coordinates, balls_array)
-        new_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
+        new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
         old_ball_key = temp_walker_list[i].current_ball_key
         old_ball_center = temp_walker_list[i].current_ball_center
         balls[old_ball_key][gv.num_cvs+2] -= 1
