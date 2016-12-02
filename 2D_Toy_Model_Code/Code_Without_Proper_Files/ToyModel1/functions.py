@@ -127,30 +127,30 @@ def m_simulation(walker_list):
                 new_x = temp_x - gv.step_size
                 if gv.pbc == 1 and new_x < gv.grid_dimensions[0]:
                     new_x = gv.grid_dimensions[1] - gv.step_size
-                #elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
-                    #new_x = gv.grid_dimensions[0]
+                elif gv.pbc == 0 and new_x < gv.grid_dimensions[0]:
+                    new_x = gv.grid_dimensions[0]
                 new_y = temp_y
             elif direction == 1:  # move to right
                 new_x = temp_x + gv.step_size
                 if gv.pbc == 1 and new_x > gv.grid_dimensions[1]:
                     new_x = gv.grid_dimensions[0] + gv.step_size
-                #elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
-                    #new_x = gv.grid_dimensions[1]
+                elif gv.pbc == 0 and new_x > gv.grid_dimensions[1]:
+                    new_x = gv.grid_dimensions[1]
                 new_y = temp_y
             elif direction == 2:  # move to top
                 new_x = temp_x
                 new_y = temp_y + gv.step_size
                 if gv.pbc == 1 and new_y > gv.grid_dimensions[3]:
                     new_y = gv.grid_dimensions[2] + gv.step_size
-                #elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
-                    #new_y = gv.grid_dimensions[3]
+                elif gv.pbc == 0 and new_y > gv.grid_dimensions[3]:
+                    new_y = gv.grid_dimensions[3]
             else:  # move to bottom
                 new_x = temp_x
                 new_y = temp_y - gv.step_size
                 if gv.pbc == 1 and new_y < gv.grid_dimensions[2]:
                     new_y = gv.grid_dimensions[3] - gv.step_size
-                #elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
-                    #new_y = gv.grid_dimensions[2]
+                elif gv.pbc == 0 and new_y < gv.grid_dimensions[2]:
+                    new_y = gv.grid_dimensions[2]
             old_energy = ef.energy_function(temp_x, temp_y)
             new_energy = ef.energy_function(new_x, new_y)
             if new_energy - old_energy <= 0.0:  # accept move
@@ -166,6 +166,24 @@ def m_simulation(walker_list):
         if abs(temp_y) < 1.0e-10:
             temp_y = 0.0
         walker_list[i].set([temp_x, temp_y])
+        walker_list[i].previous_coordinates = previous_coordinates
+
+
+def rw_simulation(walker_list):
+    for i in range(gv.total_num_walkers):
+        previous_coordinates = walker_list[i].current_coordinates
+        temp_coordinates = previous_coordinates
+        for j in range(gv.m_steps_per_step):
+            for k in range(gv.num_cvs):
+                direction = np.random.randint(0, 4)
+                if direction == 0:  # increase with 25% chance
+                    new_coordinate = temp_coordinates[k] + gv.step_size
+                else:  # decrease with 75% chance
+                    new_coordinate = temp_coordinates[k] - gv.step_size
+                    if new_coordinate < 0.0:  # bound at 0
+                        new_coordinate = 0.0
+                temp_coordinates[k] = new_coordinate
+        walker_list[i].set(temp_coordinates)
         walker_list[i].previous_coordinates = previous_coordinates
 
 
@@ -260,6 +278,27 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
                                                     previous_ball_center, current_ball_center, previous_ball_key,
                                                     gv.current_num_balls, initial_step_num, weight, state, pathway)
                 gv.current_num_balls += 1
+
+    # fifth, loop all of the walkers once more to assign them to their true nearest macrostates
+    for i in walker_indices:
+        new_ball_key = closest_ball(temp_walker_list[i].current_coordinates, balls_array)
+        new_ball_center = balls[ball_key][0:gv.num_cvs].tolist()
+        old_ball_key = temp_walker_list[i].current_ball_key
+        old_ball_center = temp_walker_list[i].current_ball_center
+        balls[old_ball_key][gv.num_cvs+2] -= 1
+        balls[new_ball_key][gv.num_cvs+2] += 1
+        ball_to_walkers[tuple(old_ball_center)].remove(i)
+        ball_to_walkers[tuple(new_ball_center)].append(i)
+        temp_walker_list[i].current_ball_key = new_ball_key
+        temp_walker_list[i].current_ball_center = new_ball_center
+
+    # sixth, delete empty macrostates
+    delete_list = []
+    for i in range(balls.shape[0]):
+        if balls[i][gv.num_cvs+2] == 0:
+            delete_list.append(i)
+    np.delete(balls, delete_list, 0)
+    np.delete(balls_array, delete_list, 0)
 
     # finally, output the entire macrostate list for this particular step to a text file.
     #os.chdir(gv.main_directory + '/CAS')
@@ -890,7 +929,9 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                for i in range(-1, gv.num_states):
+                states_list = range(gv.num_states)
+                states_list.append(-1)
+                for i in states_list:
                     num_walkers = 0
                     for j in initial_indices:
                         state = temp_walker_list[j].state
@@ -1061,7 +1102,9 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                for i in range(-1, gv.num_states):
+                states_list = range(gv.num_states)
+                states_list.append(-1)
+                for i in states_list:
                     num_walkers = 0
                     for j in initial_indices:
                         state = temp_walker_list[j].state
