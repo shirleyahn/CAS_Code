@@ -528,11 +528,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
                                                     gv.current_num_balls, initial_step_num, weight, state)
                 gv.current_num_balls += 1
 
-    # fifth, loop all of the walkers once more to assign them to their true nearest macrostates
+    # fifth, loop through all of the walkers once more to assign them to their true nearest macrostates
     for i in walker_indices:
-        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-        os.chdir(walker_directory)
-
         new_ball_key = closest_ball(temp_walker_list[i].current_coordinates, balls_array)
         new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
         old_ball_key = temp_walker_list[i].current_ball_key
@@ -544,7 +541,29 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         temp_walker_list[i].current_ball_key = new_ball_key
         temp_walker_list[i].current_ball_center = new_ball_center
 
-        # sixth, record the new macrostate on the ball trajectory file.
+    # sixth, loop through all of the walkers once more to get rid of macrostates with just one walker
+    for i in walker_indices:
+        old_ball_key = temp_walker_list[i].current_ball_key
+        old_ball_center = temp_walker_list[i].current_ball_center
+        if balls[old_ball_key][gv.num_cvs+2] == 1:
+            mask = np.ones(balls.shape[0], dtype=bool)
+            mask[old_ball_key] = 0
+            current_coordinates = temp_walker_list[i].current_coordinates
+            new_ball_key = closest_ball(current_coordinates, balls_array[mask])
+            new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
+            distance_from_center = calculate_distance_from_center(new_ball_center, current_coordinates)
+            if distance_from_center <= gv.radius or abs(distance_from_center - gv.radius) < 1.0e-10:
+                balls[old_ball_key][gv.num_cvs+2] -= 1
+                balls[new_ball_key][gv.num_cvs+2] += 1
+                ball_to_walkers[tuple(old_ball_center)].remove(i)
+                ball_to_walkers[tuple(new_ball_center)].append(i)
+                temp_walker_list[i].current_ball_key = new_ball_key
+                temp_walker_list[i].current_ball_center = new_ball_center
+
+    # seventh, record the new macrostate on the ball trajectory file.
+    for i in walker_indices:
+        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+        os.chdir(walker_directory)
         current_ball_center = temp_walker_list[i].current_ball_center
         ball_key = temp_walker_list[i].current_ball_key
         state = temp_walker_list[i].state
@@ -557,7 +576,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         f.write('\n')
         f.close()
 
-    # seventh, delete empty macrostates
+    # eighth, delete empty macrostates
     delete_list = []
     for i in range(balls.shape[0]):
         if balls[i][gv.num_cvs+2] == 0:
