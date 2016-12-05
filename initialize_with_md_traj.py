@@ -1,11 +1,11 @@
 import numpy as np
 from scipy.cluster.vq import kmeans2, ClusterError, whiten
 
-num_states = 2
+num_states = 3
 num_cvs = 6
 time_step = 500.0  # in ps
 traj_file = np.loadtxt('initial_values')
-num_clusters = 2
+num_clusters = 200
 radius = 180.0
 
 
@@ -21,14 +21,14 @@ def convert_angles_to_cos_sin(balls):
 def closest_ball(coordinates, balls):
     distance = np.zeros((balls.shape[0],))
     for i in range(num_cvs):
-        distance += np.abs(balls[:, i] - coordinates[i]) ** 2#np.minimum(360.0 - np.abs(balls[:, i] - coordinates[i]), np.abs(balls[:, i] - coordinates[i])) ** 2
+        distance += np.minimum(360.0 - np.abs(balls[:, i] - coordinates[i]), np.abs(balls[:, i] - coordinates[i])) ** 2
     return np.argmin(distance)
 
 
 def calculate_distance_from_center(center, values):
     distance = 0.0
     for i in range(len(center)):
-        distance += abs(values[i] - center[i]) ** 2#min(360.0 - abs(values[i] - center[i]), abs(values[i] - center[i])) ** 2
+        distance += min(360.0 - abs(values[i] - center[i]), abs(values[i] - center[i])) ** 2
     if abs(distance) < 1.0e-10:
         distance = 0.0
     return np.sqrt(distance)
@@ -38,10 +38,14 @@ def check_state_function(coordinates):
     if -100.0 <= coordinates[0] <= -30.0 and -90.0 <= coordinates[1] <= -10.0 and -100.0 <= coordinates[2] <= -30.0 and \
        -90.0 <= coordinates[3] <= -10.0 and -100.0 <= coordinates[4] <= -30.0 and -90.0 <= coordinates[5] <= -10.0:
         return 0
-    elif -180.0 <= coordinates[0] <= -55.0 and (105.0 <= coordinates[1] <= 180.0 or -180.0 <= coordinates[1] <= -155.0) \
-         -180.0 <= coordinates[2] <= -55.0 and (105.0 <= coordinates[3] <= 180.0 or -180.0 <= coordinates[3] <= -155.0) \
-         -180.0 <= coordinates[4] <= -55.0 and (105.0 <= coordinates[5] <= 180.0 or -180.0 <= coordinates[5] <= -155.0):
+    elif -180.0 <= coordinates[0] <= -55.0 and (105.0 <= coordinates[1] <= 180.0) \
+         -180.0 <= coordinates[2] <= -55.0 and (105.0 <= coordinates[3] <= 180.0) \
+         -180.0 <= coordinates[4] <= -55.0 and (105.0 <= coordinates[5] <= 180.0):
         return 1
+    elif -180.0 <= coordinates[0] <= -55.0 and (-180.0 <= coordinates[1] <= -155.0) \
+         -180.0 <= coordinates[2] <= -55.0 and (-180.0 <= coordinates[3] <= -155.0) \
+         -180.0 <= coordinates[4] <= -55.0 and (-180.0 <= coordinates[5] <= -155.0):
+        return 2
     else:
         return -1
 
@@ -51,7 +55,8 @@ clusters = np.zeros((traj_file.shape[0],))
 new_traj_file = np.zeros((1, num_cvs))
 new_ball_to_traj = np.zeros((1,))
 folded_present = 0
-unfolded_present = 0
+unfolded_present_1 = 0
+unfolded_present_2 = 0
 first = 0
 for i in range(traj_file.shape[0]):
     clusters[i] = check_state_function(traj_file[i])
@@ -59,10 +64,14 @@ for i in range(traj_file.shape[0]):
         state_balls[0] = traj_file[i]
         state_ball_to_traj[0] = i*time_step
         folded_present += 1
-    elif unfolded_present == 0 and clusters[i] == 1:
+    elif unfolded_present_1 == 0 and clusters[i] == 1:
         state_balls[1] = traj_file[i]
         state_ball_to_traj[1] = i*time_step
-        unfolded_present += 1
+        unfolded_present_1 += 1
+    elif unfolded_present_2 == 0 and clusters[i] == 2:
+        state_balls[2] = traj_file[i]
+        state_ball_to_traj[2] = i*time_step
+        unfolded_present_2 += 1
     elif clusters[i] == -1:
         if first == 0:
             new_traj_file[0] = traj_file[i]
@@ -72,6 +81,7 @@ for i in range(traj_file.shape[0]):
             new_traj_file = np.append(new_traj_file, [np.asarray(traj_file[i])], axis=0)
             new_ball_to_traj = np.append(new_ball_to_traj, [np.asarray(i*time_step)], axis=0)
 
+"""
 clustering_matrix = convert_angles_to_cos_sin(new_traj_file)
 while True:
     try:
@@ -133,51 +143,85 @@ idx = abs(evalues).argsort()[::-1]
 final_evalues = evalues[idx]
 final_evectors = evectors[:, idx]
 
-num_walkers = np.zeros((new_balls.shape[0],))
-for i in range(num_walkers.shape[0]):
-    num_walkers[i] = int(abs(final_evectors[i, 0])/min(abs(final_evectors[:, 0])))
-
 idx = abs(final_evectors[:, 0]).argsort()[::-1]
-new_balls = new_balls[idx, :]
-new_ball_to_traj = new_ball_to_traj[idx]
-num_walkers = num_walkers[idx]
-
+final_balls = new_balls[idx, :]
+final_ball_to_traj = new_ball_to_traj[idx]
 """
-final_balls = np.zeros((1, num_cvs))
-final_ball_to_traj = np.zeros((1,))
-new_num_walkers = np.zeros((1,))
+
+balls = np.zeros((1, num_cvs))
+ball_to_traj = np.zeros((1,))
+balls_count = np.zeros((1,))
+balls_assignment = np.zeros((new_traj_file.shape[0],))
 current_num_balls = 0
-for i in range(new_balls.shape[0]):
+for i in range(new_traj_file.shape[0]):
     inside = 0
     # if we're dealing with the very first walker, create the very first macrostate for the walker.
     if i == 0:
         inside += 1
-        current_ball_center = new_balls[i]
-        final_balls[current_num_balls] = np.asarray(current_ball_center)
-        final_ball_to_traj[current_num_balls] = new_ball_to_traj[i]
-        new_num_walkers[current_num_balls] = abs(final_evectors[i, 0])
+        current_ball_center = new_traj_file[i]
+        balls[current_num_balls] = np.asarray(current_ball_center)
+        ball_to_traj[current_num_balls] = new_ball_to_traj[i]
+        balls_count[current_num_balls] += 1
+        balls_assignment[i] = current_num_balls
         current_num_balls += 1
  
     # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
     if inside == 0:
-        ball_key = closest_ball(new_balls[i], final_balls)
-        current_ball_center = final_balls[ball_key].tolist()
-        distance_from_center = calculate_distance_from_center(current_ball_center, new_balls[i])
+        ball_key = closest_ball(new_traj_file[i], balls)
+        current_ball_center = balls[ball_key].tolist()
+        distance_from_center = calculate_distance_from_center(current_ball_center, new_traj_file[i])
         if distance_from_center <= radius or abs(distance_from_center - radius) < 1.0e-10:
             inside += 1
-            new_num_walkers[ball_key] += abs(final_evectors[i, 0])
+            balls_count[ball_key] += 1
+            balls_assignment[i] = ball_key
  
         # walker is not inside any macrostate, so create a new macrostate centered around the walker.
         if inside == 0:
-            current_ball_center = new_balls[i]
-            final_balls = np.append(final_balls, [np.asarray(current_ball_center)], axis=0)
-            final_ball_to_traj = np.append(final_ball_to_traj, [np.asarray(new_ball_to_traj[i])], axis=0)
-            new_num_walkers = np.append(new_num_walkers, [np.asarray(abs(final_evectors[i, 0]))], axis=0)
+            current_ball_center = new_traj_file[i]
+            balls = np.append(balls, [np.asarray(current_ball_center)], axis=0)
+            ball_to_traj = np.append(ball_to_traj, [np.asarray(new_ball_to_traj[i])], axis=0)
+            balls_count = np.append(balls_count, [np.asarray(1)], axis=0)
+            balls_assignment[i] = current_num_balls
             current_num_balls += 1
-"""
 
-np.savetxt('initial_values.txt', new_balls, fmt=' %1.10e')
-np.savetxt('ball_to_traj.txt', new_ball_to_traj, fmt=' %1.10e')
+for i in range(new_traj_file[i].shape[0]):
+    old_ball_key = int(balls_assignment[i])
+    new_ball_key = closest_ball(new_traj_file[i], balls)
+    balls_count[old_ball_key] -= 1
+    balls_count[new_ball_key] += 1
+    balls_assignment[i] = new_ball_key
+
+for i in range(new_traj_file[i].shape[0]):
+    old_ball_key = int(balls_assignment[i])
+    if balls_count[old_ball_key] == 1:
+        mask = np.ones(balls.shape[0], dtype=bool)
+        mask[old_ball_key] = 0
+        new_ball_key = closest_ball(new_traj_file[i], balls[mask])
+        new_ball_center = balls[new_ball_key].tolist()
+        distance_from_center = calculate_distance_from_center(new_ball_center, new_traj_file[i])
+        if distance_from_center <= radius or abs(distance_from_center - radius) < 1.0e-10:
+            balls_count[old_ball_key] -= 1
+            balls_count[new_ball_key] += 1
+            balls_assignment[i] = new_ball_key
+
+delete_list = []
+for i in range(balls.shape[0]):
+    if balls_count[i] == 0:
+        delete_list.append(i)
+np.delete(balls, delete_list, 0)
+np.delete(ball_to_traj, delete_list, 0)
+np.delete(balls_count, delete_list, 0)
+
+idx = balls_count.argsort()[::-1]
+new_balls = balls[idx, :]
+new_ball_to_traj = ball_to_traj[idx]
+new_balls_count = balls_count[idx]
+
+final_balls = np.append(state_balls, new_balls, axis=0)
+final_ball_to_traj = np.append(state_ball_to_traj, new_ball_to_traj, axis=0)
+
+np.savetxt('initial_values.txt', final_balls, fmt=' %1.10e')
+np.savetxt('ball_to_traj.txt', final_ball_to_traj, fmt=' %1.10e')
 
 for i in range(new_balls.shape[0]):
-    print check_state_function(new_balls[i]), new_balls[i], num_walkers[i]
+    print check_state_function(new_balls[i]), new_balls[i], new_balls_count[i]
