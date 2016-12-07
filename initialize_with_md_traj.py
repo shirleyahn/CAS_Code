@@ -5,7 +5,7 @@ num_states = 3
 num_cvs = 6
 time_step = 500.0  # in ps
 traj_file = np.loadtxt('initial_values')
-num_clusters = 200
+num_clusters = 2
 radius = 180.0
 
 
@@ -81,7 +81,6 @@ for i in range(traj_file.shape[0]):
             new_traj_file = np.append(new_traj_file, [np.asarray(traj_file[i])], axis=0)
             new_ball_to_traj = np.append(new_ball_to_traj, [np.asarray(i*time_step)], axis=0)
 
-"""
 clustering_matrix = convert_angles_to_cos_sin(new_traj_file)
 while True:
     try:
@@ -146,8 +145,8 @@ final_evectors = evectors[:, idx]
 idx = abs(final_evectors[:, 0]).argsort()[::-1]
 final_balls = new_balls[idx, :]
 final_ball_to_traj = new_ball_to_traj[idx]
-"""
 
+"""
 balls = np.zeros((1, num_cvs))
 ball_to_traj = np.zeros((1,))
 balls_count = np.zeros((1,))
@@ -219,9 +218,10 @@ new_balls_count = balls_count[idx]
 
 final_balls = np.append(state_balls, new_balls, axis=0)
 final_ball_to_traj = np.append(state_ball_to_traj, new_ball_to_traj, axis=0)
+"""
 
 np.savetxt('initial_values.txt', final_balls, fmt=' %1.10e')
 np.savetxt('ball_to_traj.txt', final_ball_to_traj, fmt=' %1.10e')
 
-for i in range(new_balls.shape[0]):
-    print check_state_function(new_balls[i]), new_balls[i], new_balls_count[i]
+for i in range(final_balls.shape[0]):
+    print check_state_function(final_balls[i]), final_balls[i], int(abs(final_evectors[i, 0])/min(abs(final_evectors[:, 0])))
