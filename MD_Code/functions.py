@@ -482,7 +482,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         if start == 0 and gv.balls_flag == 0:
             start += 1
             inside += 1
-            current_ball_center = [coordinate for coordinate in new_coordinates]
+            current_ball_center = [float(coordinate) for coordinate in new_coordinates]
             center_r_key_num = copy.deepcopy(current_ball_center)
             balls_array[gv.current_num_balls] = np.asarray(center_r_key_num)
             center_r_key_num.append(gv.radius)
@@ -516,7 +516,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
             # case 2: walker is not inside any macrostate and the maximum number of macrostates limit has not been
             # reached, so create a new macrostate centered around the walker.
             else:
-                current_ball_center = [coordinate for coordinate in new_coordinates]
+                current_ball_center = [float(coordinate) for coordinate in new_coordinates]
                 center_r_key_num = copy.deepcopy(current_ball_center)
                 balls_array = np.append(balls_array, [np.asarray(center_r_key_num)], axis=0)
                 center_r_key_num.append(gv.radius)
@@ -1461,7 +1461,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
             initial_indices = [temp_walker_list[i].global_index for i in ball_to_walkers[tuple(current_ball_center)]]
             temp_initial_indices = initial_indices  # sorted indices based on descending order of weights
-            initial_indices = [temp_initial_indices[i] for i in walker_indices]
+            initial_indices = [temp_initial_indices[j] for j in walker_indices]
             # reset ball_to_walkers and balls
             ball_to_walkers[tuple(current_ball_center)] = []
             balls[current_ball][gv.num_cvs+2] = 0
@@ -1478,15 +1478,15 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 num_walkers_for_each_state = []
                 states_list = range(gv.num_states)
                 states_list.append(-1)
-                for i in states_list:
+                for state in states_list:
                     num_walkers = 0
-                    for j in initial_indices:
-                        state = temp_walker_list[j].state
-                        if state == i:
+                    for k in initial_indices:
+                        walker_state = temp_walker_list[k].state
+                        if walker_state == state:
                             num_walkers += 1
                     if num_walkers != 0:
                         num_states += 1
-                        states.append(i)
+                        states.append(state)
                         num_walkers_for_each_state.append(num_walkers)
 
             target_num_walkers = int(np.floor(float(gv.num_walkers)/num_states))
@@ -1509,13 +1509,13 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     indices_bin = initial_indices
                 # otherwise, need to pick out the walkers that are in the particular state of interest
                 else:
-                    k = 0
-                    for j in initial_indices:
-                        walker_state = temp_walker_list[j].state
+                    l = 0
+                    for k in initial_indices:
+                        walker_state = temp_walker_list[k].state
                         if state == walker_state:
-                            weights_bin[k] = temp_walker_list[j].weight
-                            indices_bin[k] = temp_walker_list[j].global_index
-                            k += 1
+                            weights_bin[l] = temp_walker_list[k].weight
+                            indices_bin[l] = temp_walker_list[k].global_index
+                            l += 1
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
