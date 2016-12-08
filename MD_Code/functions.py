@@ -426,7 +426,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
 def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to_walkers):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)  # convert from list to array
-    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
+    walker_indices = np.argsort(initial_weights_array)  # sort walkers in ascending order based on their weights
     flux = np.zeros((gv.num_states, gv.num_states))
     start = 0  # indicates whether we are dealing with the very first walker or not
 
@@ -1467,7 +1467,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             balls[current_ball][gv.num_cvs+2] = 0
 
             num_states = 1
-            states = [0]
+            states = [-1]
             num_walkers_for_each_state = [len(initial_indices)]
 
             # if rates/fluxes are calculated, we need to resample separately for each state,

@@ -190,7 +190,7 @@ def rw_simulation(walker_list):
 def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to_walkers):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)  # convert from list to array
-    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
+    walker_indices = np.argsort(initial_weights_array)  # sort walkers in ascending order based on their weights
     flux = np.zeros((gv.num_states+gv.num_pathways, gv.num_states+gv.num_pathways))
     start = 0  # indicates whether we are dealing with the very first walker or not
 
