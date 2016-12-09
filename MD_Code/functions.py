@@ -102,6 +102,8 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         # all walkers have equally divided weights
         initial_weight = 1.0/gv.total_num_walkers
         f = open(input_initial_values_file, 'r')
+        if gv.rate_flag == 1:
+            initial_states = np.loadtxt('initial_states.txt')
         # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
         for n in range(gv.num_occupied_balls):
             # read initial values from file
@@ -109,7 +111,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             initial_values = [float(entry) for entry in line]
             # if rates/fluxes are calculated, obtain initial state
             if gv.rate_flag == 1:
-                initial_state = check_state_function.check_state_function(initial_values)
+                initial_state = initial_states[n]
             for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
                 walker_list[i].set(initial_values, initial_weight)
                 if gv.rate_flag == 1:
@@ -124,6 +126,17 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 walker_directory = gv.main_directory + '/CAS/walker' + str(i)
                 os.mkdir(walker_directory)
                 os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory)+'/minim.gro')
+
+        # in case created balls are kept throughout simulation
+        if gv.balls_flag == 1:
+            os.chdir(gv.main_directory)
+            balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
+            balls_array = balls[:, 0:gv.num_cvs]
+            gv.current_num_balls = balls.shape[0]
+            for j in range(balls.shape[0]):
+                current_ball_center = balls[j][0:gv.num_cvs].tolist()
+                ball_to_walkers[tuple(current_ball_center)] = []
+                balls[j][gv.num_cvs+2] = 0
 
     # restarting simulation in the middle of simulation
     elif gv.simulation_flag == 1 or gv.simulation_flag == 2:
@@ -542,26 +555,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         temp_walker_list[i].current_ball_key = new_ball_key
         temp_walker_list[i].current_ball_center = new_ball_center
 
-    # sixth, loop through all of the walkers once more to get rid of macrostates with just one walker
-    for i in walker_indices:
-        old_ball_key = temp_walker_list[i].current_ball_key
-        old_ball_center = temp_walker_list[i].current_ball_center
-        if balls[old_ball_key][gv.num_cvs+2] == 1 and balls.shape[0] > 1:
-            mask = np.ones(balls.shape[0], dtype=bool)
-            mask[old_ball_key] = 0
-            current_coordinates = temp_walker_list[i].current_coordinates
-            new_ball_key = closest_ball(current_coordinates, balls_array[mask])
-            new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
-            distance_from_center = calculate_distance_from_center(new_ball_center, current_coordinates)
-            if distance_from_center <= gv.radius or abs(distance_from_center - gv.radius) < 1.0e-10:
-                balls[old_ball_key][gv.num_cvs+2] -= 1
-                balls[new_ball_key][gv.num_cvs+2] += 1
-                ball_to_walkers[tuple(old_ball_center)].remove(i)
-                ball_to_walkers[tuple(new_ball_center)].append(i)
-                temp_walker_list[i].current_ball_key = new_ball_key
-                temp_walker_list[i].current_ball_center = new_ball_center
-
-    # seventh, record the new macrostate on the ball trajectory file.
+    # sixth, record the new macrostate on the ball trajectory file.
     for i in walker_indices:
         walker_directory = gv.main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
@@ -577,13 +571,14 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         f.write('\n')
         f.close()
 
-    # eighth, delete empty macrostates
-    delete_list = []
-    for i in range(balls.shape[0]):
-        if balls[i][gv.num_cvs+2] == 0:
-            delete_list.append(i)
-    balls = np.delete(balls, delete_list, 0)
-    balls_array = np.delete(balls_array, delete_list, 0)
+    # seventh, delete empty macrostates
+    if gv.balls_flag == 0:
+        delete_list = []
+        for i in range(balls.shape[0]):
+            if balls[i][gv.num_cvs+2] == 0:
+                delete_list.append(i)
+        balls = np.delete(balls, delete_list, 0)
+        balls_array = np.delete(balls_array, delete_list, 0)
 
     # finally, output the entire macrostate list for this particular step to a text file.
     os.chdir(gv.main_directory + '/CAS')
@@ -1477,7 +1472,6 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 states = []
                 num_walkers_for_each_state = []
                 states_list = range(gv.num_states)
-                states_list.append(-1)
                 for state in states_list:
                     num_walkers = 0
                     for k in initial_indices:

@@ -1,11 +1,12 @@
 import numpy as np
 from scipy.cluster.vq import kmeans2, ClusterError, whiten
 
-num_states = 3
+num_states = 2
 num_cvs = 6
 time_step = 500.0  # in ps
 traj_file = np.loadtxt('initial_values')
-num_clusters = 2
+state_file = np.loadtxt('initial_states')
+num_clusters = 200
 radius = 180.0
 
 
@@ -38,22 +39,24 @@ def check_state_function(coordinates):
     if -100.0 <= coordinates[0] <= -30.0 and -90.0 <= coordinates[1] <= -10.0 and -100.0 <= coordinates[2] <= -30.0 and \
        -90.0 <= coordinates[3] <= -10.0 and -100.0 <= coordinates[4] <= -30.0 and -90.0 <= coordinates[5] <= -10.0:
         return 0
-    elif -180.0 <= coordinates[0] <= -55.0 and (105.0 <= coordinates[1] <= 180.0) \
-         -180.0 <= coordinates[2] <= -55.0 and (105.0 <= coordinates[3] <= 180.0) \
-         -180.0 <= coordinates[4] <= -55.0 and (105.0 <= coordinates[5] <= 180.0):
+    elif -180.0 <= coordinates[0] <= -55.0 and (105.0 <= coordinates[1] <= 180.0 or -180.0 <= coordinates[1] <= -155.0) \
+         -180.0 <= coordinates[2] <= -55.0 and (105.0 <= coordinates[3] <= 180.0 or -180.0 <= coordinates[3] <= -155.0) \
+         -180.0 <= coordinates[4] <= -55.0 and (105.0 <= coordinates[5] <= 180.0 or -180.0 <= coordinates[5] <= -155.0):
         return 1
-    elif -180.0 <= coordinates[0] <= -55.0 and (-180.0 <= coordinates[1] <= -155.0) \
-         -180.0 <= coordinates[2] <= -55.0 and (-180.0 <= coordinates[3] <= -155.0) \
-         -180.0 <= coordinates[4] <= -55.0 and (-180.0 <= coordinates[5] <= -155.0):
-        return 2
+    #elif -180.0 <= coordinates[0] <= -55.0 and (-180.0 <= coordinates[1] <= -155.0) \
+         #-180.0 <= coordinates[2] <= -55.0 and (-180.0 <= coordinates[3] <= -155.0) \
+         #-180.0 <= coordinates[4] <= -55.0 and (-180.0 <= coordinates[5] <= -155.0):
+        #return 2
     else:
         return -1
 
 state_balls = np.zeros((num_states, num_cvs))
 state_ball_to_traj = np.zeros((num_states,))
+state_states = np.zeros((num_states,))
 clusters = np.zeros((traj_file.shape[0],))
 new_traj_file = np.zeros((1, num_cvs))
 new_ball_to_traj = np.zeros((1,))
+new_states = np.zeros((1,))
 folded_present = 0
 unfolded_present_1 = 0
 unfolded_present_2 = 0
@@ -63,23 +66,28 @@ for i in range(traj_file.shape[0]):
     if folded_present == 0 and clusters[i] == 0:
         state_balls[0] = traj_file[i]
         state_ball_to_traj[0] = i*time_step
+        state_states[0] = 0
         folded_present += 1
     elif unfolded_present_1 == 0 and clusters[i] == 1:
         state_balls[1] = traj_file[i]
         state_ball_to_traj[1] = i*time_step
+        state_states[1] = 1
         unfolded_present_1 += 1
     elif unfolded_present_2 == 0 and clusters[i] == 2:
         state_balls[2] = traj_file[i]
         state_ball_to_traj[2] = i*time_step
+        state_states[2] = 2
         unfolded_present_2 += 1
     elif clusters[i] == -1:
         if first == 0:
             new_traj_file[0] = traj_file[i]
             new_ball_to_traj[0] = i*time_step
+            new_states[0] = state_file[i]
             first += 1
         else:
             new_traj_file = np.append(new_traj_file, [np.asarray(traj_file[i])], axis=0)
             new_ball_to_traj = np.append(new_ball_to_traj, [np.asarray(i*time_step)], axis=0)
+            new_states = np.append(new_states, [np.asarray(state_file[i])], axis=0)
 
 clustering_matrix = convert_angles_to_cos_sin(new_traj_file)
 while True:
@@ -93,13 +101,16 @@ while True:
 
 balls = np.zeros((num_clusters, num_cvs))
 ball_to_traj = np.zeros((num_clusters,))
+states = np.zeros((num_clusters,))
 for i in range(balls.shape[0]):
      ball_key = closest_ball(centroids[i], clustering_matrix)
      balls[i] = new_traj_file[ball_key]
      ball_to_traj[i] = new_ball_to_traj[ball_key]
+     states[i] = new_states[ball_key]
 
 new_balls = np.append(state_balls, balls, axis=0)
 new_ball_to_traj = np.append(state_ball_to_traj, ball_to_traj, axis=0)
+new_states = np.append(state_states, states, axis=0)
 labels += num_states
 
 transition_matrix = np.zeros((new_balls.shape[0], new_balls.shape[0]))
@@ -145,6 +156,7 @@ final_evectors = evectors[:, idx]
 idx = abs(final_evectors[:, 0]).argsort()[::-1]
 final_balls = new_balls[idx, :]
 final_ball_to_traj = new_ball_to_traj[idx]
+final_states = new_states[idx]
 
 """
 balls = np.zeros((1, num_cvs))
@@ -222,6 +234,15 @@ final_ball_to_traj = np.append(state_ball_to_traj, new_ball_to_traj, axis=0)
 
 np.savetxt('initial_values.txt', final_balls, fmt=' %1.10e')
 np.savetxt('ball_to_traj.txt', final_ball_to_traj, fmt=' %1.10e')
+np.savetxt('initial_states.txt', final_states, fmt=' %d')
+
+balls_file = np.zeros((final_balls.shape[0], num_cvs+3))
+balls_file[:,0:num_cvs] = final_balls
+balls_file[:,num_cvs] = radius
+balls_file[:,num_cvs+1] = np.arange(final_balls.shape[0])
+balls_file[:,num_cvs+2] = 0
+
+np.savetxt('balls_0.txt', balls_file, fmt=' %1.10e')
 
 for i in range(final_balls.shape[0]):
-    print check_state_function(final_balls[i]), final_balls[i], int(abs(final_evectors[i, 0])/min(abs(final_evectors[:, 0])))
+    print check_state_function(final_balls[i]), final_balls[i], final_states[i]
