@@ -8,7 +8,7 @@ traj_file = np.loadtxt('initial_values')
 traj_file = traj_file[0:6002,:]
 state_file = np.loadtxt('initial_states')
 state_file = state_file[0:6002]
-radius = 80.0
+num_clusters_kmeans = 200
 num_clusters = 1
 
 
@@ -82,63 +82,33 @@ for i in range(traj_file.shape[0]):
             states = np.append(states, [np.asarray(state_file[i])], axis=0)
 
 # second, cover the rest of the states with macrostates
+while True:
+    try:
+        centroids, labels = kmeans2(balls, num_clusters_kmeans, minit='points', iter=200, missing='raise')
+        break
+    except ClusterError:
+        num_clusters_kmeans -= 1
+    if num_clusters_kmeans <= 1:
+        break
+
+labels += num_states
 new_balls = np.zeros((1, num_cvs))
 new_ball_to_traj = np.zeros((1,))
-new_balls_count = np.zeros((1,))
 new_states = np.zeros((1,))
-new_balls_assignment = np.zeros((balls.shape[0],))
-current_num_balls = 0
-for i in range(balls.shape[0]):
-    inside = 0
-    # if we're dealing with the very first walker, create the very first macrostate for the walker.
-    if i == 0:
-        inside += 1
-        new_balls[current_num_balls] = np.asarray(balls[i])
-        new_ball_to_traj[current_num_balls] = ball_to_traj[i]
-        new_balls_count[current_num_balls] += 1
-        new_states[current_num_balls] = states[i]
-        new_balls_assignment[i] = current_num_balls
-        current_num_balls += 1
+first = 0
+for i in range(centroids.shape[0]):
+    ball_key = closest_ball(centroids[i], balls, num_cvs)
+    if first == 0:
+        new_balls[0] = balls[ball_key]
+        new_ball_to_traj[0] = ball_to_traj[ball_key]
+        new_states[0] = states[ball_key]
+        first += 1
+    else:
+        new_balls = np.append(new_balls, [np.asarray(balls[ball_key])], axis=0)
+        new_ball_to_traj = np.append(new_ball_to_traj, [np.asarray(ball_to_traj[ball_key])], axis=0)
+        new_states = np.append(new_states, [np.asarray(states[ball_key])], axis=0)
 
-    # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
-    if inside == 0:
-        ball_key = closest_ball(balls[i], new_balls, num_cvs)
-        current_ball_center = new_balls[ball_key].tolist()
-        distance_from_center = calculate_distance_from_center(current_ball_center, balls[i])
-        if distance_from_center <= radius or abs(distance_from_center - radius) < 1.0e-10:
-            inside += 1
-            new_balls_count[ball_key] += 1
-            new_balls_assignment[i] = ball_key
-
-        # walker is not inside any macrostate, so create a new macrostate centered around the walker.
-        if inside == 0:
-            new_balls = np.append(new_balls, [np.asarray(balls[i])], axis=0)
-            new_ball_to_traj = np.append(new_ball_to_traj, [np.asarray(ball_to_traj[i])], axis=0)
-            new_balls_count = np.append(new_balls_count, [np.asarray(1)], axis=0)
-            new_states = np.append(new_states, [np.asarray(states[i])], axis=0)
-            new_balls_assignment[i] = current_num_balls
-            current_num_balls += 1
-
-# third, loop through all of the walkers once more to assign them to their true nearest macrostates
-for i in range(balls.shape[0]):
-    old_ball_key = int(new_balls_assignment[i])
-    new_ball_key = closest_ball(balls[i], new_balls, num_cvs)
-    new_balls_count[old_ball_key] -= 1
-    new_balls_count[new_ball_key] += 1
-    new_balls_assignment[i] = new_ball_key
-
-# fourth, delete empty macrostates
-delete_list = []
-for i in range(new_balls.shape[0]):
-    if new_balls_count[i] == 0:
-        delete_list.append(i)
-new_balls = np.delete(new_balls, delete_list, 0)
-new_ball_to_traj = np.delete(new_ball_to_traj, delete_list, 0)
-new_balls_count = np.delete(new_balls_count, delete_list, 0)
-new_states = np.delete(new_states, delete_list, 0)
-new_balls_assignment += num_states
-
-# fifth, calculate the transition matrix and its eigenvalues and eigenvectors
+# third, calculate the transition matrix and its eigenvalues and eigenvectors
 transition_matrix = np.zeros((new_balls.shape[0]+num_states, new_balls.shape[0]+num_states))
 current_index = 0
 for i in range(traj_file.shape[0]-1):
@@ -147,7 +117,7 @@ for i in range(traj_file.shape[0]-1):
     elif clusters[i] == 1:
         previous_ball_key = 1
     else:
-        previous_ball_key = int(new_balls_assignment[current_index])
+        previous_ball_key = int(labels[current_index])
 
     if clusters[i+1] == 0:
         current_ball_key = 0
@@ -156,7 +126,7 @@ for i in range(traj_file.shape[0]-1):
     else:
         if clusters[i] == -1:
             current_index += 1
-        current_ball_key = int(new_balls_assignment[current_index])
+        current_ball_key = int(labels[current_index])
 
     transition_matrix[previous_ball_key][current_ball_key] += 1.0
 
@@ -177,7 +147,7 @@ final_evectors = evectors[:, idx]
 np.savetxt('evalues.txt', final_evalues, fmt=' %1.10e')
 np.savetxt('evectors.txt', final_evectors, fmt=' %1.10e')
 
-# sixth, normalize the second evector by the first evector values -> good approximation to committor functions.
+# fourth, normalize the second evector by the first evector values -> good approximation to committor functions.
 normalized_second_evector = np.zeros((final_evectors.shape[0]-num_states, 1))
 for i in range(final_evectors.shape[0]-num_states):
     if final_evectors[i+num_states, 0] != 0.0:
@@ -241,7 +211,7 @@ np.savetxt('initial_states.txt', states, fmt=' %d')
 
 balls_file = np.zeros((balls.shape[0], num_cvs+3))
 balls_file[:,0:num_cvs] = balls
-balls_file[:,num_cvs] = radius
+balls_file[:,num_cvs] = num_clusters_kmeans
 balls_file[:,num_cvs+1] = np.arange(balls.shape[0])
 balls_file[:,num_cvs+2] = 0
 np.savetxt('balls_0.txt', balls_file, fmt=' %1.10e')

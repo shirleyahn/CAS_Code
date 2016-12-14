@@ -8,17 +8,8 @@ traj_file = np.loadtxt('initial_values')
 traj_file = traj_file[0:6002,:]
 state_file = np.loadtxt('initial_states')
 state_file = state_file[0:6002]
-radius = 160.0
-num_clusters = 10
-
-
-def convert_angles_to_cos_sin(balls):
-    new_balls = np.zeros((balls.shape[0], 2*balls.shape[1]))
-    for i in range(balls.shape[0]):
-        for j in range(balls.shape[1]):
-            new_balls[i, 2*j] = np.cos(balls[i, j]*np.pi/180)
-            new_balls[i, 2*j+1] = np.sin(balls[i, j]*np.pi/180)
-    return new_balls
+radius = 80.0
+num_clusters = 1
 
 
 def closest_ball(coordinates, balls, num_cvs):
@@ -104,10 +95,9 @@ balls = np.delete(balls, delete_list, 0)
 ball_to_traj = np.delete(ball_to_traj, delete_list, 0)
 balls_count = np.delete(balls_count, delete_list, 0)
 states = np.delete(states, delete_list, 0)
-balls_assignment += num_states
 
 # fourth, calculate the transition matrix and its eigenvalues and eigenvectors
-transition_matrix = np.zeros((balls.shape[0]+num_states, balls.shape[0]+num_states))
+transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
 current_index = 0
 for i in range(traj_file.shape[0]-1):
     previous_ball_key = int(balls_assignment[i])
