@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.cluster.vq import kmeans2, ClusterError, whiten
+from scipy.cluster.vq import kmeans2, ClusterError
 
 num_states = 2
 num_cvs = 6
@@ -9,7 +9,7 @@ traj_file = traj_file[0:6002,:]
 state_file = np.loadtxt('initial_states')
 state_file = state_file[0:6002]
 radius = 80.0
-num_clusters = 1
+num_clusters = 10
 
 
 def closest_ball(coordinates, balls, num_cvs):
@@ -23,8 +23,6 @@ def calculate_distance_from_center(center, values):
     distance = 0.0
     for i in range(len(center)):
         distance += min(360.0 - abs(values[i] - center[i]), abs(values[i] - center[i])) ** 2
-    if abs(distance) < 1.0e-10:
-        distance = 0.0
     return np.sqrt(distance)
 
 
@@ -51,7 +49,7 @@ ball_to_traj = np.zeros((1,))
 states = np.zeros((1,))
 folded_present = 0
 unfolded_present = 0
-first = 0
+neither_present = 0
 for i in range(traj_file.shape[0]):
     clusters[i] = check_state_function(traj_file[i])
     if clusters[i] == 0:
@@ -71,11 +69,11 @@ for i in range(traj_file.shape[0]):
             unfolded_balls = np.append(unfolded_balls, [np.asarray(traj_file[i])], axis=0)
             unfolded_ball_to_traj = np.append(unfolded_ball_to_traj, [np.asarray(i*time_step)], axis=0)
     else:
-        if first == 0:
+        if neither_present == 0:
             balls[0] = traj_file[i]
             ball_to_traj[0] = i*time_step
             states[0] = state_file[i]
-            first += 1
+            neither_present += 1
         else:
             balls = np.append(balls, [np.asarray(traj_file[i])], axis=0)
             ball_to_traj = np.append(ball_to_traj, [np.asarray(i*time_step)], axis=0)
@@ -105,7 +103,7 @@ for i in range(balls.shape[0]):
         ball_key = closest_ball(balls[i], new_balls, num_cvs)
         current_ball_center = new_balls[ball_key].tolist()
         distance_from_center = calculate_distance_from_center(current_ball_center, balls[i])
-        if distance_from_center <= radius or abs(distance_from_center - radius) < 1.0e-10:
+        if distance_from_center <= radius:
             inside += 1
             new_balls_count[ball_key] += 1
             new_balls_assignment[i] = ball_key

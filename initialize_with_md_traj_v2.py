@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.cluster.vq import kmeans2, ClusterError, whiten
+from scipy.cluster.vq import kmeans2, ClusterError
 
 num_states = 2
 num_cvs = 6
@@ -23,8 +23,6 @@ def calculate_distance_from_center(center, values):
     distance = 0.0
     for i in range(len(center)):
         distance += min(360.0 - abs(values[i] - center[i]), abs(values[i] - center[i])) ** 2
-    if abs(distance) < 1.0e-10:
-        distance = 0.0
     return np.sqrt(distance)
 
 
@@ -64,7 +62,7 @@ for i in range(traj_file.shape[0]):
         ball_key = closest_ball(traj_file[i], balls, num_cvs)
         current_ball_center = balls[ball_key].tolist()
         distance_from_center = calculate_distance_from_center(current_ball_center, traj_file[i])
-        if distance_from_center <= radius or abs(distance_from_center - radius) < 1.0e-10:
+        if distance_from_center <= radius:
             inside += 1
             balls_count[ball_key] += 1
             balls_assignment[i] = ball_key
