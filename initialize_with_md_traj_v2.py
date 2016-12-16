@@ -50,7 +50,7 @@ for i in range(traj_file.shape[0]):
     # if we're dealing with the very first walker, create the very first macrostate for the walker.
     if i == 0:
         inside += 1
-        balls[current_num_balls] = np.asarray(traj_file[i])
+        balls[current_num_balls] = traj_file[i]
         ball_to_traj[current_num_balls] = i*time_step
         balls_count[current_num_balls] += 1
         states[current_num_balls] = state_file[i]
