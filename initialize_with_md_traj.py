@@ -198,30 +198,40 @@ while True:
     if num_clusters <= 1:
         break
 
-print num_clusters
-
 balls = np.zeros((num_walkers*(num_states+num_clusters), num_cvs))
 ball_to_traj = np.zeros((num_walkers*(num_states+num_clusters),))
 states = np.zeros((num_walkers*(num_states+num_clusters),))
 
+indices = range(folded_balls.shape[0])
+indices = indices[0::int(folded_balls.shape[0]/num_walkers)]
+k = 0
 for i in range(num_walkers):
-    index = np.random.choice(folded_balls.shape[0], 1, replace=False)
+    index = indices[k]
     balls[i] = folded_balls[index]
     ball_to_traj[i] = folded_ball_to_traj[index]
     states[i] = 0
+    k += 1
 
+indices = range(unfolded_balls.shape[0])
+indices = indices[0::int(unfolded_balls.shape[0]/num_walkers)]
+k = 0
 for i in range(num_walkers, num_states*num_walkers):
-    index = np.random.choice(unfolded_balls.shape[0], 1, replace=False)
+    index = indices[k]
     balls[i] = unfolded_balls[index]
     ball_to_traj[i] = unfolded_ball_to_traj[index]
     states[i] = 1
+    k += 1
 
 if num_clusters == 1:
+    indices = range(new_balls.shape[0])
+    indices = indices[0::int(new_balls.shape[0] / num_walkers)]
+    k = 0
     for i in range(num_states*num_walkers, (num_states+num_clusters)*num_walkers):
-        index = np.random.choice(new_balls.shape[0], 1, replace=False)
+        index = indices[k]
         balls[i] = new_balls[index]
         ball_to_traj[i] = new_ball_to_traj[index]
         states[i] = new_states[index]
+        k += 1
 else:
     for i in range(num_clusters):
         first = 0
@@ -238,11 +248,15 @@ else:
                 neither_balls = np.append(neither_balls, [np.asarray(new_balls[j])], axis=0)
                 neither_ball_to_traj = np.append(neither_ball_to_traj, [np.asarray(new_ball_to_traj[j])], axis=0)
                 neither_states = np.append(neither_states, [np.asarray(new_states[j])], axis=0)
+        indices = range(neither_balls.shape[0])
+        indices = indices[0::int(neither_balls.shape[0] / num_walkers)]
+        k = 0
         for j in range((num_states+i)*num_walkers, (num_states+i+1)*num_walkers):
-            index = np.random.choice(neither_balls.shape[0], 1, replace=False)
+            index = indices[k]
             balls[j] = neither_balls[index]
             ball_to_traj[j] = neither_ball_to_traj[index]
             states[j] = neither_states[index]
+            k += 1
 
 np.savetxt('initial_values.txt', balls, fmt=' %1.10e')
 np.savetxt('ball_to_traj.txt', ball_to_traj, fmt=' %1.10e')

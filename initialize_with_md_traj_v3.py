@@ -10,6 +10,7 @@ state_file = np.loadtxt('initial_states')
 state_file = state_file[0:6002]
 num_clusters_kmeans = 200
 num_clusters = 1
+num_walkers = 10
 
 
 def closest_ball(coordinates, balls, num_cvs):
@@ -160,20 +161,6 @@ np.savetxt('committor_function.txt', normalized_second_evector, fmt=' %1.10e')
 # seventh, cluster states with committor function
 while True:
     try:
-        folded_centroids, folded_labels = kmeans2(folded_balls, 1, minit='points', iter=200, missing='raise')
-        break
-    except ClusterError:
-        break
-
-while True:
-    try:
-        unfolded_centroids, unfolded_labels = kmeans2(unfolded_balls, 1, minit='points', iter=200, missing='raise')
-        break
-    except ClusterError:
-        break
-
-while True:
-    try:
         centroids, labels = kmeans2(normalized_second_evector, num_clusters, minit='points', iter=200, missing='raise')
         break
     except ClusterError:
@@ -181,38 +168,84 @@ while True:
     if num_clusters <= 1:
         break
 
-balls = np.zeros((num_states, num_cvs))
-ball_to_traj = np.zeros((num_states,))
-states = np.zeros((num_states,))
+balls = np.zeros((num_walkers*(num_states+num_clusters), num_cvs))
+ball_to_traj = np.zeros((num_walkers*(num_states+num_clusters),))
+states = np.zeros((num_walkers*(num_states+num_clusters),))
 
-folded_centroids = folded_centroids.reshape((num_cvs,))
-ball_key = closest_ball(folded_centroids, folded_balls, num_cvs)
-balls[0] = folded_balls[ball_key]
-ball_to_traj[0] = folded_ball_to_traj[ball_key]
-states[0] = 0
+indices = range(folded_balls.shape[0])
+indices = indices[0::int(folded_balls.shape[0]/num_walkers)]
+k = 0
+for i in range(num_walkers):
+    index = indices[k]
+    balls[i] = folded_balls[index]
+    ball_to_traj[i] = folded_ball_to_traj[index]
+    states[i] = 0
+    k += 1
 
-unfolded_centroids = unfolded_centroids.reshape((num_cvs,))
-ball_key = closest_ball(unfolded_centroids, unfolded_balls, num_cvs)
-balls[1] = unfolded_balls[ball_key]
-ball_to_traj[1] = unfolded_ball_to_traj[ball_key]
-states[1] = 1
+indices = range(unfolded_balls.shape[0])
+indices = indices[0::int(unfolded_balls.shape[0]/num_walkers)]
+k = 0
+for i in range(num_walkers, num_states*num_walkers):
+    index = indices[k]
+    balls[i] = unfolded_balls[index]
+    ball_to_traj[i] = unfolded_ball_to_traj[index]
+    states[i] = 1
+    k += 1
 
-for i in range(centroids.shape[0]):
-    ball_key = closest_ball(centroids[i], normalized_second_evector, 1)
-    balls = np.append(balls, [np.asarray(new_balls[ball_key])], axis=0)
-    ball_to_traj = np.append(ball_to_traj, [np.asarray(new_ball_to_traj[ball_key])], axis=0)
-    states = np.append(states, [np.asarray(new_states[ball_key])], axis=0)
+if num_clusters == 1:
+    indices = range(new_balls.shape[0])
+    indices = indices[0::int(new_balls.shape[0] / num_walkers)]
+    k = 0
+    for i in range(num_states*num_walkers, (num_states+num_clusters)*num_walkers):
+        index = indices[k]
+        balls[i] = new_balls[index]
+        ball_to_traj[i] = new_ball_to_traj[index]
+        states[i] = new_states[index]
+        k += 1
+else:
+    for i in range(num_clusters):
+        first = 0
+        neither_balls = np.zeros((1, num_cvs))
+        neither_ball_to_traj = np.zeros((1,))
+        neither_states = np.zeros((1,))
+        for j in range(new_balls.shape[0]):
+            if labels[j] == i and first == 0:
+                first += 1
+                neither_balls[0] = new_balls[j]
+                neither_ball_to_traj[0] = new_ball_to_traj[j]
+                neither_states[0] = new_states[j]
+            elif labels[j] == i and first != 0:
+                neither_balls = np.append(neither_balls, [np.asarray(new_balls[j])], axis=0)
+                neither_ball_to_traj = np.append(neither_ball_to_traj, [np.asarray(new_ball_to_traj[j])], axis=0)
+                neither_states = np.append(neither_states, [np.asarray(new_states[j])], axis=0)
+        indices = range(neither_balls.shape[0])
+        indices = indices[0::int(neither_balls.shape[0] / num_walkers)]
+        k = 0
+        for j in range((num_states+i)*num_walkers, (num_states+i+1)*num_walkers):
+            index = indices[k]
+            balls[j] = neither_balls[index]
+            ball_to_traj[j] = neither_ball_to_traj[index]
+            states[j] = neither_states[index]
+            k += 1
 
 np.savetxt('initial_values.txt', balls, fmt=' %1.10e')
 np.savetxt('ball_to_traj.txt', ball_to_traj, fmt=' %1.10e')
 np.savetxt('initial_states.txt', states, fmt=' %d')
 
-balls_file = np.zeros((balls.shape[0], num_cvs+3))
-balls_file[:,0:num_cvs] = balls
+balls_file = np.zeros((num_states+num_clusters, num_cvs+3))
+balls_file[0,0:num_cvs] = balls[0]
+balls_file[1,0:num_cvs] = balls[num_walkers]
+if num_clusters == 1:
+    balls_file[num_states,0:num_cvs] = balls[num_states*num_walkers]
+else:
+    for i in range(num_clusters):
+        ball_key = closest_ball(centroids[i], normalized_second_evector, 1)
+        balls_file[(num_states+i),0:num_cvs] = new_balls[ball_key]
 balls_file[:,num_cvs] = num_clusters_kmeans
-balls_file[:,num_cvs+1] = np.arange(balls.shape[0])
+balls_file[:,num_cvs+1] = np.arange(num_states+num_clusters)
 balls_file[:,num_cvs+2] = 0
 np.savetxt('balls_0.txt', balls_file, fmt=' %1.10e')
 
 for i in range(balls.shape[0]):
     print check_state_function(balls[i]), balls[i], states[i]
+
