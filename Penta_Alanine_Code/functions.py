@@ -76,6 +76,8 @@ def set_parameters():
     # then use the calculated value as the limit for total number of macrostates
     if max_num_balls < gv.num_balls_limit:
         gv.num_balls_limit = max_num_balls
+    if gv.num_occupied_balls > gv.num_balls_limit:
+        gv.num_balls_limit = gv.num_occupied_balls*2
     if gv.num_balls_limit == 0:
         gv.num_balls_limit = 1
     print 'max # of balls (n_b) = ' + str(gv.num_balls_limit)
@@ -86,7 +88,7 @@ def set_parameters():
         gv.total_num_walkers = gv.num_occupied_clusters*gv.num_walkers_for_sc
         gv.num_occupied_clusters = 0
     else:
-        gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
+        gv.total_num_walkers = gv.num_occupied_balls
     gv.sc_performed = 0
     gv.sc_start = -1
 
@@ -112,7 +114,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             # if rates/fluxes are calculated, obtain initial state
             if gv.rate_flag == 1:
                 initial_state = initial_states[n]
-            for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
+            for i in range(n, n+1):
                 walker_list[i].set(initial_values, initial_weight)
                 if gv.rate_flag == 1:
                     walker_list[i].state = initial_state
@@ -122,7 +124,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         os.system('mkdir CAS')
         os.chdir(gv.main_directory + '/CAS')
         for n in range(gv.num_occupied_balls):
-            for i in range(n*gv.num_walkers, (n+1)*gv.num_walkers):
+            for i in range(n, n+1):
                 walker_directory = gv.main_directory + '/CAS/walker' + str(i)
                 os.mkdir(walker_directory)
                 os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory)+'/minim.gro')
@@ -132,7 +134,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             os.chdir(gv.main_directory)
             balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
             balls_array = balls[:, 0:gv.num_cvs]
-            gv.current_num_balls = balls.shape[0]
+            gv.current_num_balls = balls[-1, gv.num_cvs+1]+1  # last ball index + 1
             for j in range(balls.shape[0]):
                 current_ball_center = balls[j][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)] = []
@@ -543,17 +545,18 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
                 gv.current_num_balls += 1
 
     # fifth, loop through all of the walkers once more to assign them to their true nearest macrostates
-    for i in walker_indices:
-        new_ball_key = closest_ball(temp_walker_list[i].current_coordinates, balls_array)
-        new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
-        old_ball_key = temp_walker_list[i].current_ball_key
-        old_ball_center = temp_walker_list[i].current_ball_center
-        balls[old_ball_key][gv.num_cvs+2] -= 1
-        balls[new_ball_key][gv.num_cvs+2] += 1
-        ball_to_walkers[tuple(old_ball_center)].remove(i)
-        ball_to_walkers[tuple(new_ball_center)].append(i)
-        temp_walker_list[i].current_ball_key = new_ball_key
-        temp_walker_list[i].current_ball_center = new_ball_center
+    if gv.balls_flag == 0:
+        for i in walker_indices:
+            new_ball_key = closest_ball(temp_walker_list[i].current_coordinates, balls_array)
+            new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
+            old_ball_key = temp_walker_list[i].current_ball_key
+            old_ball_center = temp_walker_list[i].current_ball_center
+            balls[old_ball_key][gv.num_cvs+2] -= 1
+            balls[new_ball_key][gv.num_cvs+2] += 1
+            ball_to_walkers[tuple(old_ball_center)].remove(i)
+            ball_to_walkers[tuple(new_ball_center)].append(i)
+            temp_walker_list[i].current_ball_key = new_ball_key
+            temp_walker_list[i].current_ball_center = new_ball_center
 
     # sixth, record the new macrostate on the ball trajectory file.
     for i in walker_indices:

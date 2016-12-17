@@ -10,8 +10,6 @@ state_file = np.loadtxt('initial_states')
 state_file = state_file[0:6002]
 radius = 80.0
 num_clusters = 10
-num_walkers = 10
-
 
 def closest_ball(coordinates, balls, num_cvs):
     distance = np.zeros((balls.shape[0],))
@@ -198,41 +196,30 @@ while True:
     if num_clusters <= 1:
         break
 
-balls = np.zeros((num_walkers*(num_states+num_clusters), num_cvs))
-ball_to_traj = np.zeros((num_walkers*(num_states+num_clusters),))
-states = np.zeros((num_walkers*(num_states+num_clusters),))
+balls = np.zeros((num_states+new_balls.shape[0], num_cvs))
+ball_to_traj = np.zeros((num_states+new_balls.shape[0],))
+states = np.zeros((num_states+new_balls.shape[0],))
 
-indices = range(folded_balls.shape[0])
-indices = indices[0::int(folded_balls.shape[0]/num_walkers)]
-k = 0
-for i in range(num_walkers):
-    index = indices[k]
-    balls[i] = folded_balls[index]
-    ball_to_traj[i] = folded_ball_to_traj[index]
-    states[i] = 0
-    k += 1
+balls[0] = folded_balls[0]
+ball_to_traj[0] = folded_ball_to_traj[0]
+states[0] = 0
 
-indices = range(unfolded_balls.shape[0])
-indices = indices[0::int(unfolded_balls.shape[0]/num_walkers)]
-k = 0
-for i in range(num_walkers, num_states*num_walkers):
-    index = indices[k]
-    balls[i] = unfolded_balls[index]
-    ball_to_traj[i] = unfolded_ball_to_traj[index]
-    states[i] = 1
-    k += 1
+balls[1] = unfolded_balls[1]
+ball_to_traj[1] = unfolded_ball_to_traj[1]
+states[1] = 1
 
+balls_file = np.zeros((num_states+new_balls.shape[0], num_cvs+3))
+balls_file[0,0:num_cvs] = balls[0]
+balls_file[1,0:num_cvs] = balls[1]
+balls_file[0,num_cvs] = 0
+balls_file[1,num_cvs] = 1
+balls_file[0,num_cvs+1] = 0
+balls_file[1,num_cvs+1] = 1
+balls_file[:,num_cvs+2] = 0
 if num_clusters == 1:
-    indices = range(new_balls.shape[0])
-    indices = indices[0::int(new_balls.shape[0] / num_walkers)]
-    k = 0
-    for i in range(num_states*num_walkers, (num_states+num_clusters)*num_walkers):
-        index = indices[k]
-        balls[i] = new_balls[index]
-        ball_to_traj[i] = new_ball_to_traj[index]
-        states[i] = new_states[index]
-        k += 1
+    balls_file[num_states,0:num_cvs] = balls[num_states]
 else:
+    starting_index = num_states
     for i in range(num_clusters):
         first = 0
         neither_balls = np.zeros((1, num_cvs))
@@ -248,32 +235,16 @@ else:
                 neither_balls = np.append(neither_balls, [np.asarray(new_balls[j])], axis=0)
                 neither_ball_to_traj = np.append(neither_ball_to_traj, [np.asarray(new_ball_to_traj[j])], axis=0)
                 neither_states = np.append(neither_states, [np.asarray(new_states[j])], axis=0)
-        indices = range(neither_balls.shape[0])
-        indices = indices[0::int(neither_balls.shape[0] / num_walkers)]
-        k = 0
-        for j in range((num_states+i)*num_walkers, (num_states+i+1)*num_walkers):
-            index = indices[k]
-            balls[j] = neither_balls[index]
-            ball_to_traj[j] = neither_ball_to_traj[index]
-            states[j] = neither_states[index]
-            k += 1
+        for j in range(neither_balls.shape[0]):
+            index = starting_index+j
+            balls[index] = neither_balls[j]
+            balls_file[index,0:num_cvs] = neither_balls[j]
+            balls_file[index,num_cvs] = starting_index
+            balls_file[index,num_cvs+1] = num_states+i
+            ball_to_traj[index] = neither_ball_to_traj[j]
+            states[index] = neither_states[j]
+        starting_index += neither_balls.shape[0]
 
-np.savetxt('initial_values.txt', balls, fmt=' %1.10e')
-np.savetxt('ball_to_traj.txt', ball_to_traj, fmt=' %1.10e')
-np.savetxt('initial_states.txt', states, fmt=' %d')
-
-balls_file = np.zeros((num_states+num_clusters, num_cvs+3))
-balls_file[0,0:num_cvs] = balls[0]
-balls_file[1,0:num_cvs] = balls[num_walkers]
-if num_clusters == 1:
-    balls_file[num_states,0:num_cvs] = balls[num_states*num_walkers]
-else:
-    for i in range(num_clusters):
-        ball_key = closest_ball(centroids[i], normalized_second_evector, 1)
-        balls_file[(num_states+i),0:num_cvs] = new_balls[ball_key]
-balls_file[:,num_cvs] = radius
-balls_file[:,num_cvs+1] = np.arange(num_states+num_clusters)
-balls_file[:,num_cvs+2] = 0
 np.savetxt('balls_0.txt', balls_file, fmt=' %1.10e')
 
 for i in range(balls.shape[0]):
