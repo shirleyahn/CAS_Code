@@ -9,7 +9,8 @@ traj_file = traj_file[0:6002,:]
 state_file = np.loadtxt('initial_states')
 state_file = state_file[0:6002]
 radius = 80.0
-num_clusters = 10
+num_clusters = 1
+
 
 def closest_ball(coordinates, balls, num_cvs):
     distance = np.zeros((balls.shape[0],))
@@ -187,18 +188,24 @@ if np.min(normalized_second_evector) != 0.0:
 np.savetxt('committor_function.txt', normalized_second_evector, fmt=' %1.10e')
 
 # seventh, cluster states with committor function
-while True:
-    try:
-        centroids, labels = kmeans2(normalized_second_evector, num_clusters, minit='points', iter=200, missing='raise')
-        break
-    except ClusterError:
-        num_clusters -= 1
-    if num_clusters <= 1:
-        break
+if num_clusters > 1:
+    while True:
+        try:
+            centroids, labels = kmeans2(normalized_second_evector, num_clusters, minit='points', iter=200, missing='raise')
+            break
+        except ClusterError:
+            num_clusters -= 1
+        if num_clusters <= 1:
+            break
 
-balls = np.zeros((num_states+new_balls.shape[0], num_cvs))
-ball_to_traj = np.zeros((num_states+new_balls.shape[0],))
-states = np.zeros((num_states+new_balls.shape[0],))
+if num_clusters > 1:
+    balls = np.zeros((num_states+new_balls.shape[0], num_cvs))
+    ball_to_traj = np.zeros((num_states+new_balls.shape[0],))
+    states = np.zeros((num_states+new_balls.shape[0],))
+else:
+    balls = np.zeros((num_states+1, num_cvs))
+    ball_to_traj = np.zeros((num_states+1,))
+    states = np.zeros((num_states+1,))
 
 balls[0] = folded_balls[0]
 ball_to_traj[0] = folded_ball_to_traj[0]
@@ -208,7 +215,10 @@ balls[1] = unfolded_balls[1]
 ball_to_traj[1] = unfolded_ball_to_traj[1]
 states[1] = 1
 
-balls_file = np.zeros((num_states+new_balls.shape[0], num_cvs+3))
+if num_clusters > 1:
+    balls_file = np.zeros((num_states+new_balls.shape[0], num_cvs+3))
+else:
+    balls_file = np.zeros((num_states+1, num_cvs+3))
 balls_file[0,0:num_cvs] = balls[0]
 balls_file[1,0:num_cvs] = balls[1]
 balls_file[0,num_cvs] = 0
@@ -216,8 +226,14 @@ balls_file[1,num_cvs] = 1
 balls_file[0,num_cvs+1] = 0
 balls_file[1,num_cvs+1] = 1
 balls_file[:,num_cvs+2] = 0
+
 if num_clusters == 1:
-    balls_file[num_states,0:num_cvs] = balls[num_states]
+    balls[num_states] = new_balls[0]
+    ball_to_traj[num_states] = new_ball_to_traj[0]
+    states[num_states] = new_states[0]
+    balls_file[num_states,0:num_cvs] = new_balls[0]
+    balls_file[num_states,num_cvs] = num_states
+    balls_file[num_states,num_cvs+1] = num_states
 else:
     starting_index = num_states
     for i in range(num_clusters):

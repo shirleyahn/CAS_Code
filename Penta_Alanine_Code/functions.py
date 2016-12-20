@@ -88,7 +88,10 @@ def set_parameters():
         gv.total_num_walkers = gv.num_occupied_clusters*gv.num_walkers_for_sc
         gv.num_occupied_clusters = 0
     else:
-        gv.total_num_walkers = gv.num_occupied_balls
+        if gv.simulation_flag == 0:
+            gv.total_num_walkers = gv.num_occupied_balls
+        else:
+            gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
     gv.sc_performed = 0
     gv.sc_start = -1
 
@@ -113,7 +116,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             initial_values = [float(entry) for entry in line]
             # if rates/fluxes are calculated, obtain initial state
             if gv.rate_flag == 1:
-                initial_state = initial_states[n]
+                initial_state = int(initial_states[n])
             for i in range(n, n+1):
                 walker_list[i].set(initial_values, initial_weight)
                 if gv.rate_flag == 1:
@@ -151,20 +154,34 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].weight = weight
             f.close()
             f = open('trajectory.txt', 'r')
-            lines = f.readlines()[-2:]
-            previous_line = lines[0].strip().split()
-            previous_coordinates = [float(entry) for entry in previous_line]
-            current_line = lines[1].strip().split()
-            current_coordinates = [float(entry) for entry in current_line]
+            if gv.initial_step_num > 1:
+                lines = f.readlines()[-2:]
+                previous_line = lines[0].strip().split()
+                previous_coordinates = [float(entry) for entry in previous_line]
+                current_line = lines[1].strip().split()
+                current_coordinates = [float(entry) for entry in current_line]
+            else:
+                lines = f.readlines()[-1:]
+                previous_line = lines[0].strip().split()
+                previous_coordinates = [float(entry) for entry in previous_line]
+                current_line = previous_line
+                current_coordinates = previous_coordinates
             walker_list[i].previous_coordinates = previous_coordinates
             walker_list[i].current_coordinates = current_coordinates
             f.close()
             f = open('ball_trajectory.txt', 'r')
-            lines = f.readlines()[-2:]
-            previous_line = lines[0].strip().split()
-            previous_ball_center = [float(entry) for entry in previous_line[0:gv.num_cvs]]
-            current_line = lines[1].strip().split()
-            current_ball_center = [float(entry) for entry in current_line[0:gv.num_cvs]]
+            if gv.initial_step_num > 1:
+                lines = f.readlines()[-2:]
+                previous_line = lines[0].strip().split()
+                previous_ball_center = [float(entry) for entry in previous_line[0:gv.num_cvs]]
+                current_line = lines[1].strip().split()
+                current_ball_center = [float(entry) for entry in current_line[0:gv.num_cvs]]
+            else:
+                lines = f.readlines()[-1:]
+                previous_line = lines[0].strip().split()
+                previous_ball_center = [float(entry) for entry in previous_line[0:gv.num_cvs]]
+                current_line = previous_line
+                current_ball_center = previous_ball_center
             walker_list[i].previous_ball_center = previous_ball_center
             walker_list[i].current_ball_center = current_ball_center
             walker_list[i].radius = float(current_line[gv.num_cvs])
@@ -178,7 +195,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 os.chdir(gv.main_directory + '/CAS')
                 balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
                 balls_array = balls[:, 0:gv.num_cvs]
-                gv.current_num_balls = balls.shape[0]
+                gv.current_num_balls = balls[-1, gv.num_cvs+1] + 1  # last ball index + 1
                 for j in range(balls.shape[0]):
                     current_ball_center = balls[j][0:gv.num_cvs].tolist()
                     ball_to_walkers[tuple(current_ball_center)] = []
