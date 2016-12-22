@@ -137,7 +137,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             os.chdir(gv.main_directory)
             balls = np.loadtxt('balls_' + str(gv.initial_step_num) + '.txt')
             balls_array = balls[:, 0:gv.num_cvs]
-            gv.current_num_balls = balls[-1, gv.num_cvs+1]+1  # last ball index + 1
+            gv.current_num_balls = balls[-1, gv.num_cvs+1] + 1  # last ball index + 1
             for j in range(balls.shape[0]):
                 current_ball_center = balls[j][0:gv.num_cvs].tolist()
                 ball_to_walkers[tuple(current_ball_center)] = []
@@ -458,7 +458,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
 def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to_walkers):
     initial_weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     initial_weights_array = np.array(initial_weights)  # convert from list to array
-    walker_indices = np.argsort(initial_weights_array)  # sort walkers in ascending order based on their weights
+    walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
     flux = np.zeros((gv.num_states, gv.num_states))
     start = 0  # indicates whether we are dealing with the very first walker or not
 
@@ -1472,11 +1472,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             num_occupied_balls += 1
             current_ball_center = balls[current_ball][0:gv.num_cvs].tolist()
             initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(current_ball_center)]]
-            initial_weights_array = np.array(initial_weights)  # convert from list to array
-            walker_indices = np.argsort(-initial_weights_array)  # sort walkers in descending order based on their weights
             initial_indices = [temp_walker_list[i].global_index for i in ball_to_walkers[tuple(current_ball_center)]]
-            temp_initial_indices = initial_indices  # sorted indices based on descending order of weights
-            initial_indices = [temp_initial_indices[j] for j in walker_indices]
             # reset ball_to_walkers and balls
             ball_to_walkers[tuple(current_ball_center)] = []
             balls[current_ball][gv.num_cvs+2] = 0
@@ -1530,6 +1526,11 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                             weights_bin[l] = temp_walker_list[k].weight
                             indices_bin[l] = temp_walker_list[k].global_index
                             l += 1
+
+                weights_bin_array = np.array(weights_bin)  # convert from list to array
+                walker_indices = np.argsort(-weights_bin_array)  # sort walkers in descending order based on their weights
+                temp_indices_bin = indices_bin  # sorted indices based on descending order of weights
+                indices_bin = [temp_indices_bin[j] for j in walker_indices]
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers

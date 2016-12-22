@@ -211,8 +211,8 @@ balls[0] = folded_balls[0]
 ball_to_traj[0] = folded_ball_to_traj[0]
 states[0] = 0
 
-balls[1] = unfolded_balls[1]
-ball_to_traj[1] = unfolded_ball_to_traj[1]
+balls[1] = unfolded_balls[0]
+ball_to_traj[1] = unfolded_ball_to_traj[0]
 states[1] = 1
 
 if num_clusters > 1:
