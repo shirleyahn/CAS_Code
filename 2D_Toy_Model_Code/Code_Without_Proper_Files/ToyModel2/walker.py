@@ -15,6 +15,16 @@ class Walker:
         self.state = int(state)
         self.pathway = int(pathway)
 
+    def __repr__(self):
+        return "<Walker prev_coord:%s curr_coord:%s index:%s radius:%s prev_center:%s curr_center:%s prev_key:%s " \
+               "curr_key:%s step_num:%s weight:%s state:%s pathway:%s>" % (self.previous_coordinates,
+                                                                           self.current_coordinates, self.global_index,
+                                                                           self.radius, self.previous_ball_center,
+                                                                           self.current_ball_center,
+                                                                           self.previous_ball_key,
+                                                                           self.current_ball_key, self.initial_step_num,
+                                                                           self.weight, self.state, self.pathway)
+
     def set(self, current_coordinates, weight=0.0):
         self.current_coordinates = current_coordinates
         if weight > 0.0:

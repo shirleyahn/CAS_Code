@@ -1256,7 +1256,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                             l += 1
 
                 weights_bin_array = np.array(weights_bin)  # convert from list to array
-                walker_indices = np.argsort(-weights_bin_array)  # sort walkers in descending order based on their weights
+                walker_indices = np.argsort(weights_bin_array)  # sort walkers in ascending order based on their weights
                 temp_indices_bin = indices_bin  # sorted indices based on descending order of weights
                 indices_bin = [temp_indices_bin[j] for j in walker_indices]
 
