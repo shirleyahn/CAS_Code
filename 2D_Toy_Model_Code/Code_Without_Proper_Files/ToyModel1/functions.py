@@ -1148,13 +1148,14 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                             l += 1
 
                 weights_bin_array = np.array(weights_bin)  # convert from list to array
-                walker_indices = np.argsort(weights_bin_array)  # sort walkers in ascending order based on their weights
+                walker_indices = np.argsort(-weights_bin_array)  # sort walkers in descending order based on their weights
                 temp_indices_bin = indices_bin  # sorted indices based on descending order of weights
                 indices_bin = [temp_indices_bin[j] for j in walker_indices]
+                indices_bin_copy = [temp_indices_bin[j] for j in walker_indices]
 
                 total_weight = np.sum(weights_bin)
                 target_weight = total_weight/target_num_walkers
-                x = indices_bin.pop()
+                x = indices_bin.pop(0)
                 while True:
                     x_weight = weights[x]
                     if x_weight >= target_weight or len(indices_bin) == 0:
@@ -1168,22 +1169,21 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                             indices_bin.append(x)
                             weights[x] = x_weight-r*target_weight
                         if len(indices_bin) > 0:
-                            x = indices_bin.pop()
+                            x = indices_bin.pop(0)
                         else:
                             break
                     else:
-                        y = indices_bin.pop()
+                        y = indices_bin.pop(0)
                         y_weight = weights[y]
                         xy_weight = x_weight+y_weight
                         p = np.random.random()
-                        # swap x and y
                         if p < y_weight/xy_weight:
-                            temp = x
                             x = y
-                            y = temp
                         weights[x] = xy_weight
-                        if y not in new_indices:
-                            vacant_walker_indices.append(y)
+
+                for y in indices_bin_copy:
+                    if y not in new_indices:
+                        vacant_walker_indices.append(y)
 
                 # assign the resampled walkers to particular indices
                 for index_num, global_index in enumerate(new_indices):
@@ -1196,7 +1196,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     # otherwise, use one of the vacant walker indices or the next smallest index available
                     else:
                         if len(vacant_walker_indices) > 0:
-                            new_index = vacant_walker_indices.pop()
+                            new_index = vacant_walker_indices.pop(0)
                         else:
                             new_index = excess_index
                             excess_index += 1
@@ -1213,19 +1213,19 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     # finally, re-index the walkers so that the walkers have indices in order from 0 to total_num_walkers-1
     if total_num_walkers >= gv.total_num_walkers:
         for i in range(total_num_walkers, excess_index):
-            new_index = vacant_walker_indices.pop()
+            new_index = vacant_walker_indices.pop(0)
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
     else:
         for i in range(gv.total_num_walkers, excess_index):
-            new_index = vacant_walker_indices.pop()
+            new_index = vacant_walker_indices.pop(0)
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
         for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
-                new_index = vacant_walker_indices.pop()
+                new_index = vacant_walker_indices.pop(0)
                 while new_index >= total_num_walkers:
-                    new_index = vacant_walker_indices.pop()
+                    new_index = vacant_walker_indices.pop(0)
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
 
