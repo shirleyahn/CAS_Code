@@ -2,6 +2,7 @@ import numpy as np
 import os
 import shutil
 import copy
+import itertools
 from scipy import special
 from scipy.cluster.vq import kmeans2, ClusterError, whiten
 import walker
@@ -1187,7 +1188,6 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
         gv.sc_performed = 1
         gv.sc_start = -1
     num_occupied_balls = 0
-    weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
     if gv.enhanced_sampling_flag == 2:
         occupied_indices = np.zeros(gv.num_balls_for_sc*gv.num_walkers*100, int)
     else:
@@ -1218,8 +1218,8 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 states_list = range(gv.num_states)
                 for state in states_list:
                     num_walkers = 0
-                    for k in initial_indices:
-                        walker_state = temp_walker_list[k].state
+                    for i in initial_indices:
+                        walker_state = temp_walker_list[i].state
                         if walker_state == state:
                             num_walkers += 1
                     if num_walkers != 0:
@@ -1238,50 +1238,49 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 if remainder != 0 and state_num == num_states-1:
                     target_num_walkers += remainder
 
-                weights_bin = [float]*num_walkers_for_each_state[state_num]
-                indices_bin = [int]*num_walkers_for_each_state[state_num]
+                weights = [float]*num_walkers_for_each_state[state_num]
+                indices = [int]*num_walkers_for_each_state[state_num]
 
                 # if the macrostate only consists of one state
                 if num_states == 1:
-                    weights_bin = initial_weights
-                    indices_bin = initial_indices
+                    weights = initial_weights
+                    indices = initial_indices
                 # otherwise, need to pick out the walkers that are in the particular state of interest
                 else:
-                    l = 0
-                    for k in initial_indices:
-                        walker_state = temp_walker_list[k].state
+                    i = 0
+                    for j in initial_indices:
+                        walker_state = temp_walker_list[j].state
                         if state == walker_state:
-                            weights_bin[l] = temp_walker_list[k].weight
-                            indices_bin[l] = temp_walker_list[k].global_index
-                            l += 1
+                            weights[i] = temp_walker_list[j].weight
+                            indices[i] = temp_walker_list[j].global_index
+                            i += 1
 
-                weights_bin_array = np.array(weights_bin)  # convert from list to array
-                walker_indices = np.argsort(-weights_bin_array)  # sort walkers in descending order based on their weights
-                temp_indices_bin = indices_bin  # sorted indices based on descending order of weights
-                indices_bin = [temp_indices_bin[j] for j in walker_indices]
-                indices_bin_copy = [temp_indices_bin[j] for j in walker_indices]
+                indices_copy = [i for i in indices]
+                neg_weights = np.array([-i for i in weights])  # convert from list to array
+                sorted_list = list(np.argsort(neg_weights))  # sort walkers in descending order based on their weights
 
-                total_weight = np.sum(weights_bin)
+                total_weight = np.sum(weights)
                 target_weight = total_weight/target_num_walkers
-                x = indices_bin.pop(0)
+                x = sorted_list.pop()
                 while True:
                     x_weight = weights[x]
-                    if x_weight >= target_weight or len(indices_bin) == 0:
+                    current_walker = indices[x]
+                    if x_weight >= target_weight or len(sorted_list) == 0:
                         r = max(1, int(np.floor(x_weight/target_weight)))
                         r = min(r, target_num_walkers-new_num_walkers)
                         new_num_walkers += r
-                        for item in np.repeat(x, r):
-                            new_indices.append(item)
+                        for _ in itertools.repeat(x, r):
+                            new_indices.append(current_walker)
                             new_weights.append(target_weight)
                         if new_num_walkers < target_num_walkers and x_weight-r*target_weight > 0.0:
-                            indices_bin.append(x)
+                            sorted_list.append(x)
                             weights[x] = x_weight-r*target_weight
-                        if len(indices_bin) > 0:
-                            x = indices_bin.pop(0)
+                        if len(sorted_list) > 0:
+                            x = sorted_list.pop()
                         else:
                             break
                     else:
-                        y = indices_bin.pop(0)
+                        y = sorted_list.pop()
                         y_weight = weights[y]
                         xy_weight = x_weight+y_weight
                         p = np.random.random()
@@ -1289,12 +1288,12 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                             x = y
                         weights[x] = xy_weight
 
-                for y in indices_bin_copy:
-                    if y not in new_indices:
-                        vacant_walker_indices.append(y)
+                for x in indices_copy:
+                    if x not in new_indices:
+                        vacant_walker_indices.append(x)
                         # remove walker y directory
                         os.chdir(gv.main_directory + '/CAS')
-                        os.system('rm -rf walker' + str(y))
+                        os.system('rm -rf walker' + str(x))
 
                 # assign the resampled walkers to particular indices
                 for index_num, global_index in enumerate(new_indices):
@@ -1313,7 +1312,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     # otherwise, use one of the vacant walker indices or the next smallest index available
                     else:
                         if len(vacant_walker_indices) > 0:
-                            new_index = vacant_walker_indices.pop(0)
+                            new_index = vacant_walker_indices.pop()
                         else:
                             new_index = excess_index
                             excess_index += 1
@@ -1339,7 +1338,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
     # finally, re-index the walkers so that the walkers have indices in order from 0 to total_num_walkers-1
     if total_num_walkers >= gv.total_num_walkers:
         for i in range(total_num_walkers, excess_index):
-            new_index = vacant_walker_indices.pop(0)
+            new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
@@ -1347,7 +1346,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
     else:
         for i in range(gv.total_num_walkers, excess_index):
-            new_index = vacant_walker_indices.pop(0)
+            new_index = vacant_walker_indices.pop()
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
@@ -1355,9 +1354,9 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
         for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
-                new_index = vacant_walker_indices.pop(0)
+                new_index = vacant_walker_indices.pop()
                 while new_index >= total_num_walkers:
-                    new_index = vacant_walker_indices.pop(0)
+                    new_index = vacant_walker_indices.pop()
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
                 # rename the directory with name 'i' to 'new_index'
