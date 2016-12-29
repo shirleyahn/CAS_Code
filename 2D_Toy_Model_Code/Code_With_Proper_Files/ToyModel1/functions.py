@@ -1389,9 +1389,8 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
     # verify that total weight of all balls is 1.0
     f = open('total_weight.txt', 'a')
     if gv.enhanced_sampling_flag == 2:
-        f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' +
-                str(gv.num_occupied_clusters) + '\n')
+        f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' + str(gv.num_occupied_clusters) + '\n')
         gv.num_occupied_clusters = 0
     else:
-        f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + '\n')
+        f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' + str(gv.total_num_walkers) + '\n')
     return balls

@@ -530,13 +530,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
 
         # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
         if inside == 0:
-            current_ball_key = check_state_function.check_state_function(new_coordinates) #closest_ball(new_coordinates, balls_array)
-            if current_ball_key == -1:
-                if gv.current_num_balls == 3:
-                    current_ball_key = 2
-                else:
-                    calculated_ball_key = closest_ball(new_coordinates, balls_array[2:])
-                    current_ball_key = int(balls[calculated_ball_key+2][gv.num_cvs])
+            current_ball_key = closest_ball(new_coordinates, balls_array)
             current_ball_center = balls[current_ball_key][0:gv.num_cvs].tolist()
             distance_from_center = calculate_distance_from_center(current_ball_center, new_coordinates)
             if distance_from_center <= gv.radius or abs(distance_from_center - gv.radius) < 1.0e-10:
@@ -1667,8 +1661,7 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
     # verify that total weight of all balls is 1.0
     f = open('total_weight.txt', 'a')
     if gv.enhanced_sampling_flag == 2:
-        f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' +
-                str(gv.num_occupied_clusters) + '\n')
+        f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' + str(gv.num_occupied_clusters) + '\n')
         gv.num_occupied_clusters = 0
     else:
         f.write(str(step_num+1) + ' ' + str(total_weight) + ' ' + str(gv.num_occupied_balls) + ' ' + str(gv.total_num_walkers) + '\n')
