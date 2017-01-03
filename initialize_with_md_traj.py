@@ -4,10 +4,8 @@ from scipy.cluster.vq import kmeans2, ClusterError
 num_states = 2
 num_cvs = 6
 time_step = 500.0  # in ps
-traj_file = np.loadtxt('initial_values')
-traj_file = traj_file[0:6002,:]
-state_file = np.loadtxt('initial_states')
-state_file = state_file[0:6002]
+traj_file = np.loadtxt('initial_values_first')
+state_file = np.loadtxt('initial_states_first')
 radius = 80.0
 num_clusters = 1
 
@@ -30,8 +28,8 @@ def check_state_function(coordinates):
     if -100.0 <= coordinates[0] <= -30.0 and -90.0 <= coordinates[1] <= -10.0 and -100.0 <= coordinates[2] <= -30.0 and \
        -90.0 <= coordinates[3] <= -10.0 and -100.0 <= coordinates[4] <= -30.0 and -90.0 <= coordinates[5] <= -10.0:
         return 0
-    elif -180.0 <= coordinates[0] <= -55.0 and (105.0 <= coordinates[1] <= 180.0 or -180.0 <= coordinates[1] <= -155.0) \
-         -180.0 <= coordinates[2] <= -55.0 and (105.0 <= coordinates[3] <= 180.0 or -180.0 <= coordinates[3] <= -155.0) \
+    elif -180.0 <= coordinates[0] <= -55.0 and (105.0 <= coordinates[1] <= 180.0 or -180.0 <= coordinates[1] <= -155.0) and \
+         -180.0 <= coordinates[2] <= -55.0 and (105.0 <= coordinates[3] <= 180.0 or -180.0 <= coordinates[3] <= -155.0) and \
          -180.0 <= coordinates[4] <= -55.0 and (105.0 <= coordinates[5] <= 180.0 or -180.0 <= coordinates[5] <= -155.0):
         return 1
     else:
@@ -78,6 +76,8 @@ for i in range(traj_file.shape[0]):
             balls = np.append(balls, [np.asarray(traj_file[i])], axis=0)
             ball_to_traj = np.append(ball_to_traj, [np.asarray(i*time_step)], axis=0)
             states = np.append(states, [np.asarray(state_file[i])], axis=0)
+unique, counts = np.unique(states, return_counts=True)
+print folded_balls.shape, unfolded_balls.shape, balls.shape, np.asarray((unique,counts)).T
 
 # second, cover the rest of the states with macrostates
 new_balls = np.zeros((1, num_cvs))
@@ -175,6 +175,54 @@ final_evectors = evectors[:, idx]
 np.savetxt('evalues.txt', final_evalues, fmt=' %1.10e')
 np.savetxt('evectors.txt', final_evectors, fmt=' %1.10e')
 
+eq_weights = abs(final_evectors[:, 0])
+eq_weights /= np.sum(eq_weights)
+zero_weights_list = []
+for i in range(eq_weights.shape[0]):
+    if eq_weights[i] == 0.0:
+        zero_weights_list.append(i)
+print zero_weights_list
+
+new_eq_weights = np.zeros((eq_weights.shape[0]-len(zero_weights_list),))
+index = 0
+for i in range(eq_weights.shape[0]):
+    if eq_weights[i] != 0.0:
+        new_eq_weights[index] = eq_weights[i]
+        index += 1
+np.savetxt('eq_weights.txt', new_eq_weights, fmt=' %1.10e')
+
+balls = np.zeros((num_states+new_balls.shape[0], num_cvs))
+ball_to_traj = np.zeros((num_states+new_balls.shape[0],))
+states = np.zeros((num_states+new_balls.shape[0],))
+
+balls[0] = folded_balls[0]
+ball_to_traj[0] = folded_ball_to_traj[0]
+states[0] = 0
+
+balls[1] = unfolded_balls[0]
+ball_to_traj[1] = unfolded_ball_to_traj[0]
+states[1] = 1
+
+balls[2:] = new_balls
+ball_to_traj[2:] = new_ball_to_traj
+states[2:] = new_states
+
+final_balls = np.zeros((balls.shape[0]-len(zero_weights_list), num_cvs))
+final_ball_to_traj = np.zeros((ball_to_traj.shape[0]-len(zero_weights_list),))
+final_states = np.zeros((states.shape[0]-len(zero_weights_list),))
+
+index = 0
+for i in range(ball_to_traj.shape[0]):
+    if eq_weights[i] != 0.0:
+        final_balls[index,:] = balls[i,:]
+        final_ball_to_traj[index] = ball_to_traj[i]
+        final_states[index] = states[i]
+        index += 1
+
+np.savetxt('initial_values.txt', final_balls, fmt=' %1.10e')
+np.savetxt('ball_to_traj.txt', final_ball_to_traj, fmt=' %d')
+np.savetxt('initial_states.txt', final_states, fmt= '%d')
+
 # sixth, normalize the second evector by the first evector values -> good approximation to committor functions.
 normalized_second_evector = np.zeros((final_evectors.shape[0]-num_states, 1))
 for i in range(final_evectors.shape[0]-num_states):
@@ -263,5 +311,5 @@ else:
 
 np.savetxt('balls_0.txt', balls_file, fmt=' %1.10e')
 
-for i in range(balls.shape[0]):
-    print check_state_function(balls[i]), balls[i], states[i]
+#for i in range(balls.shape[0]):
+    #print check_state_function(balls[i]), balls[i], states[i]
