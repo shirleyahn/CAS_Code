@@ -5,9 +5,12 @@ num_states = 2
 num_cvs = 6
 time_step = 500.0  # in ps
 traj_file = np.loadtxt('initial_values_first')
+#traj_file = traj_file[0:6000]
 state_file = np.loadtxt('initial_states_first', dtype=int)
-radius = 180.0
+#state_file = state_file[0:6000]
+radius = 80.0
 num_clusters = 10
+boundary = 1.3
 
 
 def closest_ball(coordinates, balls, num_cvs):
@@ -50,7 +53,6 @@ folded_balls = np.zeros((1, num_cvs))
 folded_ball_to_traj = np.zeros((1,))
 unfolded_balls = np.zeros((1, num_cvs))
 unfolded_ball_to_traj = np.zeros((1,))
-clusters = np.zeros((traj_file.shape[0],), dtype=int)
 balls = np.zeros((1, num_cvs))
 ball_to_traj = np.zeros((1,))
 states = np.zeros((1,), dtype=int)
@@ -58,8 +60,8 @@ folded_present = 0
 unfolded_present = 0
 neither_present = 0
 for i in range(traj_file.shape[0]):
-    clusters[i] = check_state_function(traj_file[i])
-    if clusters[i] == 0:
+    current_state = check_state_function(traj_file[i])
+    if current_state == 0:
         if folded_present == 0:
             folded_balls[0] = traj_file[i]
             folded_ball_to_traj[0] = i*time_step
@@ -67,7 +69,7 @@ for i in range(traj_file.shape[0]):
         else:
             folded_balls = np.append(folded_balls, [np.asarray(traj_file[i])], axis=0)
             folded_ball_to_traj = np.append(folded_ball_to_traj, [np.asarray(i*time_step)], axis=0)
-    elif clusters[i] == 1:
+    elif current_state == 1:
         if unfolded_present == 0:
             unfolded_balls[0] = traj_file[i]
             unfolded_ball_to_traj[0] = i*time_step
@@ -162,7 +164,6 @@ new_folded_balls = np.delete(new_folded_balls, delete_list, 0)
 new_folded_ball_to_traj = np.delete(new_folded_ball_to_traj, delete_list, 0)
 balls_count = np.delete(balls_count, delete_list, 0)
 current_num_balls = new_folded_balls.shape[0]
-print new_folded_balls, balls_count
 
 # second, cover the unfolded states with macrostates
 new_unfolded_balls = np.zeros((1, num_cvs))
@@ -229,8 +230,6 @@ new_unfolded_ball_to_traj = np.delete(new_unfolded_ball_to_traj, delete_list, 0)
 if len(delete_list) != 0:
     delete_list += new_folded_balls.shape[0]
     balls_count = np.delete(balls_count, delete_list, 0)
-current_num_balls = new_folded_balls.shape[0]+new_unfolded_balls.shape[0]
-print new_unfolded_balls, balls_count
 
 # second, cover the rest of the states with macrostates
 new_balls = np.zeros((1, num_cvs))
@@ -317,7 +316,6 @@ if len(delete_list) != 0:
     delete_list += new_folded_balls.shape[0]+new_unfolded_balls.shape[0]
     balls_count = np.delete(balls_count, delete_list, 0)
 current_num_balls = new_folded_balls.shape[0]+new_unfolded_balls.shape[0]
-print new_balls, balls_count
 
 for i in range(new_distances.shape[0]):
     ball_index = i+new_folded_balls.shape[0]+new_unfolded_balls.shape[0]
@@ -327,7 +325,6 @@ for i in range(new_distances.shape[0]):
     if balls_count[ball_index, 1] != 0:
         new_distances[i, 1] /= balls_count[ball_index, 1]
         #new_distances[i, 1] = calculate_distance_from_center(unfolded_centroid, new_balls[i])
-print new_distances
 
 # fifth, calculate the transition matrix and its eigenvalues and eigenvectors
 transition_matrix_size = new_folded_balls.shape[0]+new_unfolded_balls.shape[0]+new_balls.shape[0]
@@ -378,14 +375,9 @@ unfolded_centroid = new_unfolded_balls[closest_unfolded]
 
 neither_committor = normalized_second_evector[new_folded_balls.shape[0]+new_unfolded_balls.shape[0]:]
 if num_clusters > 1:
-    while True:
-        try:
-            centroids, labels = kmeans2(neither_committor, num_clusters, minit='points', iter=200, missing='raise')
-            break
-        except ClusterError:
-            num_clusters -= 1
-        if num_clusters <= 1:
-            break
+    interval = boundary*2/num_clusters
+    clusters = np.arange(-boundary,boundary,interval)
+    print clusters
 
 if num_clusters > 1:
     balls = np.zeros((num_states+new_balls.shape[0], num_cvs))
@@ -425,7 +417,7 @@ if num_clusters == 1:
     balls_file[num_states,num_cvs+1] = num_states
 else:
     starting_index = num_states
-    new_balls_count = balls_count[new_folded_balls.shape[0]+new_unfolded_balls.shape[0]:]
+    new_balls_count = balls_count[new_folded_balls.shape[0]+new_unfolded_balls.shape[0]:,:]
     for i in range(num_clusters):
         first = 0
         neither_balls = np.zeros((1, num_cvs))
@@ -434,7 +426,7 @@ else:
         states_count = np.zeros((1, 2))
         distance = np.zeros((1, 2))
         for j in range(new_balls.shape[0]):
-            if labels[j] == i and first == 0:
+            if clusters[i] <= neither_committor[j] and ((i < num_clusters-1 and neither_committor[j] < clusters[i+1]) or (i == num_clusters-1 and neither_committor[j] <= boundary)) and first == 0:
                 first += 1
                 neither_balls[0] = new_balls[j]
                 neither_ball_to_traj[0] = new_ball_to_traj[j]
@@ -443,7 +435,8 @@ else:
                 folded_distance = calculate_distance_from_center(folded_centroid, new_balls[j])
                 unfolded_distance = calculate_distance_from_center(unfolded_centroid, new_balls[j])
                 distance += np.asarray((folded_distance, unfolded_distance))
-            elif labels[j] == i and first != 0:
+                #print neither_committor[j], new_balls[j], new_balls_count[j], folded_distance, unfolded_distance
+            elif clusters[i] <= neither_committor[j] and ((i < num_clusters-1 and neither_committor[j] < clusters[i+1]) or (i == num_clusters-1 and neither_committor[j] <= boundary)) and first != 0:
                 neither_balls = np.append(neither_balls, [np.asarray(new_balls[j])], axis=0)
                 neither_ball_to_traj = np.append(neither_ball_to_traj, [np.asarray(new_ball_to_traj[j])], axis=0)
                 neither_states = np.append(neither_states, [np.asarray(new_states[j])], axis=0)
@@ -451,15 +444,16 @@ else:
                 folded_distance = calculate_distance_from_center(folded_centroid, new_balls[j])
                 unfolded_distance = calculate_distance_from_center(unfolded_centroid, new_balls[j])
                 distance += np.asarray((folded_distance, unfolded_distance))
-        print centroids[i], states_count
-        if states_count[0, 0] != 0:
-            print distance[0, 0]/states_count[0, 0]
-        else:
-            print distance[0, 0]
-        if states_count[0, 1] != 0:
-            print distance[0, 1]/states_count[0, 1]
-        else:
-            print distance[0, 1]
+                #print neither_committor[j], new_balls[j], new_balls_count[j], folded_distance, unfolded_distance
+        print clusters[i], states_count, neither_balls[0]
+        #if states_count[0, 0] != 0:
+            #print distance[0, 0]/states_count[0, 0]
+        #else:
+            #print distance[0, 0]
+        #if states_count[0, 1] != 0:
+            #print distance[0, 1]/states_count[0, 1]
+        #else:
+            #print distance[0, 1]
         for j in range(neither_balls.shape[0]):
             index = starting_index+j
             balls[index] = neither_balls[j]
