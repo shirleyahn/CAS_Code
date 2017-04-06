@@ -19,6 +19,10 @@ def compute_transition_matrix(file_directory, size, num_matrices):
                     for i in range(size):
                         for j in range(size):
                             new_transition_matrix[i, j] = transition_matrix[new_indices[i], new_indices[j]]
+                    row_sum = np.sum(new_transition_matrix, axis=1)
+                    for i in range(new_transition_matrix.shape[0]):
+                        if row_sum[i] != 0.0:
+                            new_transition_matrix[i, :] /= row_sum[i]
                     avg_transition_matrix += new_transition_matrix
                     new_transition_matrix = new_transition_matrix.reshape((1, size, size))
                     if int(file[18:-4]) == 1:
@@ -34,4 +38,4 @@ def compute_transition_matrix(file_directory, size, num_matrices):
 
 
 if __name__ == '__main__':
-    compute_transition_matrix('CAS_180_v2', 10, 2)
+    compute_transition_matrix('CAS_180_v4', 12, 8)

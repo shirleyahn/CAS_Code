@@ -144,7 +144,8 @@ def diffusion_map(file_name, dimension, epsilon, label):
     # and use the first few eigenvectors of M for low-dimensional representation of data.
 
     balls = np.loadtxt(file_name)
-    balls = balls[balls[:,0].argsort()]
+    total_num = np.sum(balls[:,-1])
+    #balls = balls[balls[:,0].argsort()]
     matrix = balls[:, 0:dimension]
     new_matrix = convert_angles_to_cos_sin(matrix)
     kernel_matrix = np.zeros([new_matrix.shape[0], new_matrix.shape[0]])
@@ -162,7 +163,7 @@ def diffusion_map(file_name, dimension, epsilon, label):
     second_eval = evals[2]
     first_evec = evecs[:, 1]
     second_evec = evecs[:, 2]
-    if label != 'eq-after':
+    if label != 'eq-before':
         count = 0
         for i in range(balls.shape[0]):
             if balls[i, -1] == 0:
@@ -184,21 +185,16 @@ def diffusion_map(file_name, dimension, epsilon, label):
                 print ' '.join([str(x) for x in ball_coords[index, :]])
                 index += 1
     else:
-        count = 0
+        ball_coords = np.zeros([balls.shape[0], dimension+3])
+        weight = 0.0
         for i in range(balls.shape[0]):
-            if balls[i, -1] == 1:
-                count += 1
-        ball_coords = np.zeros([count, dimension+3])
-        index = 0
-        for i in range(balls.shape[0]):
-            if balls[i, -1] == 1:
-                ball_coords[index, 0:dimension] = balls[i, 0:dimension].tolist()
-                ball_coords[index, dimension] = first_eval*first_evec[i]
-                ball_coords[index, dimension+1] = second_eval*second_evec[i]
-                if balls[i, dimension] != 0.0:
-                    ball_coords[index, dimension+2] = (-0.0019872041*300*np.log(abs(balls[i, dimension]))).tolist()
-                print ' '.join([str(x) for x in ball_coords[index, :]])
-                index += 1
+            ball_coords[i, 0:dimension] = balls[i, 0:dimension].tolist()
+            ball_coords[i, dimension] = first_eval*first_evec[i]
+            ball_coords[i, dimension+1] = second_eval*second_evec[i]
+            if balls[i, -1] != 0.0:
+                weight = balls[i, -1]
+            ball_coords[i, dimension+2] = (-0.0019872041*300*np.log(weight/total_num)).tolist()
+            print ' '.join([str(x) for x in ball_coords[i, :]])
     #np.savetxt('labels.txt', ball_coords[:, dimension+2], fmt=' %1.10e')
 
 

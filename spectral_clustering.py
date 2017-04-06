@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import numpy as np
-import copy
 from scipy.cluster.vq import kmeans2, ClusterError
 import sys
 
