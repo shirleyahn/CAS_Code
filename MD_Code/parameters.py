@@ -1,5 +1,5 @@
-main_directory='/scratch/users/sahn1/Triazine'
-initial_configuration_directory='/scratch/users/sahn1/Triazine/InitConfig'
+main_directory='/scratch/users/sahn1/triazine'
+initial_configuration_directory='/scratch/users/sahn1/triazine/InitConfig'
 
 simulation_flag=0  # 0: new simulation. 1: restarting simulation that didn't run all walkers.
                    # 2: restarting simulation that didn't finish post-processing.
@@ -8,17 +8,17 @@ simulation_flag=0  # 0: new simulation. 1: restarting simulation that didn't run
 balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
 rate_flag=0  # 0: off. 1: on. rates/fluxes between pre-defined states will be calculated. the walker's state is
              # determined by check_state_function.py.
-num_states=1  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 0.
-enhanced_sampling_flag=1  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
+num_states=0  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 0.
+enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
                           # 2: spectral clustering.
 
-num_balls_limit=500  # parameter needed in case the calculated max_num_balls is greater than the limit.
-radius=1  # radius can be changed in the middle of the simulation.
+num_balls_limit=10000  # parameter needed in case the calculated max_num_balls is greater than the limit.
+radius=[0.5, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # radius can be changed in the middle of the simulation.
 num_walkers=10  # num_walkers should be fixed.
-num_cvs=1  # number of collective variables (num_cvs) should be fixed.
-lower_bound=0  # lower bound value for the collective variables.
-upper_bound=20  # upper bound value for the collective variables.
-angle_cvs=[0]  # 0: if the cv is not an angle. 1: if the cv is an angle.
+num_cvs=9  # number of collective variables (num_cvs) should be fixed.
+lower_bound=[0, -180.0, -180.0, -180.0, -180.0, -180.0, -180.0, -180.0, -180.0]   # lower bound value for the collective variables.
+upper_bound=[20, 180.0, 180.0, 180.0, 180.0, 180.0, 180.0, 180.0, 180.0]  # upper bound value for the collective variables.
+angle_cvs=[0, 1, 1, 1, 1, 1, 1, 1, 1]  # 0: if the cv is not an angle. 1: if the cv is an angle.
 
 initial_step_num=0  # initial_step_num should be changed from 0 when restarting a simulation.
 max_num_steps=50  # maximum number of steps for the simulation.

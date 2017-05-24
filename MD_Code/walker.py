@@ -5,7 +5,7 @@ class Walker:
         self.previous_coordinates = previous_coordinates
         self.current_coordinates = current_coordinates
         self.global_index = int(global_index)  # global_index indicates the corresponding trajectory file number
-        self.radius = float(radius)
+        self.radius = radius
         self.previous_ball_center = previous_ball_center
         self.current_ball_center = current_ball_center
         self.previous_ball_key = int(previous_ball_key)
