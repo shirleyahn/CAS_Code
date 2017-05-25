@@ -41,7 +41,9 @@ def closest_ball(walker_coordinates, balls_array):
             distance += distance_from_center
     #distance = np.sum((balls_array - walker_coordinates)**2, axis=1)
     inside_max = np.max(inside)
-    closest_ball_key = np.argmin(distance[inside == inside_max])
+    indices = np.where(inside == inside_max)[0]
+    index = np.argmin(distance[indices])
+    closest_ball_key = indices[index]
     return closest_ball_key, inside_max
 
 
