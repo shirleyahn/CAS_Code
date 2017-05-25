@@ -103,15 +103,16 @@ def initialize(input_initial_values_file, walker_list):
     initial_weight = 1.0/gv.total_num_walkers
     f = open(input_initial_values_file, 'r')
     if gv.rate_flag == 1:
-        initial_states = np.loadtxt('initial_states.txt')
+        rate_f = open('initial_states.txt', 'r')
     # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
     for n in range(gv.num_occupied_balls):
         # read initial values from file
         line = f.readline().strip().split()
         initial_values = [float(entry) for entry in line]
-        # if rates/fluxes are calculated, obtain initial state and pathway
+        # if rates/fluxes are calculated, obtain initial state
         if gv.rate_flag == 1:
-            initial_state = int(initial_states[n])
+            line = rate_f.readline().strip()
+            initial_state = int(line)
             initial_pathway = check_pathway_function.check_pathway_function(initial_values)
         for i in range(n, n+1):
             walker_list[i].set(initial_values, initial_weight)
@@ -119,6 +120,8 @@ def initialize(input_initial_values_file, walker_list):
                 walker_list[i].state = initial_state
                 walker_list[i].pathway = initial_pathway
     f.close()
+    if gv.rate_flag == 1:
+        rate_f.close()
 
     os.system('mkdir CAS')
 
