@@ -1,18 +1,58 @@
-The regular weighted ensemble simulation Python code was originally developed by H. Lee, Stanford. The bash script for 
-multiple simultaneous simulations was originally developed by S. Ahn, Stanford. The resampling method implemented in the 
-code is from E. Darve, Stanford and J. Izaguirre, University of Notre Dame. The Concurrent Adaptive Sampling (CAS) 
-algorithm Python code was developed on top of the regular weighted ensemble code by S. Ahn, Stanford. Outlier detection
-in spectral clustering has been implemented by J. Birgmeier, Stanford.
+The regular weighted ensemble method simulation Python code was originally developed by H. Lee, Stanford. The bash 
+script for multiple simultaneous simulations was originally developed by S. Ahn, Stanford. The resampling method 
+implemented in the code is from E. Darve and J. Izaguirre (Chapter 7 in Schlick's "Innovations in Biomolecular Modeling 
+and Simulations."). The Concurrent Adaptive Sampling (CAS) algorithm Python code was developed on top of the regular 
+weighted ensemble method code by S. Ahn, Stanford. Improvements on the parameter input file had been made by J. 
+Birgmeier, Stanford.
 
-Please see the TODO sections in main.py, execute.sh, simulations.sh to get started (e.g. edit main directories, 
-etc.). Then edit the initial_values.txt and parameters.py for your simulation.
+There are two folders provided in this Github repository: 2D_Toy_Model_Code and MD_Code. Each folder provides all of the
+needed code with input files for a particular example, e.g., toymodel1, toymodel2, and penta-alanine. In the 
+2D_Toy_Model_Code, Code_With_Proper_Files will make a separate folder with many output files for each walker and
+Code_Without_Proper_Files will only output minimum number of files like flux.txt, total_weight_on_each_ball.txt, etc. 
 
-Note that if more than one initial condition is provided, then write the initial values in order in the same file 
-(initial_values.txt) on the next line, i.e., if I have two initial conditions x = 1.0, y = 2.0, and x = 3.0, y = 4.0, 
-then my initial_values.txt would look like the following:
-1.0 2.0
-3.0 4.0
+# List of files
 
-execute.sh is the script to submit to your cluster to run the CAS algorithm.
+Here is the list of files provided and the files that the user needs to edit are bolded. All of the files need to be 
+downloaded and placed in the same directory.
+
+1. **`check_state_function.py`**: Defines the reactant and product states.
+User needs to edit this file if the user wants to calculate the fluxes between these states.
+
+2. **`clean_up.sh`** (only for MD_Code): 
+
+3. **`energy_function.py`** (only for 2D_Toy_Model_Code): Defines the free energy landscape of the system.
+User needs to edit this file if the user wants to run 2D toy model simulations (uses Metropolis algorithm to move walkers)
+
+4. **`execute_pbs.sh`** or **`execute_slurm.sh`**: Shell script to submit to the user's cluster to run a CAS simulation. 
+PBS and SLURM scripts are written separately as the name of the files imply.
+
+5. functions.py: Has all of the functions of the CAS algorithm. No need to edit.
+
+6. global_variables.py: Has all of the global variables used in the CAS algorithm. No need to edit.
+
+7. **`initial_states.txt`**: Defines whether the initial states are in the reactant or product state.
+User needs to edit this file if the user wants to calculate the fluxes between these states.
+
+8. **`initial_values.txt`**: Writes out the collective variables' values of the initial states. 
+User needs to edit this file. Note that if there is more than one initial state, then the user needs to write the 
+initial values on the next line for the next initial state, i.e., if I have two initial states x = 1.0, y = 2.0, 
+and x = 3.0, y = 4.0, then my initial_values.txt would look like the following:
+```
+    1.0 2.0
+    3.0 4.0
+```
+
+9. **`main.py`**: Main function of the CAS simulation.
+User needs to edit the main directory (highlighted in TODO), i.e. change it to the directory where all of the files are.
+
+10. **`parameters.py`**: Parameters of the CAS simulation. 
+User needs to extensively edit this for the user's CAS simulation and how to do that is detailed below in the "Howe to 
+edit parameters.py" section.
+
+11. **`simulations.sh`** (only for MD_Code):
+
+12. walker.py: Characterizes the walker object. No need to edit.
+
+# How to edit parameters.py
 
 Please report any bugs and questions/comments to sahn1@stanford.edu.
