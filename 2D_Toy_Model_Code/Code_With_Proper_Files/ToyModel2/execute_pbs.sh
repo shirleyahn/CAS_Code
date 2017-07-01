@@ -15,7 +15,7 @@
 ### Bash shell script is specific for PBS. This can be easily modified for other cluster systems (e.g. SLURM).
 ### ----------------------------------------------------------------------------------------------------------
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  #TODO: edit library path
 
 echo The master node of this job is `hostname`
 echo This job runs on the following nodes:

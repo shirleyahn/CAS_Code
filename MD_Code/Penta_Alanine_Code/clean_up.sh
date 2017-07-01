@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine  # TODO
-export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  # TODO
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  # TODO
-export GROMACS=/home/sahn1/gromacs/4.6.4/bin  # TODO
+export MAIN_DIRECTORY=/scratch/users/sahn1/Penta_Alanine  #TODO: edit main directory path
+export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  #TODO: edit walker directory path
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  #TODO: edit library path
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin  #TODO: edit MD program path
 
 # get sequence of walker indices from sh_input.txt
 cd $MAIN_DIRECTORY
@@ -19,6 +19,8 @@ for i in `seq $first_walker $last_walker`;
 do
     cd walker$i
     echo "post-processing walker$i"
+
+    # TODO: EDIT STARTS
     rm -rf nodefile*
     rm -rf mdout.mdp
     mv run.gro minim.gro
@@ -35,6 +37,7 @@ do
     mv out.xtc traj.xtc
     rm -rf run*
     rm -rf \#*
+    # TODO: EDIT ENDS
     cd ..
 done
 exit

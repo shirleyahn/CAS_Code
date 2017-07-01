@@ -16,6 +16,8 @@
 ### (e.g. SLURM) and other molecular dynamics simulation programs (e.g. LAMMPS).
 ### --------------------------------------------------------------------------------------------------------
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  #TODO: edit library path
+
 echo The master node of this job is `hostname`
 echo This job runs on the following nodes:
 echo `cat $PBS_NODEFILE`

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  #TODO
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  #TODO
-export GROMACS=/home/sahn1/gromacs/4.6.4/bin  #TODO
+export WALKER_DIRECTORY=/scratch/users/sahn1/Penta_Alanine/CAS  #TODO: edit walker directory path
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sahn1/  #TODO: edit library path
+export GROMACS=/home/sahn1/gromacs/4.6.4/bin  #TODO: edit MD program path
 
-num_nodes=1  # TODO
-num_cpu=16  # TODO
+num_nodes=1  # TODO: set number of nodes requested
+num_cpu=16  # TODO: set number of cores per node
 #num_gpu=4
 num_sim_walkers=$((num_nodes*num_cpu))
 
@@ -15,6 +15,7 @@ first_walker=$(echo $output | awk '{$NF=""}1')
 last_walker=$(echo $output | cut -d'_' -f 2)
 
 # assume walkers run in separate directories, walker0, walker1, ...
+# TODO: edit library path and MD program commands to start the simulations
 cd $WALKER_DIRECTORY
 counter=0
 pin=0
@@ -54,6 +55,7 @@ wait
 
 # post-process data after simulations are done. this needs to be modified depending on how the output files are named
 # and what collective variables are being collected from the simulations.
+# TODO: edit library path and MD program commands to start the simulations
 for i in `seq 0 $last_walker`;
 do
     cd walker$i
@@ -74,6 +76,7 @@ do
         `" &
     done
     wait
+    # TODO: EDIT STARTS
     rm -rf nodefile*
     rm -rf mdout.mdp
     mv run.gro minim.gro
@@ -90,6 +93,7 @@ do
     mv out.xtc traj.xtc
     rm -rf run*
     rm -rf \#*
+    # TODO: EDIT ENDS
     cd ..
 done
 exit
