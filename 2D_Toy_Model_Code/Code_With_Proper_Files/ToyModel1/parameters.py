@@ -1,13 +1,13 @@
 main_directory='/scratch/users/sahn1/2D_Toy_Model'
 
-balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
+balls_flag=0  # 0: create new balls at each step. 1: keep created balls (only allowed if enhanced sampling is off).
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states will be calculated. the walker's state is
              # determined by check_state_function.py.
 num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 0.
 enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
                           # 2: spectral clustering.
 
-num_balls_limit=1000  # parameter needed in case the calculated max_num_balls is greater than the limit.
+num_balls_limit=1000
 radius=0.1
 num_walkers=100
 num_cvs=2  # number of collective variables (num_cvs) should be fixed to be 2 for this case.

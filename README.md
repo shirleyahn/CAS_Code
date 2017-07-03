@@ -8,7 +8,8 @@ Birgmeier, Stanford.
 There are two folders provided in this Github repository: **2D_Toy_Model_Code** and **MD_Code**. Each folder provides 
 all of the needed code with input files for a particular example, e.g., toymodel1, toymodel2, and penta-alanine. In the 
 2D_Toy_Model_Code, **Code_With_Proper_Files** will make a separate folder with many output files for each walker and
-**Code_Without_Proper_Files** will only output minimum number of files like flux.txt, total_weight_on_each_ball.txt, etc. 
+**Code_Without_Proper_Files** will only output minimum number of files like flux.txt, total_weight_on_each_ball.txt, 
+total_weight.txt, time_record.txt, etc. 
 
 # List of input files
 
@@ -19,7 +20,7 @@ be downloaded and placed in the same directory.
 wants to calculate the fluxes between these states.
 
 2. **`clean_up.sh`** (only for MD_Code): Only used when simulation_flag in `parameters.py` is 2, or when the user is 
-restarting a CAS simulation that didn't finish post-processing or getting the new collective variables' values from the
+restarting a CAS simulation that didn't finish post-processing / getting the new collective variables' values from the
 walkers that finished running. User needs to edit this file and it will be almost equivalent to the post-processing
 part of `simulations.sh`. 
 
@@ -29,12 +30,19 @@ edit this file if the user wants to run 2D toy model simulations (uses Metropoli
 4. **`execute_pbs.sh`** or **`execute_slurm.sh`**: Shell script to submit to the user's cluster to run a CAS simulation. 
 PBS and SLURM scripts are written separately as the name of the files imply.
 
-5. functions.py: Has all of the functions of the CAS algorithm. No need to edit.
+5. **`functions.py`**: Has all of the functions of the CAS algorithm. User needs to edit a few parts in initialize 
+function (highlighted in TODO) that has initial config and simulation files' names (only for MD_Code).
 
 6. global_variables.py: Has all of the global variables used in the CAS algorithm. No need to edit.
 
 7. **`initial_states.txt`**: Defines whether the initial states are in the reactant or product state. User needs to edit 
-this file if the user wants to calculate the fluxes between these states.
+this file if the user wants to calculate the fluxes between these states. Note that if there is more than one initial 
+state, then the user needs to write the initial state on the next line for the next initial state, i.e., if I have two 
+initial states 0 and 1, then my initial_states.txt would look like the following:
+```
+    0
+    1
+```
 
 8. **`initial_values.txt`**: Writes out the collective variables' values of the initial states. User needs to edit this 
 file. Note that if there is more than one initial state, then the user needs to write the initial values on the next 
@@ -49,10 +57,10 @@ initial_values.txt would look like the following:
 i.e. change it to the directory where all of the files are.
 
 10. **`parameters.py`**: Parameters of the CAS simulation. User needs to **extensively** edit this file for the user's CAS 
-simulation and how to do that is detailed below in the "How to edit parameters.py" section.
+simulation and how to do that is detailed below in the **"How to edit parameters.py"** section.
 
 11. **`simulations.sh`** (only for MD_Code): Handles running walkers in parallel across the provided cores and 
-post-processing or getting the new collective variables' values from the walkers that finished running. User needs to 
+post-processing / getting the new collective variables' values from the walkers that finished running. User needs to 
 **extensively** edit this file for the user's CAS simulation, depending on the MD simulation program and what collective
 variables are of interest. 
 

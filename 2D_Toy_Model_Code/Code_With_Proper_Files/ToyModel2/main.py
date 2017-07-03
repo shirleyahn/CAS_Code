@@ -22,8 +22,8 @@ def CAS_simulation(input_initial_values_file):
         walker_list = [None]*(gv.num_balls_limit*gv.num_walkers*2)
         temp_walker_list = [None]*(gv.num_balls_limit*gv.num_walkers*2)
 
-    # balls is recorded in the following order: ball coordinates / ball radius / ball key / # of walkers
-    balls = np.zeros((1, gv.num_cvs+3))
+    # balls is recorded in the following order: ball coordinates / ball key / # of walkers
+    balls = np.zeros((1, gv.num_cvs+2))
     balls_array = np.zeros((1, gv.num_cvs))
     # maps ball coordinates to walkers
     ball_to_walkers = {}
@@ -34,7 +34,7 @@ def CAS_simulation(input_initial_values_file):
     for step_num in range(gv.max_num_steps):
         # reset ball objects so that balls are newly created at every step.
         if gv.balls_flag == 0:
-            balls = np.zeros((1, gv.num_cvs+3))
+            balls = np.zeros((1, gv.num_cvs+2))
             balls_array = np.zeros((1, gv.num_cvs))
             ball_to_walkers = {}
             gv.current_num_balls = 0

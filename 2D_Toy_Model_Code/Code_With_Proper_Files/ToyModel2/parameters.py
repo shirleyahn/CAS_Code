@@ -1,13 +1,13 @@
 main_directory='/scratch/users/sahn1/2D_Toy_Model'
 
-balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
+balls_flag=0  # 0: create new balls at each step. 1: keep created balls (only allowed if enhanced sampling is off).
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states will be calculated. the walker's state is
              # determined by check_state_function.py.
 num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 0.
-enhanced_sampling_flag=2  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
+enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
                           # 2: spectral clustering.
 
-num_balls_limit=1000  # parameter needed in case the calculated max_num_balls is greater than the limit.
+num_balls_limit=1000
 radius=0.1
 num_walkers=100
 num_cvs=2  # number of collective variables (num_cvs) should be fixed to be 2 for this case.
@@ -30,11 +30,11 @@ static_threshold_flag=1  # 0: off, then the lowest (less_or_greater_flag = 0) or
                          # "reference walker." 1: on, initial threshold is kept throughout the simulation.
 threshold_values=[1.0e-100]  # if some properties of the walker have values less or greater than the threshold values,
                              # then it is binned to the one designated "leftover" macrostate.
-properties_to_keep_track = [-1]  # properties of the walker that are compared against threshold values. this can be weight
-                                 # and/or some cv(s). if one of them is weight, then type -1. otherwise type the
-                                 # indices of the collective variables, e.g. if there are 3 cvs and you would like to keep
-                                 # track of the last one, then type 2 (index starts from 0). if there is more than one
-                                 # property to keep track of, then type them sequentially.
+properties_to_keep_track=[-1]  # properties of the walker that are compared against threshold values. this can be weight
+                               # and/or some cv(s). if one of them is weight, then type -1. otherwise type the
+                               # indices of the collective variables, e.g. if there are 3 cvs and you would like to keep
+                               # track of the last one, then type 2 (index starts from 0). if there is more than one
+                               # property to keep track of, then type them sequentially.
 
 ### for the next three lines, if enhanced_sampling flag == 2 ###
 num_balls_for_sc=1000  # minimum number of balls present to perform spectral clustering for that step.

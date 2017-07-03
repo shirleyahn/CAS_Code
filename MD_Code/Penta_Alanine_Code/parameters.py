@@ -5,14 +5,14 @@ simulation_flag=0  # 0: new simulation. 1: restarting simulation that didn't run
                    # 2: restarting simulation that didn't finish post-processing.
                    # 3: restarting simulation that didn't finish binning.
                    # 4: restarting simulation that didn't finish resampling.
-balls_flag=0  # 0: create new balls at each step. 1: keep created balls.
+balls_flag=0  # 0: create new balls at each step. 1: keep created balls (only allowed if enhanced sampling is off).
 rate_flag=1  # 0: off. 1: on. rates/fluxes between pre-defined states will be calculated. the walker's state is
              # determined by check_state_function.py.
 num_states=2  # number of pre-defined states for rate/flux calculation. only needed if rate_flag = 1, otherwise 0.
-enhanced_sampling_flag=2  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
+enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
                           # 2: spectral clustering.
 
-num_balls_limit=600  # parameter needed in case the calculated max_num_balls is greater than the limit.
+num_balls_limit=600
 radius=80.0  # radius can be changed in the middle of the simulation.
 num_walkers=10  # num_walkers should be fixed.
 num_cvs=6  # number of collective variables (num_cvs) should be fixed.

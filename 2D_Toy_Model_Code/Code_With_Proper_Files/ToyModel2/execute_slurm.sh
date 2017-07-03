@@ -25,17 +25,5 @@ echo "Running on $SLURM_NNODES nodes."
 echo "Running on $SLURM_NPROCS processors."
 echo "Current working directory is `pwd`"
 
-num_nodes=1  # TODO: set number of nodes requested
-num_cpu=1  # TODO: set number of cores per node
-
-scontrol show hostname $SLURM_JOB_NODELIST > initial_nodefilelist.txt
-rm -rf nodefilelist.txt
-for i in `seq 1 $num_nodes`;
-do
-    for j in `seq 1 $num_cpu`;
-    do
-        awk NR==$i initial_nodefilelist.txt >> nodefilelist.txt
-    done
-done
 python main.py
 exit

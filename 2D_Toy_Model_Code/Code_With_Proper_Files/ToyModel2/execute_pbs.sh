@@ -33,6 +33,5 @@ echo PBS: current home directory is $PBS_O_HOME
 echo PBS: PATH = $PBS_O_PATH
 
 cd $PBS_O_WORKDIR
-cat $PBS_NODEFILE > nodefilelist.txt
 python main.py
 exit

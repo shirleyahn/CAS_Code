@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#PBS -N A5_80
-#PBS -e A5_80.err
-#PBS -o A5_80.out
+#PBS -N A5
+#PBS -e A5.err
+#PBS -o A5.out
 #PBS -k oe
 #PBS -m aeb
 #PBS -M sahn1@stanford.edu
