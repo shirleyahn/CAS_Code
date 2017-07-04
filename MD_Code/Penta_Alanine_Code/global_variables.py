@@ -6,7 +6,7 @@ global initial_configuration_directory
 
 global simulation_flag
 global balls_flag
-global rate_flag
+global flux_flag
 global num_states
 global enhanced_sampling_flag
 
@@ -14,8 +14,6 @@ global num_balls_limit
 global radius
 global num_walkers
 global num_cvs
-global lower_bound
-global upper_bound
 global angle_cvs
 
 global initial_step_num

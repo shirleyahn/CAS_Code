@@ -4,14 +4,13 @@
 global main_directory
 
 global balls_flag
-global rate_flag
+global flux_flag
 global num_states
 global enhanced_sampling_flag
 
 global num_balls_limit
 global radius
 global num_walkers
-global num_cvs
 global grid_dimensions
 global angle_cvs
 
@@ -42,3 +41,4 @@ global num_occupied_clusters
 global sc_performed
 global sc_start
 global trans_mat_for_sc
+global num_cvs

@@ -40,7 +40,7 @@ def set_parameters():
     gv.initial_configuration_directory = p.initial_configuration_directory
     gv.simulation_flag = p.simulation_flag
     gv.balls_flag = p.balls_flag
-    gv.rate_flag = p.rate_flag
+    gv.flux_flag = p.flux_flag
     gv.num_states = p.num_states
     gv.enhanced_sampling_flag = p.enhanced_sampling_flag
     # macrostates can't be fixed if we use threshold binning or spectral clustering
@@ -50,8 +50,6 @@ def set_parameters():
     gv.radius = p.radius
     gv.num_walkers = p.num_walkers
     gv.num_cvs = p.num_cvs
-    gv.lower_bound = p.lower_bound
-    gv.upper_bound = p.upper_bound
     gv.angle_cvs = p.angle_cvs
     gv.initial_step_num = p.initial_step_num
     gv.max_num_steps = p.max_num_steps
@@ -96,24 +94,24 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         # all walkers have equally divided weights
         initial_weight = 1.0/gv.total_num_walkers
         f = open(input_initial_values_file, 'r')
-        if gv.rate_flag == 1:
-            rate_f = open('initial_states.txt', 'r')
+        if gv.flux_flag == 1:
+            flux_f = open('initial_states.txt', 'r')
         # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
         for n in range(gv.num_occupied_balls):
             # read initial values from file
             line = f.readline().strip().split()
             initial_values = [float(entry) for entry in line]
-            # if rates/fluxes are calculated, obtain initial state
-            if gv.rate_flag == 1:
-                line = rate_f.readline().strip()
+            # if fluxes are calculated, obtain initial state
+            if gv.flux_flag == 1:
+                line = flux_f.readline().strip()
                 initial_state = int(line)
             for i in range(n, n+1):
                 walker_list[i].set(initial_values, initial_weight)
-                if gv.rate_flag == 1:
+                if gv.flux_flag == 1:
                     walker_list[i].state = initial_state
         f.close()
-        if gv.rate_flag == 1:
-            rate_f.close()
+        if gv.flux_flag == 1:
+            flux_f.close()
 
         # make walker directories
         os.system('mkdir CAS')
@@ -122,7 +120,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             for i in range(n, n+1):
                 walker_directory = gv.main_directory + '/CAS/walker' + str(i)
                 os.mkdir(walker_directory)
-                # TODO: change initial config name
+                # TODO: change initial configurations' name
                 os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory)+
                           '/minim.gro')
 
@@ -182,7 +180,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].previous_ball_key = int(previous_line[gv.num_cvs])
             walker_list[i].current_ball_key = int(current_line[gv.num_cvs])
             f.close()
-            if gv.rate_flag == 1:
+            if gv.flux_flag == 1:
                 walker_list[i].state = int(current_line[-1])
             # in case created balls are kept throughout simulation
             if gv.balls_flag == 1:
@@ -244,7 +242,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             walker_list[i].previous_ball_key = int(previous_line[gv.num_cvs])
             walker_list[i].current_ball_key = int(current_line[gv.num_cvs])
             f.close()
-            if gv.rate_flag == 1:
+            if gv.flux_flag == 1:
                 walker_list[i].state = int(current_line[-1])
             # in case created balls are kept throughout simulation
             if gv.balls_flag == 1:
@@ -531,8 +529,8 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         initial_step_num = walker_list[i].initial_step_num
         weight = walker_list[i].weight
 
-        # calculate rates/fluxes if needed.
-        if gv.rate_flag == 1:
+        # calculate fluxes if needed.
+        if gv.flux_flag == 1:
             current_state = check_state_function.check_state_function(new_coordinates)
             if previous_state != -1 and current_state == -1:
                 current_state = previous_state
@@ -631,7 +629,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         balls_array = np.delete(balls_array, delete_list, 0)
 
     # output the total flux for this particular step to a text file, if needed.
-    if gv.rate_flag == 1:
+    if gv.flux_flag == 1:
         os.chdir(gv.main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
 
@@ -700,8 +698,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
         initial_step_num = walker_list[i].initial_step_num
         weight = walker_list[i].weight
 
-        # calculate rates/fluxes if needed.
-        if gv.rate_flag == 1:
+        # calculate fluxes if needed.
+        if gv.flux_flag == 1:
             current_state = check_state_function.check_state_function(new_coordinates)
             if previous_state != -1 and current_state == -1:
                 current_state = previous_state
@@ -955,7 +953,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
         balls_array = np.delete(balls_array, delete_list, 0)
 
     # output the total flux for this particular step to a text file, if needed.
-    if gv.rate_flag == 1:
+    if gv.flux_flag == 1:
         os.chdir(gv.main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
     # update threshold values if they are better
@@ -1328,9 +1326,9 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             states = [0]
             num_walkers_for_each_state = [len(initial_indices)]
 
-            # if rates/fluxes are calculated, we need to resample separately for each state,
+            # if fluxes are calculated, we need to resample separately for each state,
             # so check to see if more than one state exists in the macrostate/cluster.
-            if gv.rate_flag == 1:
+            if gv.flux_flag == 1:
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
@@ -1523,9 +1521,9 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             states = [-1]
             num_walkers_for_each_state = [len(initial_indices)]
 
-            # if rates/fluxes are calculated, we need to resample separately for each state,
+            # if fluxes are calculated, we need to resample separately for each state,
             # so check to see if more than one state exists in the macrostate.
-            if gv.rate_flag == 1:
+            if gv.flux_flag == 1:
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
