@@ -177,8 +177,8 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 current_ball_center = previous_ball_center
             walker_list[i].previous_ball_center = previous_ball_center
             walker_list[i].current_ball_center = current_ball_center
-            walker_list[i].previous_ball_key = int(previous_line[gv.num_cvs])
-            walker_list[i].current_ball_key = int(current_line[gv.num_cvs])
+            walker_list[i].previous_ball_key = int(previous_line[gv.num_cvs+1])
+            walker_list[i].current_ball_key = int(current_line[gv.num_cvs+1])
             f.close()
             if gv.flux_flag == 1:
                 walker_list[i].state = int(current_line[-1])
@@ -239,8 +239,8 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
                 current_ball_center = previous_ball_center
             walker_list[i].previous_ball_center = previous_ball_center
             walker_list[i].current_ball_center = current_ball_center
-            walker_list[i].previous_ball_key = int(previous_line[gv.num_cvs])
-            walker_list[i].current_ball_key = int(current_line[gv.num_cvs])
+            walker_list[i].previous_ball_key = int(previous_line[gv.num_cvs+1])
+            walker_list[i].current_ball_key = int(current_line[gv.num_cvs+1])
             f.close()
             if gv.flux_flag == 1:
                 walker_list[i].state = int(current_line[-1])
