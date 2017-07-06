@@ -227,15 +227,15 @@ type 2 (index starts from 0). if there is more than one property to keep track o
 
 ##### The next five lines are needed if enhanced_sampling flag = 2
 
-* num_occupied_clusters: number of occupied clusters or macrostates (union of Voronoi cells). it could be nonzero when 
+* num_occupied_clusters: number of occupied clusters or macrostates (unions of Voronoi cells). it could be nonzero when 
 restarting a simulation, otherwise 0.
 
 * num_balls_for_sc: minimum number of Voronoi cells present to start performing spectral clustering.
 
-* num_clusters: number of clusters or macrostates (union of Voronoi cells )for k-means part of spectral clustering.
+* num_clusters: number of clusters or macrostates (unions of Voronoi cells )for k-means part of spectral clustering.
 
 * num_walkers_for_sc: number of walkers for each cluster or macrostate (union of Voronoi cells).
 
-* num_steps_for_sc: number of steps needed to calculate the transition matrix for spectral clustering.
+* num_steps_for_sc: number of simulation steps needed to calculate the transition matrix for spectral clustering.
 
 Please report any bugs and questions/comments to sahn1@stanford.edu.
