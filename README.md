@@ -90,7 +90,11 @@ variables are of interest.
 
 * num_balls_limit: maximum number of macrostates in the simulation.
 
-* radius: radius of the Voronoi cells.
+* separate_radii_flag: either equal to 0 or 1.
+
+   0: off. 1: on. we have different radii for each collective variable.
+
+* radius: radii of the Voronoi cells. this will be a list if separate_radii_flag = 1, otherwise just a single number.
 
 * num_walkers: number of walkers per macrostate.
 
@@ -180,7 +184,11 @@ type 2 (index starts from 0). if there is more than one property to keep track o
 
 * num_balls_limit: maximum number of macrostates in the simulation.
 
-* radius: radius of the Voronoi cells.
+* separate_radii_flag: either equal to 0 or 1.
+
+   0: off. 1: on. we have different radii for each collective variable.
+
+* radius: radii of the Voronoi cells. this will be a list if separate_radii_flag = 1, otherwise just a single number.
 
 * num_walkers: number of walkers per macrostate.
 

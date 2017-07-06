@@ -14,7 +14,8 @@ enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some 
                           # 2: spectral clustering.
 
 num_balls_limit=600  # maximum number of macrostates in the simulation.
-radius=80.0  # radius of the Voronoi cells.
+separate_radii_flag=0  # 0: off. 1: on. we have different radii for each collective variable.
+radius=80.0  # radii of the Voronoi cells. this will be a list if separate_radii_flag = 1, otherwise just a single number.
 num_walkers=10  # number of walkers per macrostate.
 num_cvs=6  # number of collective variables.
 angle_cvs=[1, 1, 1, 1, 1, 1]  # 0: if the cv is not an angle. 1: if the cv is an angle.

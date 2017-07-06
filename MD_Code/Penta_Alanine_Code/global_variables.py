@@ -11,6 +11,7 @@ global num_states
 global enhanced_sampling_flag
 
 global num_balls_limit
+global separate_radii_flag
 global radius
 global num_walkers
 global num_cvs

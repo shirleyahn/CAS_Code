@@ -10,7 +10,8 @@ enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some 
                           # 2: spectral clustering.
 
 num_balls_limit=1000  # maximum number of macrostates in the simulation.
-radius=0.1  # radius of the Voronoi cells.
+separate_radii_flag=0  # 0: off. 1: on. we have different radii for each collective variable.
+radius=0.1  # radii of the Voronoi cells. this will be a list if separate_radii_flag = 1, otherwise just a single number.
 num_walkers=100  # number of walkers per macrostate.
 grid_dimensions=[-1.0, 1.0, -1.0, 1.0]  # since this is for a 2D toy model, this is equal to
                                         # [x_lower_bound, x_upper_bound, y_lower_bound, y_upper_bound].
