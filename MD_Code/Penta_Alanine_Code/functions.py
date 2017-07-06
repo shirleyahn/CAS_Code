@@ -128,7 +128,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         if gv.balls_flag == 1:
             os.chdir(gv.main_directory)
             created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
-            balls = np.zeros((created_balls.shape[0], gv.num_cvs+1))
+            balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
             balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
             balls_array = balls[:, 0:gv.num_cvs]
             gv.current_num_balls = balls.shape[0]
@@ -186,7 +186,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             if gv.balls_flag == 1:
                 os.chdir(gv.main_directory + '/CAS')
                 created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
-                balls = np.zeros((created_balls.shape[0], gv.num_cvs+1))
+                balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
                 balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
                 balls_array = balls[:, 0:gv.num_cvs]
                 gv.current_num_balls = balls.shape[0]
@@ -248,7 +248,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
             if gv.balls_flag == 1:
                 os.chdir(gv.main_directory + '/CAS')
                 created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
-                balls = np.zeros((created_balls.shape[0], gv.num_cvs+1))
+                balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
                 balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
                 balls_array = balls[:, 0:gv.num_cvs]
                 gv.current_num_balls = balls.shape[0]
@@ -475,7 +475,7 @@ def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, 
         if gv.balls_flag == 1:
             os.chdir(gv.main_directory + '/CAS')
             created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
-            balls = np.zeros((created_balls.shape[0], gv.num_cvs + 1))
+            balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
             balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
             balls_array = balls[:, 0:gv.num_cvs]
             gv.current_num_balls = balls.shape[0]
