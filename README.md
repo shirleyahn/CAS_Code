@@ -17,7 +17,10 @@ Here is the list of input files provided and the files that the user needs to ed
 be downloaded and placed in the same directory.
 
 1. **`check_state_function.py`**: Defines the reactant and product states. User needs to edit this file if the user 
-wants to calculate the fluxes between these states.
+wants to calculate the fluxes between these states. If the walker is not in one of the defined states, then the function 
+should return -1 for that walker. Otherwise, the function should return some other integer value. Make sure each state 
+returns an integer from 0 to number of states-1, i.e., if there are two defined states, then they are labeled by 0 and 1, 
+respectively.
 
 2. **`clean_up.sh`** (only for MD_Code): Only used when simulation_flag in `parameters.py` is 2, or when the user is 
 restarting a CAS simulation that didn't finish post-processing / getting the new collective variables' values from the
@@ -31,7 +34,10 @@ edit this file if the user wants to run 2D toy model simulations (uses Metropoli
 PBS and SLURM scripts are written separately as the name of the files imply.
 
 5. **`functions.py`**: Has all of the functions of the CAS algorithm. User needs to edit a few parts in initialize 
-function (highlighted in TODO) that has initial configurations' and simulation files' names (only for MD_Code).
+function (highlighted in TODO) that has initial configurations' and simulation files' names (only for MD_Code). Note 
+that each initial configurations' files are assumed to be the same and are followed by a number, e.g., minim_0.gro, 
+minim_1.gro, and so on. Hence, even if there is only one initial configuration, label it with a number, e.g., 
+minim_0.gro.
 
 6. global_variables.py: Has all of the global variables used in the CAS algorithm. No need to edit.
 
@@ -62,7 +68,8 @@ simulation and how to do that is detailed below in the **"How to edit parameters
 11. **`simulations.sh`** (only for MD_Code): Handles running walkers in parallel across the provided cores and 
 post-processing / getting the new collective variables' values from the walkers that finished running. User needs to 
 **extensively** edit this file for the user's CAS simulation, depending on the MD simulation program and what collective
-variables are of interest. 
+variables are of interest. Note that the necessary simulation files (e.g., initial structure file, simulation setting 
+file) need to be provided by the user for the simulations to run. 
 
 12. walker.py: Characterizes the walker object. No need to edit.
 
