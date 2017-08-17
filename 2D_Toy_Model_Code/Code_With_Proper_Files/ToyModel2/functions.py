@@ -778,9 +778,15 @@ def reweighting(step_num, balls):
                                           (2.0*(step_num-gv.initial_step_num_for_eq-gv.num_steps_for_eq+1))
 
     row_sum = np.sum(new_transition_matrix, axis=1)
+    zero_rows = []
     for i in range(new_transition_matrix.shape[0]):
         if row_sum[i] != 0.0:
             new_transition_matrix[i, :] /= row_sum[i]
+        else:
+            zero_rows.append(i)
+    for i in zero_rows:
+        new_transition_matrix = np.delete(new_transition_matrix, i, 0)
+        new_transition_matrix = np.delete(new_transition_matrix, i, 1)
     os.chdir(gv.main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
