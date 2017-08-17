@@ -58,11 +58,13 @@ def CAS_simulation(input_initial_values_file):
         # third, perform spectral clustering if enhanced_sampling_flag = 2.
         if gv.enhanced_sampling_flag == 2 and gv.num_balls_for_sc <= gv.num_occupied_balls and gv.sc_performed == 0 \
                 and gv.sc_start == -1:
-            # start fixing macrostates from this point on until we finish calculating the transition matrix
+            # start fixing macrostates from this point on until we finish calculating the transition matrix.
             gv.balls_flag = 1
             gv.sc_start = step_num
         if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 0 and gv.sc_start != -1:
-            functions.calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array)
+            functions.calculate_trans_mat(step_num, temp_walker_list, balls, balls_array)
+            # fourth, resample walkers for every macrostate.
+            balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
         if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1 and gv.sc_start != -1:
             ball_clusters_list = functions.spectral_clustering(step_num, balls)
             # fourth, resample walkers for every macrostate.
@@ -71,7 +73,30 @@ def CAS_simulation(input_initial_values_file):
                                                     ball_clusters_list)
             else:
                 balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
-        else:
+
+        # third, perform reweighting if enhanced_sampling_flag = 3.
+        if gv.enhanced_sampling_flag == 3 and gv.eq_frequency > 0 and step_num == gv.initial_step_num_for_eq:
+            # start fixing macrostates from this point on until we finish calculating the transition matrix.
+            gv.balls_flag = 1
+            functions.calculate_trans_mat(step_num, temp_walker_list, balls, balls_array)
+            # fourth, resample walkers for every macrostate.
+            balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
+        elif gv.enhanced_sampling_flag == 3 and gv.eq_frequency > 0 and \
+                        step_num < gv.initial_step_num_for_eq+gv.num_steps_for_eq:
+            functions.calculate_trans_mat(step_num, temp_walker_list, balls, balls_array)
+            # fourth, resample walkers for every macrostate.
+            balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
+        elif gv.enhanced_sampling_flag == 3 and gv.eq_frequency > 0 and \
+                        step_num == gv.initial_step_num_for_eq+gv.num_steps_for_eq:
+            gv.balls_flag = gv.prev_balls_flag
+            gv.eq_frequency -= 1
+            gv.initial_step_num_for_eq = step_num+gv.num_steps_in_bw
+            eq_weights = functions.reweighting(step_num, balls)
+            # fourth, resample walkers for every macrostate.
+            balls = functions.resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq_weights)
+
+        # third, resample walkers for every macrostate otherwise.
+        if gv.enhanced_sampling_flag == 0 or 1:
             balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # finally, output the results as text files.

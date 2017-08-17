@@ -52,7 +52,6 @@ def closest_ball(walker_coordinates, balls_array):
             inside_max = gv.num_cvs
         else:
             inside_max = 0
-
     return closest_ball_key, inside_max
 
 
@@ -87,12 +86,18 @@ def set_parameters():
         gv.num_clusters = p.num_clusters
         gv.num_walkers_for_sc = p.num_walkers_for_sc
         gv.num_steps_for_sc = p.num_steps_for_sc
+    elif gv.enhanced_sampling_flag == 3:
+        gv.initial_step_num_for_eq = p.initial_step_num_for_eq
+        gv.num_steps_for_eq = p.num_steps_for_eq
+        gv.eq_frequency = p.eq_frequency
+        gv.num_steps_in_bw = p.num_steps_in_bw
 
     gv.current_num_balls = 0
     gv.total_num_walkers = gv.num_occupied_balls
     gv.num_occupied_clusters = 0
     gv.sc_performed = 0
     gv.sc_start = -1
+    gv.prev_balls_flag = gv.balls_flag
     gv.num_cvs = 2
 
 
@@ -293,7 +298,6 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
             transition_matrix[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
         os.chdir(gv.main_directory + '/CAS')
         np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.10e')
-
     return balls, balls_array
 
 
@@ -544,7 +548,6 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                     threshold_replace_value -= 1
         if threshold_replace_value > 0:
             gv.threshold_values = new_threshold_values
-
     return balls, balls_array
 
 
@@ -652,21 +655,57 @@ def merge_with_outliers(outlier_labels, labels):
     return np.array(rv)
 
 
-def calculate_trans_mat_for_sc(step_num, temp_walker_list, balls, balls_array):
-    if step_num == gv.sc_start:
-        gv.trans_mat_for_sc = np.zeros((balls.shape[0], balls.shape[0]))
-    if step_num == gv.sc_start + gv.num_steps_for_sc:
+def calculate_trans_mat(step_num, temp_walker_list, balls, balls_array):
+    if (gv.enhanced_sampling_flag == 2 and step_num == gv.sc_start) or \
+            (gv.enhanced_sampling_flag == 3 and step_num == gv.initial_step_num_for_eq):
+        gv.trans_mat = np.zeros((balls.shape[0], balls.shape[0]))
+    if gv.enhanced_sampling_flag == 2 and step_num == gv.sc_start+gv.num_steps_for_sc:
         gv.sc_performed = 1  # indicate spectral clustering can be started after this step
 
-    if step_num == gv.sc_start or gv.num_steps_for_sc == 0:
+    if (gv.enhanced_sampling_flag == 2 and step_num == gv.sc_start or gv.num_steps_for_sc == 0) or \
+            (gv.enhanced_sampling_flag == 3 and step_num == gv.initial_step_num_for_eq or gv.num_steps_for_eq == 0):
         for i in range(gv.total_num_walkers):
             previous_coordinates = temp_walker_list[i].previous_coordinates
             previous_ball_key, inside = closest_ball(previous_coordinates, balls_array)
-            gv.trans_mat_for_sc[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
+            gv.trans_mat[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
     else:
         for i in range(gv.total_num_walkers):
-            gv.trans_mat_for_sc[temp_walker_list[i].previous_ball_key][temp_walker_list[i].current_ball_key] \
+            gv.trans_mat[temp_walker_list[i].previous_ball_key][temp_walker_list[i].current_ball_key] \
                 += temp_walker_list[i].weight
+
+
+def reweighting(step_num, balls):
+    # transition matrix should fulfill detailed balance if simulation is run under Hamiltonian dynamics in the
+    # canonical ensemble. equation is from Prinz, et al JCP (2011).
+    new_transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
+    for i in range(new_transition_matrix.shape[0]):
+        for j in range(new_transition_matrix.shape[1]):
+            new_transition_matrix[i][j] = (gv.trans_mat[i][j]+gv.trans_mat[j][i])/\
+                                          (2.0*(step_num-gv.initial_step_num_for_eq-gv.num_steps_for_eq+1))
+
+    row_sum = np.sum(new_transition_matrix, axis=1)
+    for i in range(new_transition_matrix.shape[0]):
+        if row_sum[i] != 0.0:
+            new_transition_matrix[i, :] /= row_sum[i]
+    os.chdir(gv.main_directory + '/CAS')
+    np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
+
+    evalues, evectors = np.linalg.eig(new_transition_matrix.T)
+    idx = abs(evalues).argsort()[::-1]
+    evalues = evalues[idx]
+    final_evalues = np.real(evalues)
+    evectors = evectors[:, idx]
+    final_evectors = np.real(evectors)
+    np.savetxt('evalues_' + str(step_num+1) + '.txt', final_evalues, fmt=' %1.10e')
+    np.savetxt('evectors_' + str(step_num+1) + '.txt', final_evectors, fmt=' %1.10e')
+    eq_weights = np.zeros((final_evectors.shape[0], 1))
+    for i in range(final_evectors.shape[0]):
+        if final_evectors[i, 0] != 0.0:
+            eq_weights[i] = abs(final_evectors[i, 0])
+        else:
+            eq_weights[i] = 0.0
+    eq_weights /= np.sum(eq_weights)  # normalize
+    return eq_weights
 
 
 def spectral_clustering(step_num, balls):
@@ -858,8 +897,167 @@ def spectral_clustering(step_num, balls):
         f.close()
     if num_balls != balls.shape[0]:
         gv.sc_performed = 0
-
     return ball_clusters_list
+
+
+def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq_weights):
+    num_occupied_balls = 0
+    occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
+    excess_index = gv.total_num_walkers
+    vacant_walker_indices = []
+    initial_total_weight = 0.0
+    for current_ball in range(balls.shape[0]):
+        if int(balls[current_ball][gv.num_cvs+1]) > 0:
+            initial_total_weight += eq_weights[current_ball]
+    if initial_total_weight != 1.0:
+        factor = 1.0/initial_total_weight
+        eq_weights *= factor
+
+    # loop through each macrostate and perform resampling within each macrostate
+    for current_ball in range(balls.shape[0]):
+        if int(balls[current_ball][gv.num_cvs+1]) > 0:
+            num_occupied_balls += 1
+            current_ball_center = balls[current_ball][0:gv.num_cvs].tolist()
+            initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(current_ball_center)]]
+            initial_indices = [temp_walker_list[i].global_index for i in ball_to_walkers[tuple(current_ball_center)]]
+            # reset ball_to_walkers and balls
+            ball_to_walkers[tuple(current_ball_center)] = []
+            balls[current_ball][gv.num_cvs+1] = 0
+
+            num_states = 1
+            states = [-1]
+            num_walkers_for_each_state = [len(initial_indices)]
+
+            # if fluxes are calculated, we need to resample separately for each state,
+            # so check to see if more than one state exists in the macrostate.
+            if gv.flux_flag == 1:
+                num_states = 0
+                states = []
+                num_walkers_for_each_state = []
+                states_list = range(gv.num_states)
+                for state in states_list:
+                    num_walkers = 0
+                    for i in initial_indices:
+                        walker_state = temp_walker_list[i].state
+                        if walker_state == state:
+                            num_walkers += 1
+                    if num_walkers != 0:
+                        num_states += 1
+                        states.append(state)
+                        num_walkers_for_each_state.append(num_walkers)
+
+            target_num_walkers = int(np.floor(float(gv.num_walkers)/num_states))
+            remainder = gv.num_walkers-target_num_walkers*num_states
+            # resample separately for each state in the macrostate
+            for state_num, state in enumerate(states):
+                new_weights = []
+                new_indices = []
+                new_num_walkers = 0
+                # add the remaining walkers to the very last state if there are any
+                if remainder != 0 and state_num == num_states-1:
+                    target_num_walkers += remainder
+
+                weights = [float]*num_walkers_for_each_state[state_num]
+                indices = [int]*num_walkers_for_each_state[state_num]
+
+                # if the macrostate only consists of one state
+                if num_states == 1:
+                    weights = initial_weights
+                    indices = initial_indices
+                # otherwise, need to pick out the walkers that are in the particular state of interest
+                else:
+                    i = 0
+                    for j in initial_indices:
+                        walker_state = temp_walker_list[j].state
+                        if state == walker_state:
+                            weights[i] = temp_walker_list[j].weight
+                            indices[i] = temp_walker_list[j].global_index
+                            i += 1
+
+                indices_copy = [i for i in indices]
+                neg_weights = np.array([-i for i in weights])  # convert from list to array
+                sorted_list = list(np.argsort(neg_weights))  # sort walkers in descending order based on their weights
+
+                total_weight = eq_weights[current_ball]/num_states
+                target_weight = total_weight/target_num_walkers
+                x = sorted_list.pop()
+                while True:
+                    x_weight = weights[x]
+                    current_walker = indices[x]
+                    if x_weight >= target_weight or len(sorted_list) == 0:
+                        r = max(1, int(np.floor(x_weight/target_weight)))
+                        r = min(r, target_num_walkers-new_num_walkers)
+                        new_num_walkers += r
+                        for _ in itertools.repeat(x, r):
+                            new_indices.append(current_walker)
+                            new_weights.append(target_weight)
+                        if new_num_walkers < target_num_walkers and x_weight-r*target_weight > 0.0:
+                            sorted_list.append(x)
+                            weights[x] = x_weight-r*target_weight
+                        if len(sorted_list) > 0:
+                            x = sorted_list.pop()
+                        else:
+                            break
+                    else:
+                        y = sorted_list.pop()
+                        y_weight = weights[y]
+                        xy_weight = x_weight+y_weight
+                        p = np.random.random()
+                        if p < y_weight/xy_weight:
+                            x = y
+                        weights[x] = xy_weight
+
+                for x in indices_copy:
+                    if x not in new_indices:
+                        vacant_walker_indices.append(x)
+
+                # assign the resampled walkers to particular indices
+                for index_num, global_index in enumerate(new_indices):
+                    # if the global index is not used up, use it
+                    if occupied_indices[global_index] == 0:
+                        occupied_indices[global_index] = 1
+                        walker_list[global_index].copy_walker(temp_walker_list[global_index])
+                        walker_list[global_index].weight = new_weights[index_num]
+                        ball_to_walkers[tuple(current_ball_center)].append(global_index)
+                    # otherwise, use one of the vacant walker indices or the next smallest index available
+                    else:
+                        if len(vacant_walker_indices) > 0:
+                            new_index = vacant_walker_indices.pop()
+                        else:
+                            new_index = excess_index
+                            excess_index += 1
+                        occupied_indices[new_index] = 1
+                        walker_list[new_index].copy_walker(temp_walker_list[global_index])
+                        walker_list[new_index].weight = new_weights[index_num]
+                        ball_to_walkers[tuple(current_ball_center)].append(new_index)
+                    balls[current_ball][gv.num_cvs+1] += 1
+
+    total_num_walkers = num_occupied_balls*gv.num_walkers
+    if excess_index-total_num_walkers != len(vacant_walker_indices):
+        print 'Something wrong with resampling'
+
+    # finally, re-index the walkers so that the walkers have indices in order from 0 to total_num_walkers-1
+    if total_num_walkers >= gv.total_num_walkers:
+        for i in range(total_num_walkers, excess_index):
+            new_index = vacant_walker_indices.pop()
+            occupied_indices[new_index] = 1
+            walker_list[new_index].copy_walker(walker_list[i])
+    else:
+        for i in range(gv.total_num_walkers, excess_index):
+            new_index = vacant_walker_indices.pop()
+            occupied_indices[new_index] = 1
+            walker_list[new_index].copy_walker(walker_list[i])
+        for i in range(total_num_walkers, gv.total_num_walkers):
+            if occupied_indices[i] == 1:
+                new_index = vacant_walker_indices.pop()
+                while new_index >= total_num_walkers:
+                    new_index = vacant_walker_indices.pop()
+                occupied_indices[new_index] = 1
+                walker_list[new_index].copy_walker(walker_list[i])
+
+    gv.total_num_walkers = total_num_walkers
+    gv.num_occupied_balls = num_occupied_balls
+    return balls
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):

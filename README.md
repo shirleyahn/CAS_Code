@@ -91,9 +91,10 @@ file) need to be provided by the user for the simulations to run.
 
 * num_states: number of pre-defined states for flux calculation. only needed if flux_flag = 1, otherwise 0.
 
-* enhanced_sampling_flag: either 0 or 1 or 2. 
+* enhanced_sampling_flag: either 0 or 1 or 2 or 3.
 
    0: off. 1: binning walkers if the walkers have some property less or greater than threshold. 2: spectral clustering.
+   3: reweighting with equilibrium weights.
 
 * num_balls_limit: maximum number of macrostates in the simulation.
 
@@ -160,6 +161,16 @@ type 2 (index starts from 0). if there is more than one property to keep track o
 
 * num_steps_for_sc: number of steps needed to calculate the transition matrix for spectral clustering.
 
+##### The next four lines are needed if enhanced_sampling flag = 3
+
+* initial_step_num_for_eq: starting CAS simulation step number for reweighting.
+
+* num_steps_for_eq: number of steps needed to calculate the transition matrix for reweighting.
+
+* eq_frequency: how many times to perform reweighting.
+
+* num_steps_in_bw: number of steps in between reweightings.
+
 ## MD_Code parameters.py
 
 * main_directory: main directory of where the CAS simulation will take place, i.e., where all of the files are.
@@ -185,9 +196,10 @@ type 2 (index starts from 0). if there is more than one property to keep track o
 
 * num_states: number of pre-defined states for flux calculation. only needed if flux_flag = 1, otherwise 0.
 
-* enhanced_sampling_flag: either 0 or 1 or 2. 
+* enhanced_sampling_flag: either 0 or 1 or 2 or 3.
 
    0: off. 1: binning walkers if the walkers have some property less or greater than threshold. 2: spectral clustering.
+   3: reweighting with equilibrium weights.
 
 * num_balls_limit: maximum number of macrostates in the simulation.
 
@@ -252,5 +264,15 @@ restarting a simulation, otherwise 0.
 * num_walkers_for_sc: number of walkers for each cluster or macrostate (union of Voronoi cells).
 
 * num_steps_for_sc: number of simulation steps needed to calculate the transition matrix for spectral clustering.
+
+##### The next four lines are needed if enhanced_sampling flag = 3
+
+* initial_step_num_for_eq: starting CAS simulation step number for reweighting.
+
+* num_steps_for_eq: number of steps needed to calculate the transition matrix for reweighting.
+
+* eq_frequency: how many times to perform reweighting.
+
+* num_steps_in_bw: number of steps in between reweightings.
 
 Please report any bugs and questions/comments to sahn1@stanford.edu.

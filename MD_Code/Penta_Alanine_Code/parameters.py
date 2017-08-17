@@ -11,7 +11,7 @@ flux_flag=1  # 0: off. 1: on. fluxes between pre-defined states will be calculat
              # check_state_function.py.
 num_states=2  # number of pre-defined states for flux calculation. only needed if flux_flag = 1, otherwise 0.
 enhanced_sampling_flag=0  # 0: off. 1: binning walkers if the walkers have some property less or greater than threshold.
-                          # 2: spectral clustering.
+                          # 2: spectral clustering. 3: reweighting with equilibrium weights.
 
 num_balls_limit=600  # maximum number of macrostates in the simulation.
 separate_radii_flag=0  # 0: off. 1: on. we have different radii for each collective variable.
@@ -48,3 +48,9 @@ num_balls_for_sc=100  # minimum number of Voronoi cells present to start perform
 num_clusters=5  # number of clusters or macrostates (union of Voronoi cells )for k-means part of spectral clustering.
 num_walkers_for_sc=50  # number of walkers for each cluster or macrostate (union of Voronoi cells).
 num_steps_for_sc=50  # number of steps needed to calculate the transition matrix for spectral clustering.
+
+### the next four lines are needed if enhanced_sampling flag = 3 ###
+initial_step_num_for_eq=1000  # starting CAS simulation step number for reweighting.
+num_steps_for_eq=50  # number of steps needed to calculate the transition matrix for reweighting.
+eq_frequency=2  # how many times to perform reweighting.
+num_steps_in_bw=10  # number of steps in between reweightings.

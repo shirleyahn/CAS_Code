@@ -33,6 +33,11 @@ global num_clusters
 global num_walkers_for_sc
 global num_steps_for_sc
 
+global initial_step_num_for_eq
+global num_steps_for_eq
+global eq_frequency
+global num_steps_in_bw
+
 ###
 # parameters that are set by functions.py
 ###
@@ -41,5 +46,6 @@ global total_num_walkers
 global num_occupied_clusters
 global sc_performed
 global sc_start
-global trans_mat_for_sc
+global prev_balls_flag
+global trans_mat
 global num_cvs
