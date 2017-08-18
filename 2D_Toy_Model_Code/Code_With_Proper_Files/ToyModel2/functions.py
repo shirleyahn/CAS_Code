@@ -63,7 +63,7 @@ def set_parameters():
     gv.num_states = p.num_states
     gv.enhanced_sampling_flag = p.enhanced_sampling_flag
     # macrostates can't be fixed if we use threshold binning or spectral clustering
-    if gv.enhanced_sampling_flag != 0 and gv.balls_flag == 1:
+    if (gv.enhanced_sampling_flag == 1 or gv.enhanced_sampling_flag == 2) and gv.balls_flag == 1:
         gv.balls_flag = 0
     gv.num_balls_limit = p.num_balls_limit
     gv.separate_radii_flag = p.separate_radii_flag

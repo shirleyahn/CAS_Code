@@ -64,7 +64,7 @@ def set_parameters():
     gv.num_states = p.num_states
     gv.enhanced_sampling_flag = p.enhanced_sampling_flag
     # macrostates can't be fixed if we use threshold binning or spectral clustering
-    if gv.enhanced_sampling_flag != 0 and gv.balls_flag == 1:
+    if (gv.enhanced_sampling_flag == 1 or gv.enhanced_sampling_flag == 2) and gv.balls_flag == 1:
         gv.balls_flag = 0
     gv.num_balls_limit = p.num_balls_limit
     gv.separate_radii_flag = p.separate_radii_flag
@@ -1105,7 +1105,23 @@ def merge_with_outliers(outlier_labels, labels):
     return np.array(rv)
 
 
-c
+def calculate_trans_mat(step_num, temp_walker_list, balls, balls_array):
+    if (gv.enhanced_sampling_flag == 2 and step_num == gv.sc_start) or \
+            (gv.enhanced_sampling_flag == 3 and step_num == gv.initial_step_num_for_eq):
+        gv.trans_mat = np.zeros((balls.shape[0], balls.shape[0]))
+    if gv.enhanced_sampling_flag == 2 and step_num == gv.sc_start+gv.num_steps_for_sc:
+        gv.sc_performed = 1  # indicate spectral clustering can be started after this step
+
+    if (gv.enhanced_sampling_flag == 2 and (step_num == gv.sc_start or gv.num_steps_for_sc == 0)) or \
+            (gv.enhanced_sampling_flag == 3 and (step_num == gv.initial_step_num_for_eq or gv.num_steps_for_eq == 0)):
+        for i in range(gv.total_num_walkers):
+            previous_coordinates = temp_walker_list[i].previous_coordinates
+            previous_ball_key, inside = closest_ball(previous_coordinates, balls_array)
+            gv.trans_mat[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
+    else:
+        for i in range(gv.total_num_walkers):
+            gv.trans_mat[temp_walker_list[i].previous_ball_key][temp_walker_list[i].current_ball_key] \
+                += temp_walker_list[i].weight
 
 
 def reweighting(step_num, balls):

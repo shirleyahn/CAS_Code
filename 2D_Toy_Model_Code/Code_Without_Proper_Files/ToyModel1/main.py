@@ -96,7 +96,7 @@ def CAS_simulation(input_initial_values_file):
             balls = functions.resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq_weights)
 
         # third, resample walkers for every macrostate otherwise.
-        if gv.enhanced_sampling_flag == 0 or 1:
+        if gv.enhanced_sampling_flag == 0 or gv.enhanced_sampling_flag == 1:
             balls = functions.resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers)
 
         # finally, output the results as text files.
