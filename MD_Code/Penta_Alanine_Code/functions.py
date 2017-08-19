@@ -108,6 +108,7 @@ def set_parameters():
     gv.sc_performed = 0
     gv.sc_start = -1
     gv.prev_balls_flag = gv.balls_flag
+    gv.resampling_performed = 0
 
 
 def initialize(input_initial_values_file, walker_list, temp_walker_list, balls, balls_array, ball_to_walkers):
@@ -1133,16 +1134,13 @@ def reweighting(step_num, balls):
             new_transition_matrix[i][j] = (gv.trans_mat[i][j]+gv.trans_mat[j][i])/\
                                           (2.0*(step_num-gv.initial_step_num_for_eq-gv.num_steps_for_eq+1))
 
-    row_sum = np.sum(new_transition_matrix, axis=1)
-    zero_rows = []
-    for i in range(new_transition_matrix.shape[0]):
-        if row_sum[i] != 0.0:
-            new_transition_matrix[i, :] /= row_sum[i]
-        else:
-            zero_rows.append(i)
-    for i in zero_rows:
+    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if np.allclose(new_transition_matrix[i, :], 0)]
+    for i in reversed(zero_row_indices):
         new_transition_matrix = np.delete(new_transition_matrix, i, 0)
         new_transition_matrix = np.delete(new_transition_matrix, i, 1)
+    row_sum = np.sum(new_transition_matrix, axis=1)
+    for i in range(new_transition_matrix.shape[0]):
+        new_transition_matrix[i, :] /= row_sum[i]
     os.chdir(gv.main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
@@ -1154,12 +1152,14 @@ def reweighting(step_num, balls):
     final_evectors = np.real(evectors)
     np.savetxt('evalues_' + str(step_num+1) + '.txt', final_evalues, fmt=' %1.10e')
     np.savetxt('evectors_' + str(step_num+1) + '.txt', final_evectors, fmt=' %1.10e')
-    eq_weights = np.zeros((final_evectors.shape[0], 1))
-    for i in range(final_evectors.shape[0]):
-        if final_evectors[i, 0] != 0.0:
-            eq_weights[i] = abs(final_evectors[i, 0])
-        else:
+    eq_weights = np.zeros((balls.shape[0],))
+    eq_weights_index = 0
+    for i in range(eq_weights.shape[0]):
+        if i in zero_row_indices:
             eq_weights[i] = 0.0
+        else:
+            eq_weights[i] = abs(final_evectors[eq_weights_index, 0])
+            eq_weights_index += 1
     eq_weights /= np.sum(eq_weights)  # normalize
     return eq_weights
 
@@ -1176,7 +1176,7 @@ def spectral_clustering(step_num, balls):
 
     row_sum = np.sum(new_transition_matrix, axis=1)
     for i in range(new_transition_matrix.shape[0]):
-        if row_sum[i] != 0.0:
+        if row_sum[i] > 0.0:
             new_transition_matrix[i, :] /= row_sum[i]
     os.chdir(gv.main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
@@ -1194,7 +1194,7 @@ def spectral_clustering(step_num, balls):
     num_clusters = gv.num_clusters
     normalized_second_evector = np.zeros((final_evectors.shape[0], 1))
     for i in range(final_evectors.shape[0]):
-        if final_evectors[i, 0] != 0.0:
+        if abs(final_evectors[i, 0]) > 0.0:
             normalized_second_evector[i] = final_evectors[i, 1] / abs(final_evectors[i, 0])
         else:
             normalized_second_evector[i] = 0.0
@@ -1358,6 +1358,7 @@ def spectral_clustering(step_num, balls):
 
 
 def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq_weights):
+    gv.resampling_performed = 1
     num_occupied_balls = 0
     occupied_indices = np.zeros(gv.num_balls_limit*gv.num_walkers*2, int)
     excess_index = gv.total_num_walkers
@@ -1436,6 +1437,9 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                 sorted_list = list(np.argsort(neg_weights))  # sort walkers in descending order based on their weights
 
                 total_weight = eq_weights[current_ball]/num_states
+                factor = total_weight/np.sum(weights)
+                weights_copy = [i*factor for i in weights]
+                weights = weights_copy
                 target_weight = total_weight/target_num_walkers
                 x = sorted_list.pop()
                 while True:
@@ -1545,6 +1549,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
 
 
 def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, ball_clusters_list):
+    gv.resampling_performed = 1
     num_occupied_clusters = 0
     num_occupied_balls = 0
     weights = [walker_list[i].weight for i in range(gv.total_num_walkers)]
@@ -1745,6 +1750,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
 
 
 def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
+    gv.resampling_performed = 1
     if gv.enhanced_sampling_flag == 2 and gv.sc_performed == 1:
         gv.sc_performed = 0
     elif gv.enhanced_sampling_flag == 2 and gv.sc_performed == 0 and gv.sc_start != -1 and \
@@ -1933,6 +1939,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
 
 
 def print_status(step_num, walker_list, balls, ball_to_walkers):
+    gv.resampling_performed = 0
     os.chdir(gv.main_directory + '/CAS')
     total_weight = 0.0
     f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')

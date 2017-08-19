@@ -49,3 +49,4 @@ global sc_start
 global prev_balls_flag
 global trans_mat
 global num_cvs
+global resampling_performed
