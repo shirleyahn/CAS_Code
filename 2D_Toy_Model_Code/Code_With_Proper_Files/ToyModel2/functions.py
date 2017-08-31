@@ -778,7 +778,7 @@ def reweighting(step_num, balls):
             new_transition_matrix[i][j] = (gv.trans_mat[i][j]+gv.trans_mat[j][i])/\
                                           (2.0*(step_num-gv.initial_step_num_for_eq-gv.num_steps_for_eq+1))
 
-    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if np.allclose(new_transition_matrix[i, :], 0)]
+    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if abs(np.sum(new_transition_matrix[i, :])) < 1.0e-20]
     for i in reversed(zero_row_indices):
         new_transition_matrix = np.delete(new_transition_matrix, i, 0)
         new_transition_matrix = np.delete(new_transition_matrix, i, 1)
@@ -798,13 +798,16 @@ def reweighting(step_num, balls):
     np.savetxt('evectors_' + str(step_num+1) + '.txt', final_evectors, fmt=' %1.10e')
     eq_weights = np.zeros((balls.shape[0],))
     eq_weights_index = 0
+    x_axis = np.zeros((new_transition_matrix.shape[0],))
     for i in range(eq_weights.shape[0]):
         if i in zero_row_indices:
             eq_weights[i] = 0.0
         else:
             eq_weights[i] = abs(final_evectors[eq_weights_index, 0])
+            x_axis[eq_weights_index] = i
             eq_weights_index += 1
     eq_weights /= np.sum(eq_weights)  # normalize
+    np.savetxt('x_axis_' + str(step_num+1) + '.txt', x_axis,fmt=' %1.5f')
     return eq_weights
 
 
