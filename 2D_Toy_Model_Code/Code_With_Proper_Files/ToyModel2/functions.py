@@ -457,10 +457,10 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                 walker_indices_list.remove(walker_index)
 
         # third, appropriately assign the walkers to the "leftover" macrostates
-        for i in walker_indices:
+        for i in walker_indices_list:
             binning_value = binning_values[i]
             if binning_value > lowest_binning_value:
-                ref_walker_index = leftover_macrostates[binning_value]
+                ref_walker_index = int(leftover_macrostates[binning_value])
                 current_ball_center = temp_walker_list[ref_walker_index].current_ball_center
                 current_ball_key = temp_walker_list[ref_walker_index].current_ball_key
                 current_state = temp_walker_list[i].state
