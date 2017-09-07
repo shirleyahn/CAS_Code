@@ -24,7 +24,6 @@ global beta
 global pbc
 
 global less_or_greater_flag
-global static_threshold_flag
 global threshold_values
 global properties_to_keep_track
 

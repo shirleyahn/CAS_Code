@@ -102,7 +102,7 @@ file) need to be provided by the user for the simulations to run.
 
    0: off. 1: on. we have different radii for each collective variable.
 
-* radius: radii of the Voronoi cells. this will be a list if separate_radii_flag = 1, otherwise just a single number.
+* radius: radii of the Voronoi cells.
 
 * num_walkers: number of walkers per macrostate.
 
@@ -135,21 +135,15 @@ file) need to be provided by the user for the simulations to run.
    0: criteria for binning walkers if the walkers have some property LESS than the threshold.
    
    1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
-
-* static_threshold_flag: either equal to 0 or 1.
-
-   0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1) value is set to be the 
-   threshold for the next step and all walkers are replaced with the "reference walker." 
    
-   1: on, then the initial threshold is kept throughout the simulation.
-   
-* threshold_values: list of threshold values. if some properties of the walker have values less or greater than the 
-threshold values, then it is binned to the one designated "leftover" macrostate.
+* threshold_values: list of threshold values. if at least one property of the walker has a value less or greater than 
+the threshold value, then it is binned to a "leftover" macrostate.
 
-* properties_to_keep_track: list of properties of the walker that are compared against threshold values. this can be 
-weight and/or some collective variables. if one of them is weight, then type -1. otherwise type the indices of the 
-collective variables, e.g. if there are 3 collective variables and you would like to keep track of the last one, then 
-type 2 (index starts from 0). if there is more than one property to keep track of, then type them sequentially.
+* properties_to_keep_track: list of properties of the walker that are compared against threshold values. This can be 
+weight and/or some collective variables and multiple duplicates are allowed. If one of them is weight, then type -1. 
+Otherwise type the indices of the collective variables, e.g., if there are 3 collective variables and you would like to 
+keep track of the last one twice for different threshold values, then type [2, 2] (index starts from 0). If there is 
+more than one property to keep track of, then type them sequentially.
 
 ##### The next four lines are needed if enhanced_sampling flag = 2
 
@@ -207,7 +201,7 @@ type 2 (index starts from 0). if there is more than one property to keep track o
 
    0: off. 1: on. we have different radii for each collective variable.
 
-* radius: radii of the Voronoi cells. this will be a list if separate_radii_flag = 1, otherwise just a single number.
+* radius: radii of the Voronoi cells.
 
 * num_walkers: number of walkers per macrostate.
 
@@ -237,20 +231,14 @@ it should be changed when restarting a simulation.
    
    1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
 
-* static_threshold_flag: either equal to 0 or 1.
+* threshold_values: list of threshold values. if at least one property of the walker has a value less or greater than 
+the threshold value, then it is binned to a "leftover" macrostate.
 
-   0: off, then the lowest (less_or_greater_flag = 0) or highest (less_or_greater_flag = 1) value is set to be the 
-   threshold for the next step and all walkers are replaced with the "reference walker." 
-   
-   1: on, then the initial threshold is kept throughout the simulation.
-   
-* threshold_values: list of threshold values. if some properties of the walker have values less or greater than the 
-threshold values, then it is binned to the one designated "leftover" macrostate.
-
-* properties_to_keep_track: list of properties of the walker that are compared against threshold values. this can be 
-weight and/or some collective variables. if one of them is weight, then type -1. otherwise type the indices of the 
-collective variables, e.g. if there are 3 collective variables and you would like to keep track of the last one, then 
-type 2 (index starts from 0). if there is more than one property to keep track of, then type them sequentially.
+* properties_to_keep_track: list of properties of the walker that are compared against threshold values. This can be 
+weight and/or some collective variables and multiple duplicates are allowed. If one of them is weight, then type -1. 
+Otherwise type the indices of the collective variables, e.g., if there are 3 collective variables and you would like to 
+keep track of the last one twice for different threshold values, then type [2, 2] (index starts from 0). If there is 
+more than one property to keep track of, then type them sequentially.
 
 ##### The next five lines are needed if enhanced_sampling flag = 2
 
