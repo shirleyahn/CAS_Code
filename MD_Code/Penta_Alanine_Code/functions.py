@@ -781,14 +781,20 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                 else:
                     balls_array = np.append(balls_array, [np.asarray(center_key_num)], axis=0)
                 center_key_num.append(gv.current_num_balls)
-                center_key_num.append(0)
+                center_key_num.append(1)
                 if gv.current_num_balls == 0:
                     balls[gv.current_num_balls] = np.asarray(center_key_num)
                 else:
                     balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
                 temp_walker_list[walker_index].current_ball_center = current_ball_center
                 temp_walker_list[walker_index].current_ball_key = gv.current_num_balls
+                ball_to_walkers[tuple(current_ball_center)].append(walker_index)
                 gv.current_num_balls += 1
+                walker_indices_to_delete_list.append(walker_index)
+
+        for i in walker_indices_to_delete_list:
+            walker_indices_list.remove(i)
+        walker_indices_to_delete_list = []
 
         # third, appropriately assign the walkers to the "leftover" macrostates
         for i in walker_indices_list:
