@@ -27,8 +27,8 @@ beta=10.0  # inverse temperature of the system.
 pbc=0  # 0: off. 1: periodic boundary conditions on.
 
 ### the next four lines are needed if enhanced_sampling_flag = 1 ###
-less_or_greater_flag=[0, 0]  # 0: criteria for binning walkers if the walkers have some property LESS than the threshold.
-                             # 1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
+less_or_greater_flag=0  # 0: criteria for binning walkers if the walkers have some property LESS than the threshold.
+                        # 1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
 threshold_values=[-0.5, 0.5]  # list of threshold values. if at least one property of the walker has a value less or
                               # greater than the threshold value, then it is binned to a "leftover" macrostate.
 properties_to_keep_track=[0, 0]  # list of properties of the walker that are compared against threshold values. this can

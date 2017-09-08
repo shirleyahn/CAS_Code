@@ -305,7 +305,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
     flux = np.zeros((gv.num_states, gv.num_states))
 
     # the list of their "binning values", i.e., a "binning value" indicates how many threshold requirements a walker did
-    # not meet, is needed. the list of "leftover" macrostates, the list of their binning values, and the list of their
+    # meet, is needed. the list of "leftover" macrostates, the list of their binning values, and the list of their
     # reference walkers are also needed.
     binning_values = np.zeros((gv.total_num_walkers,))
     leftover_macrostates = np.zeros((len(gv.properties_to_keep_track)+1,))
@@ -360,12 +360,13 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
             leftover_macrostates_ref_walkers.append(i)
             leftover_macrostates[binning_value] = i
 
-    # if all of the walkers do not meet all of the threshold requirements, then there's no need to have a threshold and
-    # separate binning. in this case, all of the walkers wil be binned normally as done in the function binning, i.e.,
-    # create macrostates for the walkers. but if at least one walker has met one of the threshold requirements, then we
-    # will proceed with the separate binning, i.e., bin the walkers that do not meet at least one of the threshold
-    # requirements to a "leftover" macrostate and bin the rest of walkers normally.
+    # if all of the walkers are equivalent, i.e., have the same binning value, then there's no need to have a threshold
+    # and separate binning. in this case, all of the walkers wil be binned normally as done in the function binning,
+    # i.e., create macrostates for the walkers. but if at least one walker has a different binning value, then we will
+    # proceed with the separate binning, i.e., bin the walkers with larger binning values to a "leftover" macrostate
+    # and bin the rest of walkers normally.
     walker_indices_list = walker_indices.tolist()
+    walker_indices_to_delete_list = []
     if len(leftover_macrostates_binning_values) > 1:
         # first, check to see what's the lowest binning value -> this macrostate will not be one of the "leftover" macrostates
         lowest_binning_value = len(gv.properties_to_keep_track)
@@ -385,16 +386,14 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                 else:
                     balls_array = np.append(balls_array, [np.asarray(center_key_num)], axis=0)
                 center_key_num.append(gv.current_num_balls)
-                center_key_num.append(1)
+                center_key_num.append(0)
                 if gv.current_num_balls == 0:
                     balls[gv.current_num_balls] = np.asarray(center_key_num)
                 else:
                     balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
-                ball_to_walkers[tuple(current_ball_center)] = [walker_index]
                 temp_walker_list[walker_index].current_ball_center = current_ball_center
                 temp_walker_list[walker_index].current_ball_key = gv.current_num_balls
                 gv.current_num_balls += 1
-                walker_indices_list.remove(walker_index)
 
         # third, appropriately assign the walkers to the "leftover" macrostates
         for i in walker_indices_list:
@@ -407,7 +406,11 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                 temp_walker_list[i].current_ball_key = current_ball_key
                 balls[current_ball_key][gv.num_cvs+1] += 1
                 ball_to_walkers[tuple(current_ball_center)].append(i)
-                walker_indices_list.remove(i)
+                walker_indices_to_delete_list.append(i)
+
+        # fourth, delete the walkers that are binned to "leftover" macrostates from the walker_indices_list
+        for i in walker_indices_to_delete_list:
+            walker_indices_list.remove(i)
 
     # bin the rest of the walkers normally as done in the function binning.
     start = 0  # indicates whether we are dealing with the very first walker or not for regular binning
@@ -438,7 +441,6 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
         # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
         if inside == 0:
             current_ball_key, inside = closest_ball(new_coordinates, balls_array)
-
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate due to
             # reaching the maximum number of macrostates limit.
             if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or
