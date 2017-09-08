@@ -788,7 +788,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                     balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
                 temp_walker_list[walker_index].current_ball_center = current_ball_center
                 temp_walker_list[walker_index].current_ball_key = gv.current_num_balls
-                ball_to_walkers[tuple(current_ball_center)].append(walker_index)
+                ball_to_walkers[tuple(current_ball_center)] = [walker_index]
                 gv.current_num_balls += 1
                 walker_indices_to_delete_list.append(walker_index)
 
