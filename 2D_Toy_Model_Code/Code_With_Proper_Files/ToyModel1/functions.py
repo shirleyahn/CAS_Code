@@ -718,7 +718,7 @@ def reweighting(step_num, balls):
             new_transition_matrix[i][j] = (gv.trans_mat[i][j]+gv.trans_mat[j][i])/\
                                           (2.0*(step_num-gv.initial_step_num_for_eq-gv.num_steps_for_eq+1))
 
-    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if abs(np.sum(new_transition_matrix[i, :])) < 1.0e-20]
+    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if abs(np.sum(new_transition_matrix[i, :])) < 1.0e-300]
     for i in reversed(zero_row_indices):
         new_transition_matrix = np.delete(new_transition_matrix, i, 0)
         new_transition_matrix = np.delete(new_transition_matrix, i, 1)
@@ -738,16 +738,40 @@ def reweighting(step_num, balls):
     np.savetxt('evectors_' + str(step_num+1) + '.txt', final_evectors, fmt=' %1.10e')
     eq_weights = np.zeros((balls.shape[0],))
     eq_weights_index = 0
-    x_axis = np.zeros((new_transition_matrix.shape[0],))
+    if gv.num_cvs == 1:
+        x_axis = np.zeros((new_transition_matrix.shape[0],))
+    elif gv.num_cvs == 2:
+        x_axis = np.zeros((new_transition_matrix.shape[0],))
+        y_axis = np.zeros((new_transition_matrix.shape[0],))
+    elif gv.num_cvs == 3:
+        x_axis = np.zeros((new_transition_matrix.shape[0],))
+        y_axis = np.zeros((new_transition_matrix.shape[0],))
+        z_axis = np.zeros((new_transition_matrix.shape[0],))
     for i in range(eq_weights.shape[0]):
         if i in zero_row_indices:
             eq_weights[i] = 0.0
         else:
             eq_weights[i] = abs(final_evectors[eq_weights_index, 0])
-            x_axis[eq_weights_index] = i
+            if gv.num_cvs == 1:
+                x_axis[eq_weights_index] = balls[i, 0]
+            elif gv.num_cvs == 2:
+                x_axis[eq_weights_index] = balls[i, 0]
+                y_axis[eq_weights_index] = balls[i, 1]
+            elif gv.num_cvs == 3:
+                x_axis[eq_weights_index] = balls[i, 0]
+                y_axis[eq_weights_index] = balls[i, 1]
+                z_axis[eq_weights_index] = balls[i, 2]
             eq_weights_index += 1
     eq_weights /= np.sum(eq_weights)  # normalize
-    np.savetxt('x_axis_' + str(step_num+1) + '.txt', x_axis,fmt=' %1.5f')
+    if gv.num_cvs == 1:
+        np.savetxt('x_axis_' + str(step_num+1) + '.txt', x_axis, fmt=' %1.5f')
+    elif gv.num_cvs == 2:
+        np.savetxt('x_axis_' + str(step_num+1) + '.txt', x_axis, fmt=' %1.5f')
+        np.savetxt('y_axis_' + str(step_num+1) + '.txt', y_axis, fmt=' %1.5f')
+    elif gv.num_cvs == 3:
+        np.savetxt('x_axis_' + str(step_num+1) + '.txt', x_axis, fmt=' %1.5f')
+        np.savetxt('y_axis_' + str(step_num+1) + '.txt', y_axis, fmt=' %1.5f')
+        np.savetxt('z_axis_' + str(step_num+1) + '.txt', z_axis, fmt=' %1.5f')
     return eq_weights
 
 
