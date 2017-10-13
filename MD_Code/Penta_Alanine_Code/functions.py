@@ -891,6 +891,27 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
             temp_walker_list[i].current_ball_key = new_ball_key
             temp_walker_list[i].current_ball_center = new_ball_center
 
+    # if the total weight of a macrostate is too small, then all of the walkers in that macrostate should be binned to the nearest macrostate
+    for current_ball in range(balls.shape[0]):
+        if int(balls[current_ball][gv.num_cvs+1]) > 0:
+            current_ball_center = balls[current_ball][0:gv.num_cvs].tolist()
+            initial_weights = [temp_walker_list[i].weight for i in ball_to_walkers[tuple(current_ball_center)]]
+            initial_indices = [temp_walker_list[i].global_index for i in ball_to_walkers[tuple(current_ball_center)]]
+            if np.sum(initial_weights) < 1.0e-250:
+                # reset ball_to_walkers and balls
+                ball_to_walkers[tuple(current_ball_center)] = []
+                balls[current_ball][gv.num_cvs+1] = 0
+                for walker_index in initial_indices:
+                    new_coordinates = temp_walker_list[walker_index].current_coordinates
+                    current_ball_key, inside = closest_ball(new_coordinates, np.delete(balls_array, current_ball, 0))
+                    if current_ball <= current_ball_key:
+                        current_ball_key += 1
+                    balls[current_ball_key][gv.num_cvs+1] += 1
+                    current_ball_center = balls[current_ball_key][0:gv.num_cvs].tolist()
+                    ball_to_walkers[tuple(current_ball_center)].append(walker_index)
+                    temp_walker_list[walker_index].current_ball_center = current_ball_center
+                    temp_walker_list[walker_index].current_ball_key = current_ball_key
+
     # record the new coordinates' values on the trajectory file and the new macrostate on the ball trajectory file.
     for i in walker_indices_list:
         walker_directory = gv.main_directory + '/CAS/walker' + str(i)
