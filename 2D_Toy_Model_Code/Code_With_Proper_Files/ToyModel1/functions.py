@@ -25,11 +25,12 @@ def calculate_distance_from_center(center, values):
     return np.sqrt(distance)
 
 
-def closest_ball(walker_coordinates, balls_array):
+def closest_ball(walker_coordinates, balls_array, ball_radius):
     distance = np.zeros((balls_array.shape[0],))
     inside = np.zeros((balls_array.shape[0],))
     for i in range(gv.num_cvs):
-        radius = gv.radius[i]
+        if gv.num_cvs > 1:
+            radius = float(ball_radius[i])
         if gv.angle_cvs[i] == 0:
             distance_from_center = (balls_array[:, i] - walker_coordinates[i])**2
             inside[distance_from_center <= radius**2] += 1
@@ -78,6 +79,7 @@ def set_parameters():
         gv.less_or_greater_flag = p.less_or_greater_flag
         gv.threshold_values = p.threshold_values
         gv.properties_to_keep_track = p.properties_to_keep_track
+        gv.coarse_radius = p.coarse_radius
     elif gv.enhanced_sampling_flag == 2:
         gv.num_balls_for_sc = p.num_balls_for_sc
         gv.num_clusters = p.num_clusters
@@ -248,7 +250,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
 
         # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
         if inside == 0:
-            current_ball_key, inside = closest_ball(new_coordinates, balls_array)
+            current_ball_key, inside = closest_ball(new_coordinates, balls_array, gv.radius)
 
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate due to
             # reaching the maximum number of macrostates limit and/or balls_flag = 1.
@@ -280,7 +282,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
     if gv.balls_flag == 0:
         for i in walker_indices:
             current_coordinates = temp_walker_list[i].current_coordinates
-            new_ball_key, inside = closest_ball(current_coordinates, balls_array)
+            new_ball_key, inside = closest_ball(current_coordinates, balls_array, gv.radius)
             if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or gv.balls_flag == 1)):
                 new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
                 old_ball_key = temp_walker_list[i].current_ball_key
@@ -340,12 +342,9 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
     flux = np.zeros((gv.num_states, gv.num_states))
 
     # the list of their "binning values", i.e., a "binning value" indicates how many threshold requirements a walker did
-    # meet, is needed. the list of "leftover" macrostates, the list of their binning values, and the list of their
-    # reference walkers are also needed.
+    # meet, is needed. the list of coarse macrostates' binning values is also needed.
     binning_values = np.zeros((gv.total_num_walkers,))
-    leftover_macrostates = np.zeros((len(gv.properties_to_keep_track)+1,))
-    leftover_macrostates_binning_values = []
-    leftover_macrostates_ref_walkers = []
+    coarse_macrostates_binning_values = []
 
     # loop through all of the walkers in descending order based on their weights.
     for i in walker_indices:
@@ -415,80 +414,120 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
                 if properties_to_keep_track[m] > gv.threshold_values[m]:
                     binning_value += 1
         binning_values[i] = binning_value
-        if binning_value not in leftover_macrostates_binning_values:
-            leftover_macrostates_binning_values.append(binning_value)
-            leftover_macrostates_ref_walkers.append(i)
-            leftover_macrostates[binning_value] = i
+        if binning_value not in coarse_macrostates_binning_values:
+            coarse_macrostates_binning_values.append(binning_value)
 
     # if all of the walkers are equivalent, i.e., have the same binning value, then there's no need to have a threshold
     # and separate binning. in this case, all of the walkers wil be binned normally as done in the function binning,
     # i.e., create macrostates for the walkers. but if at least one walker has a different binning value, then we will
-    # proceed with the separate binning, i.e., bin the walkers with larger binning values to a "leftover" macrostate
-    # and bin the rest of walkers normally.
+    # proceed with the separate binning, i.e., bin the walkers with larger binning values coarsely and bin the rest of
+    # walkers normally.
     walker_indices_list = walker_indices.tolist()
     walker_indices_to_delete_list = []
-    if len(leftover_macrostates_binning_values) > 1:
-        # first, check to see what's the lowest binning value -> this macrostate will not be one of the "leftover" macrostates
+    num_coarse_balls = 0
+    if len(coarse_macrostates_binning_values) > 1:
+        # first, check to see what's the lowest binning value -> this macrostate will not be coarsely binned
         lowest_binning_value = len(gv.properties_to_keep_track)
-        for binning_value in leftover_macrostates_binning_values:
+        for binning_value in coarse_macrostates_binning_values:
             if binning_value < lowest_binning_value:
                 lowest_binning_value = binning_value
 
-        # second, for the rest that have higher binning values than the lowest one, create "leftover" macrostates
-        for i in range(len(leftover_macrostates_binning_values)):
-            binning_value = leftover_macrostates_binning_values[i]
-            if binning_value > lowest_binning_value:
-                walker_index = leftover_macrostates_ref_walkers[i]
-                current_ball_center = temp_walker_list[walker_index].current_coordinates
-                center_key_num = copy.deepcopy(current_ball_center)
-                if gv.current_num_balls == 0:
-                    balls_array[gv.current_num_balls] = np.asarray(center_key_num)
-                else:
-                    balls_array = np.append(balls_array, [np.asarray(center_key_num)], axis=0)
-                center_key_num.append(gv.current_num_balls)
-                center_key_num.append(1)
-                if gv.current_num_balls == 0:
-                    balls[gv.current_num_balls] = np.asarray(center_key_num)
-                else:
-                    balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
-                temp_walker_list[walker_index].current_ball_center = current_ball_center
-                temp_walker_list[walker_index].current_ball_key = gv.current_num_balls
-                ball_to_walkers[tuple(current_ball_center)] = [walker_index]
-                gv.current_num_balls += 1
-                walker_indices_to_delete_list.append(walker_index)
-
-        for i in walker_indices_to_delete_list:
-            walker_indices_list.remove(i)
-        walker_indices_to_delete_list = []
-
-        # third, appropriately assign the walkers to the "leftover" macrostates
+        # second, for the rest that have higher binning values than the lowest one, bin them coarsely.
+        start = 0  # indicates whether we are dealing with the very first walker or not for coarse binning
         for i in walker_indices_list:
             binning_value = binning_values[i]
             if binning_value > lowest_binning_value:
-                ref_walker_index = int(leftover_macrostates[binning_value])
-                current_ball_center = temp_walker_list[ref_walker_index].current_ball_center
-                current_ball_key = temp_walker_list[ref_walker_index].current_ball_key
-                current_state = temp_walker_list[i].state
-                temp_walker_list[i].current_ball_center = current_ball_center
-                temp_walker_list[i].current_ball_key = current_ball_key
-                center_key_state = copy.deepcopy(current_ball_center)
-                center_key_state.append(current_ball_key)
-                center_key_state.append(current_state)
-                walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-                os.chdir(walker_directory)
-                f = open('ball_trajectory.txt', 'a')
-                f.write(' '.join(map(lambda coordinate: str(coordinate), center_key_state)))
-                f.write('\n')
-                f.close()
-                balls[current_ball_key][gv.num_cvs+1] += 1
-                ball_to_walkers[tuple(current_ball_center)].append(i)
-                walker_indices_to_delete_list.append(i)
+                new_coordinates = temp_walker_list[i].current_coordinates
+                inside = 0  # indicates whether walker is inside an existing macrostate or not, i.e., binned to a macrostate
+                # if we're dealing with the very first walker, create the very first ball for the walker.
+                if start == 0:
+                    start += 1
+                    inside += 1
+                    current_ball_center = [float(coordinate) for coordinate in new_coordinates]
+                    center_key_num = copy.deepcopy(current_ball_center)
+                    if gv.current_num_balls == 0:
+                        balls_array[gv.current_num_balls] = np.asarray(center_key_num)
+                    else:
+                        balls_array = np.append(balls_array, [np.asarray(center_key_num)], axis=0)
+                    center_key_num.append(gv.current_num_balls)
+                    center_key_num.append(1)
+                    if gv.current_num_balls == 0:
+                        balls[gv.current_num_balls] = np.asarray(center_key_num)
+                    else:
+                        balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
+                    ball_to_walkers[tuple(current_ball_center)] = [i]
+                    temp_walker_list[i].current_ball_center = current_ball_center
+                    temp_walker_list[i].current_ball_key = gv.current_num_balls
+                    gv.current_num_balls += 1
+                    walker_indices_to_delete_list.append(i)
 
-        # fourth, delete the walkers that are binned to "leftover" macrostates from the walker_indices_list
+                # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
+                if inside == 0:
+                    current_ball_key, inside = closest_ball(new_coordinates, balls_array, gv.coarse_radius)
+                    # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate due to
+                    # reaching the maximum number of macrostates limit.
+                    if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or
+                                                                                  gv.balls_flag == 1)):
+                        balls[current_ball_key][gv.num_cvs+1] += 1
+                        current_ball_center = balls[current_ball_key][0:gv.num_cvs].tolist()
+                        ball_to_walkers[tuple(current_ball_center)].append(i)
+                        temp_walker_list[i].current_ball_center = current_ball_center
+                        temp_walker_list[i].current_ball_key = current_ball_key
+                        walker_indices_to_delete_list.append(i)
+
+                    # case 2: walker is not inside any macrostate and the maximum number of macrostates limit has not been
+                    # reached, so create a new macrostate centered around the walker.
+                    else:
+                        current_ball_center = [coordinate for coordinate in new_coordinates]
+                        center_key_num = copy.deepcopy(current_ball_center)
+                        balls_array = np.append(balls_array, [np.asarray(center_key_num)], axis=0)
+                        center_key_num.append(gv.current_num_balls)
+                        center_key_num.append(1)
+                        balls = np.append(balls, [np.asarray(center_key_num)], axis=0)
+                        ball_to_walkers[tuple(current_ball_center)] = [i]
+                        temp_walker_list[i].current_ball_center = current_ball_center
+                        temp_walker_list[i].current_ball_key = gv.current_num_balls
+                        gv.current_num_balls += 1
+                        walker_indices_to_delete_list.append(i)
+
+        # loop through all of the walkers once more to assign them to their true nearest macrostates
+        for i in walker_indices_to_delete_list:
+            current_coordinates = temp_walker_list[i].current_coordinates
+            new_ball_key, inside = closest_ball(current_coordinates, balls_array, gv.coarse_radius)
+            if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or
+                                                                          gv.balls_flag == 1)):
+                new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
+                old_ball_key = temp_walker_list[i].current_ball_key
+                old_ball_center = temp_walker_list[i].current_ball_center
+                balls[old_ball_key][gv.num_cvs+1] -= 1
+                balls[new_ball_key][gv.num_cvs+1] += 1
+                ball_to_walkers[tuple(old_ball_center)].remove(i)
+                ball_to_walkers[tuple(new_ball_center)].append(i)
+                temp_walker_list[i].current_ball_key = new_ball_key
+                temp_walker_list[i].current_ball_center = new_ball_center
+
+        # record the new coordinates' values on the trajectory file and the new macrostate on the ball trajectory file.
+        for i in walker_indices_to_delete_list:
+            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            os.chdir(walker_directory)
+            current_ball_center = temp_walker_list[i].current_ball_center
+            current_ball_key = temp_walker_list[i].current_ball_key
+            current_state = temp_walker_list[i].state
+            center_key_state = copy.deepcopy(current_ball_center)
+            center_key_state.append(current_ball_key)
+            center_key_state.append(current_state)
+            f = open('ball_trajectory.txt', 'a')
+            f.write(' '.join(map(lambda coordinate: str(coordinate), center_key_state)))
+            f.write('\n')
+            f.close()
+
+        # third, delete the walkers that are coarsely binned from the walker_indices_list
         for i in walker_indices_to_delete_list:
             walker_indices_list.remove(i)
 
-    # bin the rest of the walkers normally as done in the function binning.
+        num_coarse_balls = gv.current_num_balls+1
+
+    # finally, bin the rest of the walkers normally as done in the function binning.
     start = 0  # indicates whether we are dealing with the very first walker or not for regular binning
     for i in walker_indices_list:
         new_coordinates = temp_walker_list[i].current_coordinates
@@ -516,7 +555,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
         # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
         if inside == 0:
-            current_ball_key, inside = closest_ball(new_coordinates, balls_array)
+            current_ball_key, inside = closest_ball(new_coordinates, balls_array[num_coarse_balls:], gv.radius)
+            current_ball_key += num_coarse_balls
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate due to
             # reaching the maximum number of macrostates limit.
             if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or
@@ -544,7 +584,8 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
     # loop through all of the walkers once more to assign them to their true nearest macrostates
     for i in walker_indices_list:
         current_coordinates = temp_walker_list[i].current_coordinates
-        new_ball_key, inside = closest_ball(current_coordinates, balls_array)
+        new_ball_key, inside = closest_ball(current_coordinates, balls_array[num_coarse_balls:], gv.radius)
+        new_ball_key += num_coarse_balls
         if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or gv.balls_flag == 1)):
             new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
             old_ball_key = temp_walker_list[i].current_ball_key

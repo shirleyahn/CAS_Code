@@ -137,13 +137,15 @@ file) need to be provided by the user for the simulations to run.
    1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
    
 * threshold_values: list of threshold values. if at least one property of the walker has a value less or greater than 
-the threshold value, then it is binned to a "leftover" macrostate.
+the threshold value, then it is binned coarsely.
 
 * properties_to_keep_track: list of properties of the walker that are compared against threshold values. This can be 
 weight and/or some collective variables and multiple duplicates are allowed. If one of them is weight, then type -1. 
 Otherwise type the indices of the collective variables, e.g., if there are 3 collective variables and you would like to 
 keep track of the last one twice for different threshold values, then type [2, 2] (index starts from 0). If there is 
 more than one property to keep track of, then type them sequentially.
+
+* coarse_radius: radius for coarse binning.
 
 ##### The next four lines are needed if enhanced_sampling flag = 2
 
@@ -232,13 +234,15 @@ it should be changed when restarting a simulation.
    1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
 
 * threshold_values: list of threshold values. if at least one property of the walker has a value less or greater than 
-the threshold value, then it is binned to a "leftover" macrostate.
+the threshold value, then it is binned coarsely.
 
 * properties_to_keep_track: list of properties of the walker that are compared against threshold values. This can be 
 weight and/or some collective variables and multiple duplicates are allowed. If one of them is weight, then type -1. 
 Otherwise type the indices of the collective variables, e.g., if there are 3 collective variables and you would like to 
 keep track of the last one twice for different threshold values, then type [2, 2] (index starts from 0). If there is 
 more than one property to keep track of, then type them sequentially.
+
+* coarse_radius: radius for coarse binning.
 
 ##### The next five lines are needed if enhanced_sampling flag = 2
 

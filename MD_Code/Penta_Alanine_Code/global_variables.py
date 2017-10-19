@@ -26,6 +26,7 @@ global last_walker
 global less_or_greater_flag
 global threshold_values
 global properties_to_keep_track
+global coarse_radius
 
 global num_occupied_clusters
 global num_balls_for_sc

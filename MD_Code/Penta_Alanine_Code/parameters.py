@@ -31,13 +31,14 @@ last_walker=0  # index of last walker in the list. only needed if simulation_fla
 less_or_greater_flag=0  # 0: criteria for binning walkers if the walkers have some property LESS than the threshold.
                         # 1: criteria for binning walkers if the walkers have some property GREATER than the threshold.
 threshold_values=[0.0, 10.0]  # list of threshold values. if at least one property of the walker has a value less or
-                              # greater than the threshold value, then it is binned to a "leftover" macrostate.
+                              # greater than the threshold value, then it is binned coarsely.
 properties_to_keep_track=[0, 0]  # list of properties of the walker that are compared against threshold values. this can
                                  # be weight and/or some collective variables and multiple duplicates are allowed.
                                  # if one of them is weight, then type -1. otherwise type the indices of the collective
                                  # variables, e.g., if there are 3 collective variables and you would like to keep track
                                  # of the last one twice for different threshold values, then type [2, 2] (index starts
                                  # from 0). if there is more than one property to keep track of, then type them sequentially.
+coarse_radius=[0.5, 0.5]  # radius for coarse binning.
 
 ### the next five lines are needed if enhanced_sampling flag = 2 ###
 num_occupied_clusters=0  # number of occupied clusters or macrostates (union of Voronoi cells). it could be nonzero when
