@@ -525,7 +525,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
         for i in walker_indices_to_delete_list:
             walker_indices_list.remove(i)
 
-        num_coarse_balls = gv.current_num_balls+1
+        num_coarse_balls = gv.current_num_balls
 
     # finally, bin the rest of the walkers normally as done in the function binning.
     start = 0  # indicates whether we are dealing with the very first walker or not for regular binning
@@ -555,7 +555,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
         # otherwise, loop through the existing macrostates and find the macrostate with a center nearest to the walker.
         if inside == 0:
-            current_ball_key, inside = closest_ball(new_coordinates, balls_array[num_coarse_balls:], gv.radius)
+            current_ball_key, inside = closest_ball(new_coordinates, balls_array[num_coarse_balls:, :], gv.radius)
             current_ball_key += num_coarse_balls
             # case 1: walker is inside some macrostate or is not but needs to be binned to the nearest macrostate due to
             # reaching the maximum number of macrostates limit.
@@ -584,7 +584,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
     # loop through all of the walkers once more to assign them to their true nearest macrostates
     for i in walker_indices_list:
         current_coordinates = temp_walker_list[i].current_coordinates
-        new_ball_key, inside = closest_ball(current_coordinates, balls_array[num_coarse_balls:], gv.radius)
+        new_ball_key, inside = closest_ball(current_coordinates, balls_array[num_coarse_balls:, :], gv.radius)
         new_ball_key += num_coarse_balls
         if inside == gv.num_cvs or (inside != gv.num_cvs and (gv.current_num_balls == gv.num_balls_limit or gv.balls_flag == 1)):
             new_ball_center = balls[new_ball_key][0:gv.num_cvs].tolist()
