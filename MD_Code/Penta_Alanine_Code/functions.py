@@ -663,7 +663,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
         transition_matrix = np.zeros((balls.shape[0], balls.shape[0]))
         for i in range(gv.total_num_walkers):
             previous_coordinates = temp_walker_list[i].previous_coordinates
-            previous_ball_key, inside = closest_ball(previous_coordinates, balls_array)
+            previous_ball_key, inside = closest_ball(previous_coordinates, balls_array, gv.radius)
             transition_matrix[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
         os.chdir(gv.main_directory + '/CAS')
         np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.10e')
