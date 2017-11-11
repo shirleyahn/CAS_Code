@@ -742,7 +742,7 @@ def calculate_trans_mat(step_num, temp_walker_list, balls, balls_array):
             (gv.enhanced_sampling_flag == 3 and (step_num == gv.initial_step_num_for_eq or gv.num_steps_for_eq == 0)):
         for i in range(gv.total_num_walkers):
             previous_coordinates = temp_walker_list[i].previous_coordinates
-            previous_ball_key, inside = closest_ball(previous_coordinates, balls_array)
+            previous_ball_key, inside = closest_ball(previous_coordinates, balls_array, gv.radius)
             gv.trans_mat[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
     else:
         for i in range(gv.total_num_walkers):
