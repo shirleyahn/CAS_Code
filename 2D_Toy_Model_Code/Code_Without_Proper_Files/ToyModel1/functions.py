@@ -669,7 +669,7 @@ def reweighting(step_num, balls):
             new_transition_matrix[i][j] = (gv.trans_mat[i][j]+gv.trans_mat[j][i])/\
                                           (2.0*(step_num-gv.initial_step_num_for_eq-gv.num_steps_for_eq+1))
 
-    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if abs(np.sum(new_transition_matrix[i, :])) < 1.0e-300]
+    zero_row_indices = [i for i in range(new_transition_matrix.shape[0]) if abs(np.sum(new_transition_matrix[i, :])) < 1.0e-250]
     for i in reversed(zero_row_indices):
         new_transition_matrix = np.delete(new_transition_matrix, i, 0)
         new_transition_matrix = np.delete(new_transition_matrix, i, 1)
