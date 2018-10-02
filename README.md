@@ -266,5 +266,3 @@ restarting a simulation, otherwise 0.
 * eq_frequency: how many times to perform reweighting.
 
 * num_steps_in_bw: number of steps in between reweightings.
-
-Please report any bugs and questions/comments to sahn1@stanford.edu.
