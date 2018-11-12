@@ -99,7 +99,7 @@ def initialize(input_initial_values_file, walker_list):
                                        [-1000.0]*gv.num_cvs, 0, 0, 0, 0.0, -1)
 
     # all walkers have equally divided weights
-    initial_weight = 1.0/gv.total_num_walkers
+    initial_weight = np.true_divide(1.0, gv.total_num_walkers)
     f = open(input_initial_values_file, 'r')
     if gv.flux_flag == 1:
         flux_f = open('initial_states.txt', 'r')
@@ -1011,7 +1011,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
         if int(balls[current_ball][gv.num_cvs+1]) > 0:
             initial_total_weight += eq_weights[current_ball]
     if initial_total_weight != 1.0:
-        factor = 1.0/initial_total_weight
+        factor = np.true_divide(1.0, initial_total_weight)
         eq_weights *= factor
 
     # loop through each macrostate and perform resampling within each macrostate
@@ -1047,7 +1047,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                         states.append(state)
                         num_walkers_for_each_state.append(num_walkers)
 
-            target_num_walkers = int(np.floor(float(gv.num_walkers)/num_states))
+            target_num_walkers = int(np.floor(np.true_divide(float(gv.num_walkers), num_states)))
             remainder = gv.num_walkers-target_num_walkers*num_states
             # resample separately for each state in the macrostate
             for state_num, state in enumerate(states):
@@ -1079,17 +1079,17 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                 neg_weights = np.array([-i for i in weights])  # convert from list to array
                 sorted_list = list(np.argsort(neg_weights))  # sort walkers in descending order based on their weights
 
-                total_weight = eq_weights[current_ball]/num_states
-                factor = total_weight/np.sum(weights)
+                total_weight = np.true_divide(eq_weights[current_ball], num_states)
+                factor = np.true_divide(total_weight, np.sum(weights))
                 weights_copy = [i*factor for i in weights]
                 weights = weights_copy
-                target_weight = total_weight/target_num_walkers
+                target_weight = np.true_divide(total_weight, target_num_walkers)
                 x = sorted_list.pop()
                 while True:
                     x_weight = weights[x]
                     current_walker = indices[x]
                     if x_weight >= target_weight or len(sorted_list) == 0:
-                        r = max(1, int(np.floor(x_weight/target_weight)))
+                        r = max(1, int(np.floor(np.true_divide(x_weight, target_weight))))
                         r = min(r, target_num_walkers-new_num_walkers)
                         new_num_walkers += r
                         for _ in itertools.repeat(x, r):
@@ -1107,7 +1107,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                         y_weight = weights[y]
                         xy_weight = x_weight+y_weight
                         p = np.random.random()
-                        if p < y_weight/xy_weight:
+                        if p < np.true_divide(y_weight, xy_weight):
                             x = y
                         weights[x] = xy_weight
 
@@ -1245,7 +1245,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         states.append(i)
                         num_walkers_for_each_state.append(num_walkers)
 
-            target_num_walkers = int(np.floor(float(initial_target_num_walkers)/num_states))
+            target_num_walkers = int(np.floor(np.true_divide(float(initial_target_num_walkers), num_states)))
             remainder = initial_target_num_walkers-target_num_walkers*num_states
             # resample separately for each state in the macrostate/cluster
             for state_num, state in enumerate(states):
@@ -1274,12 +1274,12 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                             k += 1
 
                 total_weight = np.sum(weights_bin)
-                target_weight = total_weight/target_num_walkers
+                target_weight = np.true_divide(total_weight, target_num_walkers)
                 x = indices_bin.pop()
                 while True:
                     x_weight = weights[x]
                     if x_weight >= target_weight or len(indices_bin) == 0:
-                        r = max(1, int(np.floor(x_weight/target_weight)))
+                        r = max(1, int(np.floor(np.true_divide(x_weight, target_weight))))
                         r = min(r, target_num_walkers-new_num_walkers)
                         new_num_walkers += r
                         for item in np.repeat(x, r):
@@ -1298,7 +1298,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         xy_weight = x_weight + y_weight
                         p = np.random.random()
                         # swap x and y
-                        if p < y_weight / xy_weight:
+                        if p < np.true_divide(y_weight, xy_weight):
                             temp = x
                             x = y
                             y = temp
@@ -1440,7 +1440,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         states.append(state)
                         num_walkers_for_each_state.append(num_walkers)
 
-            target_num_walkers = int(np.floor(float(gv.num_walkers)/num_states))
+            target_num_walkers = int(np.floor(np.true_divide(float(gv.num_walkers), num_states)))
             remainder = gv.num_walkers-target_num_walkers*num_states
             # resample separately for each state in the macrostate
             for state_num, state in enumerate(states):
@@ -1473,13 +1473,13 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 sorted_list = list(np.argsort(neg_weights))  # sort walkers in descending order based on their weights
 
                 total_weight = np.sum(weights)
-                target_weight = total_weight/target_num_walkers
+                target_weight = np.true_divide(total_weight, target_num_walkers)
                 x = sorted_list.pop()
                 while True:
                     x_weight = weights[x]
                     current_walker = indices[x]
                     if x_weight >= target_weight or len(sorted_list) == 0:
-                        r = max(1, int(np.floor(x_weight/target_weight)))
+                        r = max(1, int(np.floor(np.true_divide(x_weight, target_weight))))
                         r = min(r, target_num_walkers-new_num_walkers)
                         new_num_walkers += r
                         for _ in itertools.repeat(x, r):
@@ -1497,7 +1497,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         y_weight = weights[y]
                         xy_weight = x_weight+y_weight
                         p = np.random.random()
-                        if p < y_weight/xy_weight:
+                        if p < np.true_divide(y_weight, xy_weight):
                             x = y
                         weights[x] = xy_weight
 
