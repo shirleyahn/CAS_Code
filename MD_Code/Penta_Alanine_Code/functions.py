@@ -118,8 +118,8 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
             # read initial values from file
             value_line = values_f.readline().strip().split()
             initial_value = [float(entry) for entry in value_line]
-            weight_line = weights_f.readline().strip().split()
-            initial_weight = [float(entry) for entry in weight_line]
+            weight_line = weights_f.readline().strip()
+            initial_weight = float(weight_line)
             # if fluxes are calculated, obtain initial state
             if gv.flux_flag == 1:
                 line = flux_f.readline().strip()
