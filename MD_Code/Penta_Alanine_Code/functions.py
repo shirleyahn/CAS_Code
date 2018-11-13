@@ -91,7 +91,7 @@ def set_parameters():
         gv.num_occupied_clusters = 0
     else:
         if gv.simulation_flag == 0:
-            gv.total_num_walkers = gv.num_occupied_balls
+            gv.total_num_walkers = gv.last_walker+1
         else:
             gv.total_num_walkers = gv.num_occupied_balls*gv.num_walkers
     gv.sc_performed = 0
@@ -113,8 +113,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
         weights_f = open(input_initial_weights_file, 'r')
         if gv.flux_flag == 1:
             flux_f = open('initial_states.txt', 'r')
-        # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
-        for n in range(gv.num_occupied_balls):
+        for i in range(gv.last_walker+1):
             # read initial values from file
             value_line = values_f.readline().strip().split()
             initial_value = [float(entry) for entry in value_line]
@@ -124,10 +123,9 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
             if gv.flux_flag == 1:
                 line = flux_f.readline().strip()
                 initial_state = int(line)
-            for i in range(n, n+1):
-                walker_list[i].set(initial_value, initial_weight)
-                if gv.flux_flag == 1:
-                    walker_list[i].state = initial_state
+            walker_list[i].set(initial_value, initial_weight)
+            if gv.flux_flag == 1:
+                walker_list[i].state = initial_state
         values_f.close()
         weights_f.close()
         if gv.flux_flag == 1:
@@ -136,13 +134,12 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
         # make walker directories
         os.system('mkdir CAS')
         os.chdir(gv.main_directory + '/CAS')
-        for n in range(gv.num_occupied_balls):
-            for i in range(n, n+1):
-                walker_directory = gv.main_directory + '/CAS/walker' + str(i)
-                os.mkdir(walker_directory)
-                # TODO: change initial configurations' name
-                os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(n)+'.gro '+str(walker_directory)+
-                          '/minim.gro')
+        for i in range(gv.last_walker+1):
+            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            os.mkdir(walker_directory)
+            # TODO: change initial configurations' name
+            os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(i)+'.gro '+str(walker_directory)+
+                      '/minim.gro')
 
         # in case created balls are kept throughout simulation
         if gv.balls_flag == 1:

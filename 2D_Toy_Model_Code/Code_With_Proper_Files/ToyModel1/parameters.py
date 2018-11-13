@@ -19,6 +19,8 @@ angle_cvs=[0, 0]  # list of 0's and/or 1's. 0: if the collective variable is not
 
 max_num_steps=100000  # maximum number of the CAS simulation steps.
 num_occupied_balls=1  # starting number of initial states for the CAS simulation.
+first_walker=0  # index of first walker in the list.
+last_walker=0  # index of last walker in the list.
 
 m_steps_per_step=1  # how many times the Metropolis algorithm should be executed per simulation step.
 step_size=0.05  # how large the step size should be for each walker.

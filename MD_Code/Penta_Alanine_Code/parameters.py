@@ -23,8 +23,8 @@ initial_step_num=0  # starting CAS simulation step number. it should be changed 
 max_num_steps=50  # maximum number of the CAS simulation steps.
 num_occupied_balls=1  # starting number of initial states for the CAS simulation.
                       # it should be changed when restarting a simulation.
-first_walker=0  # index of first walker in the list. only needed if simulation_flag is not equal to 0, otherwise 0.
-last_walker=0  # index of last walker in the list. only needed if simulation_flag is not equal to 0, otherwise 0.
+first_walker=0  # index of first walker in the list.
+last_walker=0  # index of last walker in the list.
 
 ### the next four lines are needed if enhanced_sampling_flag = 1 ###
 less_or_greater_flag=0  # 0: criteria for binning walkers if the walkers have some property LESS than the threshold.

@@ -16,6 +16,8 @@ global angle_cvs
 
 global max_num_steps
 global num_occupied_balls
+global first_walker
+global last_walker
 
 global m_steps_per_step
 global step_size
