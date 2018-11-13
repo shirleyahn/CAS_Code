@@ -1601,6 +1601,7 @@ def print_status(step_num, walker_list, balls, ball_to_walkers):
         balls[current_ball][gv.num_cvs+1] = 0
         ball_to_walkers[tuple(ball_center)] = []
     f.close()
+    total_weight = np.float16(total_weight)
 
     # verify that total weight of all balls is 1.0
     f = open('total_weight.txt', 'a')
