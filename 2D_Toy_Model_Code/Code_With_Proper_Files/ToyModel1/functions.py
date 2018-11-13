@@ -92,31 +92,33 @@ def set_parameters():
     gv.resampling_performed = 0
 
 
-def initialize(input_initial_values_file, walker_list):
+def initialize(input_initial_values_file, input_initial_weights_file, walker_list):
     # first populate walker_list with walker objects. initial values are random.
     for i in range(len(walker_list)):
         walker_list[i] = walker.Walker([-1000.0]*gv.num_cvs, [-1000.0]*gv.num_cvs, i, [-1000.0]*gv.num_cvs,
                                        [-1000.0]*gv.num_cvs, 0, 0, 0, 0.0, -1)
 
-    # all walkers have equally divided weights
-    initial_weight = np.true_divide(1.0, gv.total_num_walkers)
-    f = open(input_initial_values_file, 'r')
+    values_f = open(input_initial_values_file, 'r')
+    weights_f = open(input_initial_weights_file, 'r')
     if gv.flux_flag == 1:
         flux_f = open('initial_states.txt', 'r')
     # for each occupied ball (usually 1 because one initial state is provided but multiple can be provided)
     for n in range(gv.num_occupied_balls):
         # read initial values from file
-        line = f.readline().strip().split()
-        initial_values = [float(entry) for entry in line]
+        value_line = values_f.readline().strip().split()
+        initial_value = [float(entry) for entry in value_line]
+        weight_line = weights_f.readline().strip().split()
+        initial_weight = [float(entry) for entry in weight_line]
         # if fluxes are calculated, obtain initial state
         if gv.flux_flag == 1:
             line = flux_f.readline().strip()
             initial_state = int(line)
         for i in range(n, n+1):
-            walker_list[i].set(initial_values, initial_weight)
+            walker_list[i].set(initial_value, initial_weight)
             if gv.flux_flag == 1:
                 walker_list[i].state = initial_state
-    f.close()
+    values_f.close()
+    weights_f.close()
     if gv.flux_flag == 1:
         flux_f.close()
 

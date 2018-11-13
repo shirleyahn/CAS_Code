@@ -9,7 +9,7 @@ import global_variables as gv
 import functions
 
 
-def CAS_simulation(input_initial_values_file):
+def CAS_simulation(input_initial_values_file, input_initial_weights_file):
     # set simulation parameters.
     functions.set_parameters()
 
@@ -29,8 +29,8 @@ def CAS_simulation(input_initial_values_file):
     ball_to_walkers = {}
 
     # create walkers and their directories.
-    balls, balls_array = functions.initialize(input_initial_values_file, walker_list, temp_walker_list, balls,
-                                              balls_array, ball_to_walkers)
+    balls, balls_array = functions.initialize(input_initial_values_file, input_initial_weights_file, walker_list,
+                                              temp_walker_list, balls, balls_array, ball_to_walkers)
 
     for step_num in range(gv.initial_step_num, gv.initial_step_num + gv.max_num_steps):
         # reset macrostate objects so that macrostates are newly created at every step.
@@ -123,4 +123,4 @@ def CAS_simulation(input_initial_values_file):
                 ' resampling time: ' + str(t3-t2) + '\n')
         f.close()
 
-CAS_simulation('initial_values.txt')
+CAS_simulation('initial_values.txt', 'initial_weights.txt')
