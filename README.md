@@ -11,6 +11,8 @@ all of the needed code with input files for a particular example, e.g., toymodel
 **Code_Without_Proper_Files** will only output minimum number of files like flux.txt, total_weight_on_each_ball.txt, 
 total_weight.txt, time_record.txt, etc. 
 
+Please cite the following paper when using the program: https://doi.org/10.1063/1.4999097
+
 # List of input files
 
 Here is the list of input files provided and the files that the user needs to edit are bolded. All of the files need to 
