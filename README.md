@@ -115,6 +115,10 @@ variable.
 
 * num_occupied_balls: starting number of initial states for the CAS simulation.
 
+* first_walker: index of first walker in the list.
+
+* last_walker: index of last walker in the list.
+
 * m_steps_per_step: how many times the Metropolis algorithm should be executed per simulation step.
 
 * step_size: how large the step size should be for each walker.
@@ -196,10 +200,6 @@ more than one property to keep track of, then type them sequentially.
 
 * num_balls_limit: maximum number of macrostates in the simulation.
 
-* separate_radii_flag: either equal to 0 or 1.
-
-   0: off. 1: on. we have different radii for each collective variable.
-
 * radius: radii of the Voronoi cells.
 
 * num_walkers: number of walkers per macrostate.
@@ -218,9 +218,9 @@ more than one property to keep track of, then type them sequentially.
 * num_occupied_balls: starting number of initial states for the CAS simulation. 
 it should be changed when restarting a simulation.
  
-* first_walker: index of first walker in the list. only needed if simulation_flag is not equal to 0, otherwise 0.
+* first_walker: index of first walker in the list.
 
-* last_walker: index of last walker in the list. only needed if simulation_flag is not equal to 0, otherwise 0.
+* last_walker: index of last walker in the list.
 
 ##### The next four lines are needed if enhanced_sampling_flag = 1
 

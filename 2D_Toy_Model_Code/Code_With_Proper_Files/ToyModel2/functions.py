@@ -83,7 +83,7 @@ def set_parameters():
         gv.num_steps_in_bw = p.num_steps_in_bw
 
     gv.current_num_balls = 0
-    gv.total_num_walkers = gv.last_walker
+    gv.total_num_walkers = gv.last_walker+1
     gv.num_occupied_clusters = 0
     gv.sc_performed = 0
     gv.sc_start = -1
@@ -1034,7 +1034,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                states_list = range(gv.num_states)
+                states_list = range(-1, gv.num_states)
                 for state in states_list:
                     num_walkers = 0
                     for i in initial_indices:
@@ -1231,8 +1231,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                states_list = range(gv.num_states)
-                states_list.append(-1)
+                states_list = range(-1, gv.num_states)
                 for i in states_list:
                     num_walkers = 0
                     for j in initial_indices:
@@ -1427,7 +1426,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 num_states = 0
                 states = []
                 num_walkers_for_each_state = []
-                states_list = range(gv.num_states)
+                states_list = range(-1, gv.num_states)
                 for state in states_list:
                     num_walkers = 0
                     for i in initial_indices:
