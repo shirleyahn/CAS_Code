@@ -61,8 +61,7 @@ initial_values.txt would look like the following:
     3.0 4.0
 ```
 
-9. **`main.py`**: Main function of the CAS simulation. User needs to edit the main directory (highlighted in TODO), 
-i.e. change it to the directory where all of the files are.
+9. **`main.py`**: Main function of the CAS simulation.
 
 10. **`parameters.py`**: Parameters of the CAS simulation. User needs to **extensively** edit this file for the user's CAS 
 simulation and how to do that is detailed below in the **"How to edit parameters.py"** section.
@@ -78,8 +77,6 @@ file) need to be provided by the user for the simulations to run.
 # How to edit parameters.py
 
 ## 2D_Toy_Model_Code parameters.py
-
-* main_directory: main directory of where the CAS simulation will take place, i.e., where all of the files are.
 
 * balls_flag: either equal to 0 or 1. 
 
@@ -171,10 +168,6 @@ more than one property to keep track of, then type them sequentially.
 * num_steps_in_bw: number of steps in between reweightings.
 
 ## MD_Code parameters.py
-
-* main_directory: main directory of where the CAS simulation will take place, i.e., where all of the files are.
-
-* initial_configuration_directory: directory where initial configurations are.
 
 * simulation_flag: either equal to 0 or 1 or 2 or 3 or 4.
 

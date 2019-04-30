@@ -1,7 +1,3 @@
-main_directory='/scratch/users/sahn1/Penta_Alanine'  # main directory of where the CAS simulation will take place,
-                                                    # i.e., where all of the files are.
-initial_configuration_directory='/scratch/users/sahn1/Penta_Alanine/InitConfig'  # where initial configurations are.
-
 simulation_flag=0  # 0: new simulation. 1: restarting simulation that didn't finish running all walkers.
                    # 2: restarting simulation that didn't finish post-processing walkers.
                    # 3: restarting simulation that didn't finish binning walkers to Voronoi cells.

@@ -1,6 +1,9 @@
 import copy
 import itertools
 import os
+import sys
+sys.path.append('.')
+main_directory = os.getcwd()
 import shutil
 import numpy as np
 from scipy.cluster.vq import kmeans2, ClusterError
@@ -46,8 +49,6 @@ def closest_ball(walker_coordinates, balls_array, ball_radius):
 
 
 def set_parameters():
-    gv.main_directory = p.main_directory
-    gv.initial_configuration_directory = p.initial_configuration_directory
     gv.simulation_flag = p.simulation_flag
     gv.balls_flag = p.balls_flag
     gv.flux_flag = p.flux_flag
@@ -133,17 +134,18 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
 
         # make walker directories
         os.system('mkdir CAS')
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir('CAS')
         for i in range(gv.last_walker+1):
-            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            walker_directory = main_directory + '/CAS/walker' + str(i)
             os.mkdir(walker_directory)
+            initial_configuration_directory = main_directory + '/InitConfig'
             # TODO: change initial configurations' name
-            os.system('cp '+str(gv.initial_configuration_directory)+'/minim_'+str(i)+'.gro '+str(walker_directory)+
-                      '/minim.gro')
+            os.system('cp ' + str(initial_configuration_directory) + '/minim_' + str(i) + '.gro ' +
+                      str(walker_directory) + '/minim.gro')
 
         # in case created balls are kept throughout simulation
         if gv.balls_flag == 1:
-            os.chdir(gv.main_directory)
+            os.chdir(main_directory)
             created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
             balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
             balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
@@ -158,7 +160,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
     elif gv.simulation_flag == 1 or gv.simulation_flag == 2:
         # loop through all walkers and obtain their weights, coordinates, ball coordinates, state, etc.
         for i in range(gv.total_num_walkers):
-            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            walker_directory = main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
             f = open('weight_trajectory.txt', 'r')
             weight = float(f.readlines()[-1].strip())
@@ -201,7 +203,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                 walker_list[i].state = int(current_line[-1])
             # in case created balls are kept throughout simulation
             if gv.balls_flag == 1:
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
                 balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
                 balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
@@ -216,7 +218,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
     elif gv.simulation_flag == 3:
         # loop through all walkers and obtain their weights, coordinates, ball coordinates, state, etc.
         for i in range(gv.total_num_walkers):
-            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            walker_directory = main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
             f = open('weight_trajectory.txt', 'r')
             weight = float(f.readlines()[-1].strip())
@@ -263,7 +265,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                 walker_list[i].state = int(current_line[-1])
             # in case created balls are kept throughout simulation
             if gv.balls_flag == 1:
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
                 balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
                 balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
@@ -290,12 +292,12 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
         # first, obtain previous macrostates' weights to keep track of which weights are missing and keep track of
         # walkers to the previous macrostates.
         previous_ball_to_walkers = {}
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         previous_balls_weights = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
 
         # second, loop through all of the remaining walkers and check to see if all of the files exist or not.
         for i in range(gv.last_walker+1):
-            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            walker_directory = main_directory + '/CAS/walker' + str(i)
             # TODO: change simulation files' names
             if os.path.isfile(walker_directory + '/weight_trajectory.txt') and \
                     os.path.isfile(walker_directory + '/ball_trajectory.txt') and \
@@ -369,13 +371,13 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                     occupied_indices[i] = 1
                 # if not, then delete the walker and potentially use the walker for other remaining weights.
                 else:
-                    os.chdir(gv.main_directory + '/CAS')
+                    os.chdir(main_directory + '/CAS')
                     os.system('rm -rf walker' + str(i))
                     vacant_walker_indices.append(i)
             # otherwise, then delete the incomplete walker and potentially use the walker for other remaining weights.
             else:
                 if os.path.isdir(walker_directory):
-                    os.chdir(gv.main_directory + '/CAS')
+                    os.chdir(main_directory + '/CAS')
                     os.system('rm -rf walker' + str(i))
                 vacant_walker_indices.append(i)
 
@@ -403,13 +405,13 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                                 distance = distance_from_center
                                 reference_ball_center = ball_center
                     reference_walker = previous_ball_to_walkers[reference_ball_center][0]
-                reference_walker_directory = gv.main_directory + '/CAS/walker' + str(reference_walker)
+                reference_walker_directory = main_directory + '/CAS/walker' + str(reference_walker)
                 if len(vacant_walker_indices) > 0:
                     walker_index = vacant_walker_indices.pop(0)
                 else:
                     walker_index = excess_index
                     excess_index += 1
-                walker_directory = gv.main_directory + '/CAS/walker' + str(walker_index)
+                walker_directory = main_directory + '/CAS/walker' + str(walker_index)
                 shutil.copytree(reference_walker_directory, walker_directory)
                 weight = previous_balls_weights[i][-1]
                 previous_balls_weights[i][-1] -= weight
@@ -462,7 +464,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
                 # rename the directory with name 'i' to 'new_index'
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
         else:
             for i in range(gv.total_num_walkers, excess_index):
@@ -470,7 +472,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
                 # rename the directory with name 'i' to 'new_index'
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
             for i in range(total_num_walkers, gv.total_num_walkers):
                 if occupied_indices[i] == 1:
@@ -480,7 +482,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
                     occupied_indices[new_index] = 1
                     walker_list[new_index].copy_walker(walker_list[i])
                     # rename the directory with name 'i' to 'new_index'
-                    os.chdir(gv.main_directory + '/CAS')
+                    os.chdir(main_directory + '/CAS')
                     os.system('mv walker' + str(i) + ' walker' + str(new_index))
         # reset the number of balls since the simulation will restart from the binning step
         gv.total_num_walkers = total_num_walkers
@@ -490,7 +492,7 @@ def initialize(input_initial_values_file, input_initial_weights_file, walker_lis
         gv.last_walker = total_num_walkers-1
         # in case created balls are kept throughout simulation
         if gv.balls_flag == 1:
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             created_balls = np.loadtxt('total_weight_on_each_ball_' + str(gv.initial_step_num) + '.txt')
             balls = np.zeros((created_balls.shape[0], gv.num_cvs+2))
             balls[:, 0:gv.num_cvs] = created_balls[:, 0:gv.num_cvs]
@@ -513,7 +515,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
     # loop through all of the walkers in descending order based on their weights
     for i in walker_indices:
         # first, go to walker directory i.
-        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+        walker_directory = main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
 
         # second, obtain new coordinates' values.
@@ -622,7 +624,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
 
     # sixth, record the new macrostate on the ball trajectory file.
     for i in walker_indices:
-        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+        walker_directory = main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
         current_ball_center = temp_walker_list[i].current_ball_center
         current_ball_key = temp_walker_list[i].current_ball_key
@@ -646,7 +648,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
 
     # output the total flux for this particular step to a text file, if needed.
     if gv.flux_flag == 1:
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
 
     if gv.balls_flag == 1 and gv.enhanced_sampling_flag == 0:
@@ -656,7 +658,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
             previous_coordinates = temp_walker_list[i].previous_coordinates
             previous_ball_key, inside = closest_ball(previous_coordinates, balls_array, gv.radius)
             transition_matrix[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.10e')
     return balls, balls_array
 
@@ -675,7 +677,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
     # loop through all of the walkers in descending order based on their weights.
     for i in walker_indices:
         # go to walker directory i.
-        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+        walker_directory = main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
 
         # obtain new coordinates' values.
@@ -834,7 +836,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
         # record the new coordinates' values on the trajectory file and the new macrostate on the ball trajectory file.
         for i in walker_indices_to_delete_list:
-            walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+            walker_directory = main_directory + '/CAS/walker' + str(i)
             os.chdir(walker_directory)
             current_ball_center = temp_walker_list[i].current_ball_center
             current_ball_key = temp_walker_list[i].current_ball_key
@@ -925,7 +927,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
     # record the new coordinates' values on the trajectory file and the new macrostate on the ball trajectory file.
     for i in walker_indices_list:
-        walker_directory = gv.main_directory + '/CAS/walker' + str(i)
+        walker_directory = main_directory + '/CAS/walker' + str(i)
         os.chdir(walker_directory)
         current_ball_center = temp_walker_list[i].current_ball_center
         current_ball_key = temp_walker_list[i].current_ball_key
@@ -948,7 +950,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
     # output the total flux for this particular step to a text file, if needed.
     if gv.flux_flag == 1:
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
     return balls, balls_array
 
@@ -1092,7 +1094,7 @@ def reweighting(step_num, balls):
     row_sum = np.sum(new_transition_matrix, axis=1)
     for i in range(new_transition_matrix.shape[0]):
         new_transition_matrix[i, :] /= row_sum[i]
-    os.chdir(gv.main_directory + '/CAS')
+    os.chdir(main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
@@ -1157,7 +1159,7 @@ def spectral_clustering(step_num, balls):
     for i in range(new_transition_matrix.shape[0]):
         if row_sum[i] > 0.0:
             new_transition_matrix[i, :] /= row_sum[i]
-    os.chdir(gv.main_directory + '/CAS')
+    os.chdir(main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
@@ -1451,7 +1453,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                     if x not in new_indices:
                         vacant_walker_indices.append(x)
                         # remove walker y directory
-                        os.chdir(gv.main_directory + '/CAS')
+                        os.chdir(main_directory + '/CAS')
                         os.system('rm -rf walker' + str(x))
 
                 # assign the resampled walkers to particular indices
@@ -1462,7 +1464,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                         walker_list[global_index].copy_walker(temp_walker_list[global_index])
                         walker_list[global_index].weight = new_weights[index_num]
                         ball_to_walkers[tuple(current_ball_center)].append(global_index)
-                        directory = gv.main_directory + '/CAS/walker' + str(global_index)
+                        directory = main_directory + '/CAS/walker' + str(global_index)
                         os.chdir(directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
@@ -1479,8 +1481,8 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                         walker_list[new_index].copy_walker(temp_walker_list[global_index])
                         walker_list[new_index].weight = new_weights[index_num]
                         ball_to_walkers[tuple(current_ball_center)].append(new_index)
-                        old_directory = gv.main_directory + '/CAS/walker' + str(global_index)
-                        new_directory = gv.main_directory + '/CAS/walker' + str(new_index)
+                        old_directory = main_directory + '/CAS/walker' + str(global_index)
+                        new_directory = main_directory + '/CAS/walker' + str(new_index)
                         shutil.copytree(old_directory, new_directory)
                         os.chdir(new_directory)
                         # write new weights on the trajectory file
@@ -1501,7 +1503,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
     else:
         for i in range(gv.total_num_walkers, excess_index):
@@ -1509,7 +1511,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
         for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
@@ -1519,7 +1521,7 @@ def resampling_with_eq(walker_list, temp_walker_list, balls, ball_to_walkers, eq
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
                 # rename the directory with name 'i' to 'new_index'
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
     gv.total_num_walkers = total_num_walkers
@@ -1641,7 +1643,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         if y not in new_indices:
                             vacant_walker_indices.append(y)
                             # remove walker y directory
-                            os.chdir(gv.main_directory + '/CAS')
+                            os.chdir(main_directory + '/CAS')
                             os.system('rm -rf walker' + str(y))
 
                 # assign the resampled walkers to particular indices
@@ -1657,7 +1659,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         balls[ball_key][gv.num_cvs+1] += 1
                         ball_center = walker_list[global_index].current_ball_center
                         ball_to_walkers[tuple(ball_center)].append(global_index)
-                        directory = gv.main_directory + '/CAS/walker' + str(global_index)
+                        directory = main_directory + '/CAS/walker' + str(global_index)
                         os.chdir(directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
@@ -1679,8 +1681,8 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                         balls[ball_key][gv.num_cvs+1] += 1
                         ball_center = walker_list[new_index].current_ball_center
                         ball_to_walkers[tuple(ball_center)].append(new_index)
-                        old_directory = gv.main_directory + '/CAS/walker' + str(global_index)
-                        new_directory = gv.main_directory + '/CAS/walker' + str(new_index)
+                        old_directory = main_directory + '/CAS/walker' + str(global_index)
+                        new_directory = main_directory + '/CAS/walker' + str(new_index)
                         shutil.copytree(old_directory, new_directory)
                         os.chdir(new_directory)
                         # write new weights on the trajectory file
@@ -1700,7 +1702,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
     else:
         for i in range(gv.total_num_walkers, excess_index):
@@ -1708,7 +1710,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
         for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
@@ -1718,7 +1720,7 @@ def resampling_for_sc(walker_list, temp_walker_list, balls, ball_to_walkers, bal
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
                 # rename the directory with name 'i' to 'new_index'
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
     gv.total_num_walkers = total_num_walkers
@@ -1840,7 +1842,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                     if x not in new_indices:
                         vacant_walker_indices.append(x)
                         # remove walker y directory
-                        os.chdir(gv.main_directory + '/CAS')
+                        os.chdir(main_directory + '/CAS')
                         os.system('rm -rf walker' + str(x))
 
                 # assign the resampled walkers to particular indices
@@ -1851,7 +1853,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         walker_list[global_index].copy_walker(temp_walker_list[global_index])
                         walker_list[global_index].weight = new_weights[index_num]
                         ball_to_walkers[tuple(current_ball_center)].append(global_index)
-                        directory = gv.main_directory + '/CAS/walker' + str(global_index)
+                        directory = main_directory + '/CAS/walker' + str(global_index)
                         os.chdir(directory)
                         # write new weights on the trajectory file
                         f = open('weight_trajectory.txt', 'a')
@@ -1868,8 +1870,8 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                         walker_list[new_index].copy_walker(temp_walker_list[global_index])
                         walker_list[new_index].weight = new_weights[index_num]
                         ball_to_walkers[tuple(current_ball_center)].append(new_index)
-                        old_directory = gv.main_directory + '/CAS/walker' + str(global_index)
-                        new_directory = gv.main_directory + '/CAS/walker' + str(new_index)
+                        old_directory = main_directory + '/CAS/walker' + str(global_index)
+                        new_directory = main_directory + '/CAS/walker' + str(new_index)
                         shutil.copytree(old_directory, new_directory)
                         os.chdir(new_directory)
                         # write new weights on the trajectory file
@@ -1890,7 +1892,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
     else:
         for i in range(gv.total_num_walkers, excess_index):
@@ -1898,7 +1900,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
             occupied_indices[new_index] = 1
             walker_list[new_index].copy_walker(walker_list[i])
             # rename the directory with name 'i' to 'new_index'
-            os.chdir(gv.main_directory + '/CAS')
+            os.chdir(main_directory + '/CAS')
             os.system('mv walker' + str(i) + ' walker' + str(new_index))
         for i in range(total_num_walkers, gv.total_num_walkers):
             if occupied_indices[i] == 1:
@@ -1908,7 +1910,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 occupied_indices[new_index] = 1
                 walker_list[new_index].copy_walker(walker_list[i])
                 # rename the directory with name 'i' to 'new_index'
-                os.chdir(gv.main_directory + '/CAS')
+                os.chdir(main_directory + '/CAS')
                 os.system('mv walker' + str(i) + ' walker' + str(new_index))
 
     gv.total_num_walkers = total_num_walkers
@@ -1918,7 +1920,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
 
 def print_status(step_num, walker_list, balls, ball_to_walkers):
     gv.resampling_performed = 0
-    os.chdir(gv.main_directory + '/CAS')
+    os.chdir(main_directory + '/CAS')
     total_weight = 0.0
     f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')
     for current_ball in range(balls.shape[0]):

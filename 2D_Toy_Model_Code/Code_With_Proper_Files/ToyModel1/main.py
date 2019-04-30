@@ -2,9 +2,7 @@ import numpy as np
 from time import time
 import os
 import sys
-main_directory = '/scratch/users/sahn1/2D_Toy_Model'  # TODO: set main directory for CAS simulation
-sys.path.append(main_directory)
-os.chdir(main_directory)
+sys.path.append('.')
 import global_variables as gv
 import functions
 
@@ -101,7 +99,7 @@ def CAS_simulation(input_initial_values_file, input_initial_weights_file):
         balls = functions.print_status(step_num, walker_list, balls, ball_to_walkers)
         t3 = time()
 
-        os.chdir(gv.main_directory+'/CAS')
+        os.chdir('CAS')
         f = open('time_record.txt', 'a')
         f.write(str(step_num+1) + '-th step: simulation time: ' + str(t1-t0) + ' binning time: ' + str(t2-t1) +
                 ' resampling time: ' + str(t3-t2) + '\n')

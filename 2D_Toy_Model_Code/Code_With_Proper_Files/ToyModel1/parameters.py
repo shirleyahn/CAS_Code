@@ -1,6 +1,3 @@
-main_directory='/scratch/users/sahn1/2D_Toy_Model'  # main directory of where the CAS simulation will take place,
-                                                    # i.e., where all of the files are.
-
 balls_flag=0  # 0: create new macrostates at each step. 1: keep created macrostates (only allowed if enhanced sampling
               # is off or enhanced_sampling_flag = 0).
 flux_flag=1  # 0: off. 1: on. fluxes between pre-defined states will be calculated. the walker's state is determined by

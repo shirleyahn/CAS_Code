@@ -1,9 +1,6 @@
 ###
 # parameters that are set by parameters.txt
 ###
-global main_directory
-global initial_configuration_directory
-
 global simulation_flag
 global balls_flag
 global flux_flag

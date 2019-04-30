@@ -1,8 +1,6 @@
 ###
 # parameters that are set by parameters.txt
 ###
-global main_directory
-
 global balls_flag
 global flux_flag
 global num_states

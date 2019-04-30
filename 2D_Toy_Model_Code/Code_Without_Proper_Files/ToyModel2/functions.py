@@ -1,5 +1,8 @@
 import numpy as np
 import os
+import sys
+sys.path.append('.')
+main_directory = os.getcwd()
 import copy
 import itertools
 from scipy.cluster.vq import kmeans2, ClusterError
@@ -46,7 +49,6 @@ def closest_ball(walker_coordinates, balls_array, ball_radius):
 
 
 def set_parameters():
-    gv.main_directory = p.main_directory
     gv.balls_flag = p.balls_flag
     gv.flux_flag = p.flux_flag
     gv.num_states = p.num_states
@@ -276,7 +278,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
 
     # output the total flux for this particular step to a text file, if needed.
     if gv.flux_flag == 1:
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
 
     if gv.balls_flag == 1 and gv.enhanced_sampling_flag == 0:
@@ -286,7 +288,7 @@ def binning(step_num, walker_list, temp_walker_list, balls, balls_array, ball_to
             previous_coordinates = temp_walker_list[i].previous_coordinates
             previous_ball_key, inside = closest_ball(previous_coordinates, balls_array, gv.radius)
             transition_matrix[previous_ball_key][temp_walker_list[i].current_ball_key] += temp_walker_list[i].weight
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', transition_matrix, fmt=' %1.10e')
     return balls, balls_array
 
@@ -523,7 +525,7 @@ def threshold_binning(step_num, walker_list, temp_walker_list, balls, balls_arra
 
     # output the total flux for this particular step to a text file, if needed.
     if gv.flux_flag == 1:
-        os.chdir(gv.main_directory + '/CAS')
+        os.chdir(main_directory + '/CAS')
         np.savetxt('flux_' + str(step_num+1) + '.txt', flux, fmt=' %1.5e')
     return balls, balls_array
 
@@ -667,7 +669,7 @@ def reweighting(step_num, balls):
     row_sum = np.sum(new_transition_matrix, axis=1)
     for i in range(new_transition_matrix.shape[0]):
         new_transition_matrix[i, :] /= row_sum[i]
-    os.chdir(gv.main_directory + '/CAS')
+    os.chdir(main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
@@ -731,7 +733,7 @@ def spectral_clustering(step_num, balls):
     for i in range(new_transition_matrix.shape[0]):
         if row_sum[i] > 0.0:
             new_transition_matrix[i, :] /= row_sum[i]
-    os.chdir(gv.main_directory + '/CAS')
+    os.chdir(main_directory + '/CAS')
     np.savetxt('transition_matrix_' + str(step_num+1) + '.txt', new_transition_matrix, fmt=' %1.10e')
 
     evalues, evectors = np.linalg.eig(new_transition_matrix.T)
@@ -1359,9 +1361,6 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
                 for x in indices_copy:
                     if x not in new_indices:
                         vacant_walker_indices.append(x)
-                        # remove walker y directory
-                        os.chdir(gv.main_directory + '/CAS')
-                        os.system('rm -rf walker' + str(x))
 
                 # assign the resampled walkers to particular indices
                 for index_num, global_index in enumerate(new_indices):
@@ -1414,7 +1413,7 @@ def resampling(step_num, walker_list, temp_walker_list, balls, ball_to_walkers):
 
 def print_status(step_num, walker_list, balls, ball_to_walkers):
     gv.resampling_performed = 0
-    os.chdir(gv.main_directory + '/CAS')
+    os.chdir(main_directory + '/CAS')
     total_weight = 0.0
     f = open('total_weight_on_each_ball_' + str(step_num+1) + '.txt', 'w')
     for current_ball in range(balls.shape[0]):
